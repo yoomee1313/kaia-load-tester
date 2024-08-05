@@ -335,6 +335,17 @@ func (self *Account) TransferSignedTx(c *client.Client, to *Account, value *big.
 	return tx.Hash(), gasPrice, err
 }
 
+func (self *Account) TransferSignedTxWithGuaranteeRetry(c *client.Client, to *Account, value *big.Int) {
+	for {
+		_, _, err := self.TransferSignedTxReturnTx(true, c, to, value)
+		// TODO-kaia-load-tester: return error if the error isn't able to handle
+		if err == nil {
+			break // Succeed, let's break the loop
+		}
+		//numChargedAcc, lastFailedNum = estimateRemainingTime(accGrp, numChargedAcc, lastFailedNum)
+	}
+}
+
 func (self *Account) TransferSignedTxWithoutLock(c *client.Client, to *Account, value *big.Int) (common.Hash, *big.Int, error) {
 	tx, gasPrice, err := self.TransferSignedTxReturnTx(false, c, to, value)
 	return tx.Hash(), gasPrice, err

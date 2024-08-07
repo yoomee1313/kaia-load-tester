@@ -1,4 +1,4 @@
-package task
+package testcase
 
 import (
 	"math/big"
@@ -59,8 +59,8 @@ type ExtendedTask struct {
 }
 type ExtendedTaskSet []*ExtendedTask
 
-// InitTCList initializes TCs and returns a slice of TCs.
-var tcList = map[string]*ExtendedTask{
+// TcList initializes TCs and returns a slice of TCs.
+var TcList = map[string]*ExtendedTask{
 	"analyticTx": {
 		Name:   "analyticTx",
 		Weight: 10,

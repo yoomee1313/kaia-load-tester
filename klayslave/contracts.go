@@ -1,4 +1,4 @@
-package task
+package main
 
 import (
 	"github.com/klaytn/klaytn-load-tester/klayslave/account"

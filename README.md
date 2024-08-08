@@ -1,11 +1,3 @@
-[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
-
-# NO LONGER MAINTAINED
-
-Since the launch of Kaia Blockchain this repository has been parked in favour of the new open-source projects in [Kaia's Github]. Contributors have now moved there continuing with massive open-source contributions to our blockchain ecosystem. A big thank you to everyone who has contributed to this repository. For more information about Kaia's chain merge with Finschia blockchain please refer to the launching of Kaia blockchain - [kaia.io](http://kaia.io/).
-
----
-
 # kaia-load-tester
 kaia-load-tester is a load tester using boomer library and it is written in golang.
 
@@ -71,10 +63,10 @@ Parameters
 * --max-rps: limit of request per second
 * --master-host: master host ip address
 * --master-port: master port number
-* --key: private key to fund to internal klay test accounts that created before run test case. This creates keystore file on to the target klay node.
+* --key: private key to fund to internal kaia test accounts that created before run test case. This creates keystore file on to the target klay node.
 * --vusigned : number of accounts for signed transaction to use in test case.
 * --vuunsigned: number of accounts for unsigned transaction to use in test case.
-* --endpoint: klay node rpc endpoint(e.g. http://localhost:8551).
+* --endpoint: kaia node rpc endpoint(e.g. http://localhost:8551).
 * --http.maxidleconns: maximum number of idle connections in default http client (default 100).
 
 ## How to contribute?
@@ -93,6 +85,7 @@ RPS generated per slave is RPS/number-of-slave. The value of --max-rps is the ta
 Reference code: https://github.com/myzhan/boomer/blob/master/runner.go spawnWorkers
 
 ## Troubleshooting
+* newAccountUpdateTC must be executed standalone since it updates the test accounts which are shared among multiple TCs.
 * check that kaia network block producing is not blocked.
 * check master or slave log
   * the HTTP connection fails: Check whether slave and node are connectable networks

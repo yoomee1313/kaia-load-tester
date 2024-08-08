@@ -67,7 +67,7 @@ func Run() {
 	value := big.NewInt(int64(rand.Int() % 3))
 
 	start := boomer.Now()
-	_, _, err := from.TransferNewSmartContractExecutionTx(cli, to, value)
+	_, _, err := from.TransferNewSmartContractExecutionTx(cli, to, value, account.TestContractInfos[account.ContractGeneral].GenData(from.GetAddress(), nil))
 	elapsed := boomer.Now() - start
 
 	if err == nil {
@@ -107,12 +107,12 @@ func RunSingle() (txHash common.Hash, err error) {
 	prevBalanceTo = big.NewInt(balance.Int64())
 	fmt.Printf("To:%v, balance:%v\n", toAccount.GetAddress().String(), prevBalanceTo.Int64())
 
-	txHash, _, err = from.TransferNewSmartContractExecutionTx(cli, to, value)
+	tx, _, err := from.TransferNewSmartContractExecutionTx(cli, to, value, account.TestContractInfos[account.ContractGeneral].GenData(from.GetAddress(), nil))
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	return txHash, err
+	return tx.Hash(), err
 }
 
 // CheckResult returns true and nil error, if expected results are observed.

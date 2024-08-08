@@ -61,9 +61,10 @@ func Run() {
 	from := accGrp[rand.Int()%nAcc]
 	to := accGrp[rand.Int()%nAcc]
 	value := big.NewInt(int64(rand.Int() % 3))
+	data := account.TestContractInfos[account.ContractErc20].GenData(to.GetAddress(), value)
 
 	start := boomer.Now()
-	_, _, err := from.TransferERC20(false, cli, SmartContractAccount.GetAddress(), to, value)
+	_, _, err := from.TransferNewSmartContractExecutionTx(cli, SmartContractAccount, nil, data)
 	elapsed := boomer.Now() - start
 
 	if err == nil {

@@ -65,7 +65,7 @@ func Run() {
 	value := big.NewInt(int64(rand.Int() % 3))
 
 	start := boomer.Now()
-	_, _, _, err := from.TransferNewSmartContractDeployTx(cli, to, value)
+	_, _, _, err := from.TransferNewSmartContractDeployTx(cli, to, value, account.TestContractInfos[account.ContractGeneral].Bytecode)
 	elapsed := boomer.Now() - start
 
 	if err == nil {
@@ -105,7 +105,7 @@ func RunSingle() (txHash common.Hash, err error) {
 	prevBalanceTo = big.NewInt(balance.Int64())
 	fmt.Printf("To:%v, balance:%v\n", toAccount.GetAddress().String(), prevBalanceTo.Int64())
 
-	_, tx, _, err := from.TransferNewSmartContractDeployTx(cli, to, value)
+	_, tx, _, err := from.TransferNewSmartContractDeployTx(cli, to, value, account.TestContractInfos[account.ContractGeneral].Bytecode)
 	if err != nil {
 		return common.Hash{}, err
 	}

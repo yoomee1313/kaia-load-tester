@@ -2,7 +2,10 @@ package account
 
 import (
 	"fmt"
+	"log"
 	"math/big"
+
+	"github.com/klaytn/klaytn/client"
 )
 
 // AccList defines the enum for accList
@@ -110,43 +113,36 @@ func (a *AccGroup) GetValidAccGrp() []*Account {
 	return accGrp
 }
 
-//func (a *AccGroup) ChargeTestTokens() {
-//	numChargedAcc := 0
-//	lastFailedNum := 0
-//	for _, recipientAccount := range a.cfg.GetAllAccGrp() {
-//		for {
-//			_, _, err := tokenChargeFn(false, cfg.GetGCli(), tokenContractAddr, recipientAccount, tokenChargeAmount)
-//			if err == nil {
-//				break // Success, move to next account.
-//			}
-//			numChargedAcc, lastFailedNum = estimateRemainingTime(cfg.GetAllAccGrp(), numChargedAcc, lastFailedNum)
-//		}
-//		numChargedAcc++
-//	}
-//}
-//func (a *AccGroup) PrepareTestContract(t TestContract) {
-//	if !a.cfg.InTheTcList(t) {
-//		return
-//	}
-//
-//	// Dedicated and fixed private key used to deploy a smart contract for ERC20 and ERC721 value transfer and storage trie writeperformance test.
-//	privateKeyStr := []string{
-//		"eb2c84d41c639178ff26a81f488c196584d678bb1390cc20a3aeb536f3969a98", // Erc20 deployer private key
-//		"45c40d95c9b7898a21e073b5bf952bcb05f2e70072e239a8bbd87bb74a53355e", // Erc721 deployer private key
-//		"3737c381633deaaa4c0bdbc64728f6ef7d381b17e1d30bbb74665839cec942b8", // StorageTrie deployer private key
-//	}
-//	deployerAcc := GetAccountFromKey(0, privateKeyStr[t])
-//	log.Printf("prepare%sTransfer, deployer addr:%s", t, deployerAcc.GetAddress().String())
-//
-//	a.cfg.GetLocalReservoir().TransferSignedTxWithGuaranteeRetry(a.cfg.GetGCli(), deployerAcc, a.cfg.GetChargeValue())
-//	a.contracts[t] = deployerAcc.DeploySingleSmartContract(a.cfg.GetGCli(), int(t))
-//
-//	a.chargeReservoir()
-//	a.chargeAccList()
-//
-//	//transferTcSca := deploySingleSmartContract(erc20DeployAcc, erc20DeployAcc.DeployERC20, "ERC20 Performance Test Contract", cfg)
-//	//firstChargeTokenToTestAccounts(erc20TransferTcSca.GetAddress(), erc20DeployAcc.TransferERC20, big.NewInt(1e11), cfg)
-//	//chargeTokenToTestAccounts(erc20TransferTcSca.GetAddress(), cfg.GetLocalReservoir().TransferERC20, big.NewInt(1e4), cfg)
-//	contracts.SetErc20TransferTcContract(erc20TransferTcSca)
-//
-//}
+func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account, gCli *client.Client, chargeValue *big.Int) {
+	inTheTcList := func(testNames []string) bool {
+		for _, tcName := range tcList {
+			for _, target := range testNames {
+				if tcName == target {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	for idx, info := range TestContractInfos {
+		testContractType := TestContract(idx)
+		if testContractType != ContractGeneral && !inTheTcList(info.testNames) {
+			continue
+		}
+		localReservoir.TransferSignedTxWithGuaranteeRetry(gCli, info.deployer, chargeValue)
+		a.contracts[idx] = info.deployer.SmartContractDeployWithGuaranteeRetry(gCli, info.Bytecode, info.contractName)
+
+		// additional work - erc20 token charging or erc721 minting
+		if TestContract(idx) == ContractErc20 {
+			log.Printf("Start erc20 token charging to the test account group")
+			TestContractInfos[ContractErc20].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], TestContractInfos[ContractErc20].GenData(localReservoir.address, big.NewInt(1e11)))
+			for _, recipientAccount := range a.GetValidAccGrp() {
+				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], TestContractInfos[ContractErc20].GenData(recipientAccount.address, big.NewInt(1e4)))
+			}
+		} else if TestContract(idx) == ContractErc721 {
+			log.Printf("Start erc721 nft minting to the test account group(similar to erc20 token charging)")
+			localReservoir.MintERC721ToTestAccounts(gCli, a.GetValidAccGrp(), a.GetTestContractByName(ContractErc721).GetAddress(), 5)
+		}
+	}
+}

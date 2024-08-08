@@ -16,17 +16,18 @@ import (
 	"sync"
 	"time"
 
-	"github.com/klaytn/klaytn"
-	"github.com/klaytn/klaytn/accounts/abi"
-	"github.com/klaytn/klaytn/accounts/abi/bind"
-	"github.com/klaytn/klaytn/blockchain"
-	"github.com/klaytn/klaytn/blockchain/types"
-	"github.com/klaytn/klaytn/blockchain/types/accountkey"
-	"github.com/klaytn/klaytn/client"
-	"github.com/klaytn/klaytn/common"
-	"github.com/klaytn/klaytn/common/hexutil"
-	"github.com/klaytn/klaytn/crypto"
-	"github.com/klaytn/klaytn/params"
+	"github.com/kaiachain/kaia"
+	"github.com/kaiachain/kaia/accounts/abi"
+	"github.com/kaiachain/kaia/accounts/abi/bind"
+	"github.com/kaiachain/kaia/api"
+	"github.com/kaiachain/kaia/blockchain"
+	"github.com/kaiachain/kaia/blockchain/types"
+	"github.com/kaiachain/kaia/blockchain/types/accountkey"
+	"github.com/kaiachain/kaia/client"
+	"github.com/kaiachain/kaia/common"
+	"github.com/kaiachain/kaia/common/hexutil"
+	"github.com/kaiachain/kaia/crypto"
+	"github.com/kaiachain/kaia/params"
 )
 
 const Letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -1910,33 +1911,21 @@ func (self *Account) TransferUnsignedTx(c *client.Client, to *Account, value *bi
 
 	fromAddr := self.GetAddress()
 	toAddr := to.GetAddress()
-
-	data := hexutil.Bytes{}
-	input := hexutil.Bytes{}
+	gasLimit := hexutil.Uint64(21000)
 
 	var err error
-	hash, err := c.SendUnsignedTransaction(ctx, fromAddr, toAddr, 21000, gasPrice.Uint64(), value, data, input)
+	hash, err := c.SendUnsignedTransaction(ctx, api.SendTxArgs{
+		From:      fromAddr,
+		Recipient: &toAddr,
+		GasLimit:  &gasLimit,
+		Price:     (*hexutil.Big)(gasPrice),
+		Amount:    (*hexutil.Big)(value),
+	})
 	if err != nil {
 		log.Printf("Account(%v) : Failed to sendTransaction: %v\n", self.address[:5], err)
 		return common.Hash{}, err
 	}
 	//log.Printf("Account(%v) : Success to sendTransaction: %v\n", self.address[:5], hash.String())
-	return hash, nil
-}
-
-func TransferUnsignedTx(c *client.Client, from common.Address, to common.Address, value *big.Int) (common.Hash, error) {
-	ctx := context.Background()
-
-	data := hexutil.Bytes{}
-	input := hexutil.Bytes{}
-
-	var err error
-	hash, err := c.SendUnsignedTransaction(ctx, from, to, 21000, gasPrice.Uint64(), value, data, input)
-	if err != nil {
-		log.Printf("Account(%v) : Failed to sendTransaction: %v\n", from[:5], err)
-		return common.Hash{}, err
-	}
-
 	return hash, nil
 }
 

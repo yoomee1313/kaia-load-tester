@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/klaytn/klaytn/accounts/abi"
-	"github.com/klaytn/klaytn/blockchain"
-	"github.com/klaytn/klaytn/blockchain/types"
-	"github.com/klaytn/klaytn/client"
-	"github.com/klaytn/klaytn/common"
+	"github.com/kaiachain/kaia/accounts/abi"
+	"github.com/kaiachain/kaia/blockchain"
+	"github.com/kaiachain/kaia/blockchain/types"
+	"github.com/kaiachain/kaia/client"
+	"github.com/kaiachain/kaia/common"
 )
 
 // TestContractInfos stores some dedicated and fixed private key used to deploy a smart contracts for TCs.

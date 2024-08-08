@@ -84,7 +84,7 @@ Parameters
 ## Build and run with docker
 (deprecated) this will be fixed
 ```bash
-$ git clone https://github.com/klaytn/klaytn
+$ git clone https://github.com/kaiachain/kaia
 $ cd klaytn && go mod vendor && cd ..
 $ dockertag=locust-$(date +%s)
 $ docker build . -t $dockertag

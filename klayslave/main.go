@@ -11,22 +11,22 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/klaytn/klaytn-load-tester/klayslave/account"
-	"github.com/klaytn/klaytn-load-tester/klayslave/erc20TransferTC"
-	"github.com/klaytn/klaytn-load-tester/klayslave/erc721TransferTC"
-	"github.com/klaytn/klaytn-load-tester/klayslave/ethereumTxAccessListTC"
-	"github.com/klaytn/klaytn-load-tester/klayslave/ethereumTxDynamicFeeTC"
-	"github.com/klaytn/klaytn-load-tester/klayslave/ethereumTxLegacyTC"
-	"github.com/klaytn/klaytn-load-tester/klayslave/newEthereumAccessListTC"
-	"github.com/klaytn/klaytn-load-tester/klayslave/newEthereumDynamicFeeTC"
-	"github.com/klaytn/klaytn-load-tester/klayslave/newFeeDelegatedSmartContractExecutionTC"
-	"github.com/klaytn/klaytn-load-tester/klayslave/newFeeDelegatedSmartContractExecutionWithRatioTC"
-	"github.com/klaytn/klaytn-load-tester/klayslave/newSmartContractExecutionTC"
-	"github.com/klaytn/klaytn-load-tester/klayslave/storageTrieWriteTC"
-	"github.com/klaytn/klaytn-load-tester/task"
-	"github.com/klaytn/klaytn/accounts/abi/bind"
-	"github.com/klaytn/klaytn/api/debug"
-	"github.com/klaytn/klaytn/console"
+	"github.com/kaiachain/kaia-load-tester/klayslave/account"
+	"github.com/kaiachain/kaia-load-tester/klayslave/config"
+	"github.com/kaiachain/kaia-load-tester/testcase/erc20TransferTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/erc721TransferTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxDynamicFeeTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxLegacyTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumAccessListTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumDynamicFeeTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractExecutionTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractExecutionWithRatioTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/newSmartContractExecutionTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/storageTrieWriteTC"
+	"github.com/kaiachain/kaia/accounts/abi/bind"
+	"github.com/kaiachain/kaia/api/debug"
+	"github.com/kaiachain/kaia/console"
 	"github.com/myzhan/boomer"
 	"github.com/urfave/cli"
 )
@@ -36,10 +36,10 @@ var app = cli.NewApp()
 func init() {
 	app.Name = filepath.Base(os.Args[0])
 	app.Usage = "This is for kaia load testing."
-	app.Version = task.GetVersionWithCommit() // To see the version, run 'klayslave -v'
+	app.Version = config.GetVersionWithCommit() // To see the version, run 'klayslave -v'
 	app.HideVersion = false
 	app.Copyright = "Copyright 2024 Kaia-load-tester authors"
-	app.Flags = append(task.Flags, task.BoomerFlags...)
+	app.Flags = append(config.Flags, config.BoomerFlags...)
 
 	// This app doesn't provide any subcommand
 	//		app.Commands = []*cli.Command{}
@@ -51,8 +51,7 @@ func init() {
 		if runtime.GOOS == "darwin" {
 			return nil
 		}
-		task.SetRLimit()
-		return nil
+		return config.SetRLimit()
 	}
 	app.Action = RunAction
 	app.After = func(cli *cli.Context) error {
@@ -70,7 +69,7 @@ func main() {
 }
 
 func RunAction(ctx *cli.Context) {
-	cfg := task.NewConfig(ctx)
+	cfg := config.NewConfig(ctx)
 	accGrp := account.NewAccGroup(cfg.GetChainID(), cfg.GetGasPrice(), cfg.GetBaseFee(), cfg.InTheTcList("transferUnsignedTx"))
 	accGrp.CreateAccountsPerAccGrp(cfg.GetNUserForSigned(), cfg.GetNUserForUnsigned(), cfg.GetNUserForNewAccounts(), cfg.GetTcStrList(), cfg.GetGEndpoint())
 
@@ -97,7 +96,7 @@ func setSmartContractAddressPerPackage(a *account.AccGroup) {
 
 // createTestAccGroupsAndPrepareContracts do every init steps before task.Init
 // those steps are about deploying test contracts and
-func createTestAccGroupsAndPrepareContracts(cfg *task.Config, accGrp *account.AccGroup) *account.Account {
+func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.AccGroup) *account.Account {
 	if len(cfg.GetChargeValue().Bits()) == 0 {
 		return nil
 	}
@@ -137,7 +136,7 @@ func createTestAccGroupsAndPrepareContracts(cfg *task.Config, accGrp *account.Ac
 	return localReservoirAccount
 }
 
-func initializeTasks(cfg *task.Config, accGrp *account.AccGroup) {
+func initializeTasks(cfg *config.Config, accGrp *account.AccGroup) {
 	println("Initializing tasks")
 
 	// Tc package initializes the task

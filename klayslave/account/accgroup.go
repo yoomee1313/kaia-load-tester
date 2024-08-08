@@ -5,7 +5,7 @@ import (
 	"log"
 	"math/big"
 
-	"github.com/klaytn/klaytn/client"
+	"github.com/kaiachain/kaia/client"
 )
 
 // AccList defines the enum for accList

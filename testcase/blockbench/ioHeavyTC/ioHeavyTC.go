@@ -1,6 +1,6 @@
 //go:generate abigen --sol IOHeavy.sol --pkg ioHeavyTC --out IOHeavy.go
 
-// Package ioHeavyTC implements BlockBench's IOHeavy benchmark for Klaytn and Locust.
+// Package ioHeavyTC implements BlockBench's IOHeavy benchmark for Kaia and Locust.
 // See README.md for more details.
 package ioHeavyTC
 

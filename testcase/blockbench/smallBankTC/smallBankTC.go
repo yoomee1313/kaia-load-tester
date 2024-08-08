@@ -1,6 +1,6 @@
 //go:generate abigen --sol SmallBank.sol --pkg smallBankTC --out SmallBank.go
 
-// Package smallBankTC implements BlockBench's SmallBank benchmark for Klaytn and Locust.
+// Package smallBankTC implements BlockBench's SmallBank benchmark for Kaia and Locust.
 // See README.md for more details.
 package smallBankTC
 

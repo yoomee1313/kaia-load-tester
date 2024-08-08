@@ -1,6 +1,6 @@
 //go:generate abigen --sol DoNothing.sol --pkg doNothingTC --out DoNothing.go
 
-// Package doNothingTC implements BlockBench's DoNothing benchmark for Klaytn and Locust.
+// Package doNothingTC implements BlockBench's DoNothing benchmark for Kaia and Locust.
 // See README.md for more details.
 package doNothingTC
 

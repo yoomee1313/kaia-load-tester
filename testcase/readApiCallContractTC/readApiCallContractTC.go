@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kaiachain/kaia"
+	kaia "github.com/kaiachain/kaia"
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/klayslave/clipool"
 	"github.com/kaiachain/kaia/accounts/abi/bind"
@@ -118,7 +118,7 @@ func getMethodId(str string) []byte {
 	return methodID
 }
 
-// TODO-klaytn-load-tester: deleting for loop
+// TODO-kaia-load-tester: deleting for loop
 func setAnswerVariables() {
 	retValOfCall = big.NewInt(4)
 	retValOfStorageAt = big.NewInt(4)
@@ -127,7 +127,7 @@ func setAnswerVariables() {
 		cli := cliPool.Alloc().(*client.Client)
 
 		fromAccount := accGrp[rand.Int()%nAcc]
-		callMsg := klaytn.CallMsg{
+		callMsg := kaia.CallMsg{
 			From:     fromAccount.GetAddress(),
 			To:       &contractAddr,
 			Gas:      1100000,
@@ -195,7 +195,7 @@ func EstimateGas() {
 	cli := cliPool.Alloc().(*client.Client)
 
 	fromAccount := accGrp[rand.Int()%nAcc]
-	callMsg := klaytn.CallMsg{
+	callMsg := kaia.CallMsg{
 		From:     fromAccount.GetAddress(),
 		To:       &contractAddr,
 		Gas:      1100000,

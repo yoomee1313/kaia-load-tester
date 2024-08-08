@@ -15,7 +15,7 @@ paper is like the below:
 > the observed transaction latency.
 
 Similarly to BlockBench's IOHeavy benchmark, `ioHeavyTC` evaluates the
-performance of writing and reading Klaytn's states, especially state variables
+performance of writing and reading Kaia's states, especially state variables
 declared in a smart contract.  The `IOHeavy` smart contract in `IOHeavy.sol` is
 used for testing, and its functions are tested through the following interface
 implemented in `ioHeavyTC.go`.

@@ -12,15 +12,15 @@ SIGMOD paper is like the below:
 > this workload evaluates how the system implements scan-like and aggregate
 > queries, which are determined by its data model.
 
-`analyticTC` implements three analytic operations using Klaytn's JSON RPC API.
+`analyticTC` implements three analytic operations using Kaia's JSON RPC API.
 The table below describes the three operations.
 
-| Function | Description |
-| -------- | ----------- |
-| `QueryTotalTxVal` | Calculate the sum of transaction's values in the latest 30 blocks. It internally calls `klay_getBlockByNumber` through Klaytn's Client interface. |
-| `QueryLargestTxVal` | Find the largest transaction value in the latest 30 blocks. It internally calls `klay_getBlockByNumber` through Klaytn's Client interface.|
-| `QueryLargestAccBal` | Find the largest balance of a randomly chosen account in the latest 30 blocks. It internally calls `klay_getBalance` through Klaytn's Client interface.|
-| `Run` | Randomly invoke one test function among `QueryTotalTxVal`, `QueryLargestTxVal`, and `QueryLargestAccBal`. |
+| Function | Description                                                                                                                                           |
+| -------- |-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `QueryTotalTxVal` | Calculate the sum of transaction's values in the latest 30 blocks. It internally calls `klay_getBlockByNumber` through Kaia's Client interface.       |
+| `QueryLargestTxVal` | Find the largest transaction value in the latest 30 blocks. It internally calls `klay_getBlockByNumber` through Kaia's Client interface.              |
+| `QueryLargestAccBal` | Find the largest balance of a randomly chosen account in the latest 30 blocks. It internally calls `klay_getBalance` through Kaia's Client interface. |
+| `Run` | Randomly invoke one test function among `QueryTotalTxVal`, `QueryLargestTxVal`, and `QueryLargestAccBal`.                                             |
 
 
 ## Source Files

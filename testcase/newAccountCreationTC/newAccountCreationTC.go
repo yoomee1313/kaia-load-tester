@@ -61,7 +61,7 @@ func Run() {
 	cli := cliPool.Alloc().(*client.Client)
 
 	from := accGrp[rand.Int()%nAcc]
-	to := account.NewKlaytnAccount(0)
+	to := account.NewKaiaAccount(0)
 	value := big.NewInt(int64(rand.Int() % 3))
 
 	start := boomer.Now()
@@ -83,7 +83,7 @@ func RunSingle() (txHash common.Hash, err error) {
 	fromIdx := rand.Int() % nAcc
 
 	from := accGrp[fromIdx]
-	to := account.NewKlaytnAccount(0)
+	to := account.NewKaiaAccount(0)
 	value := big.NewInt(int64(rand.Int() % 3))
 	fmt.Printf("[TC] transferSignedTc: %v, from:%v, to:%v, value:%v\n", endPoint, from.GetAddress().String(), to.GetAddress().String(), value)
 	transferedValue = big.NewInt(value.Int64())

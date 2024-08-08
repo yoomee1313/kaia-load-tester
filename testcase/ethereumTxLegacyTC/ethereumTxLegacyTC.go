@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kaiachain/kaia"
+	kaia "github.com/kaiachain/kaia"
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/klayslave/clipool"
 	"github.com/kaiachain/kaia/accounts/abi"
@@ -171,7 +171,7 @@ func GetReceipt(cli *client.Client, txHash common.Hash, maxRetry int) map[string
 			return receipt
 		}
 		if err != nil {
-			if err.Error() == klaytn.NotFound.Error() && retryCount < maxRetry {
+			if err.Error() == kaia.NotFound.Error() && retryCount < maxRetry {
 				retryCount++
 				continue
 			}

@@ -16,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kaiachain/kaia"
+	kaia "github.com/kaiachain/kaia"
 	"github.com/kaiachain/kaia/accounts/abi"
 	"github.com/kaiachain/kaia/accounts/abi/bind"
 	"github.com/kaiachain/kaia/api"
@@ -182,7 +182,7 @@ func NewAccountOnNode(id int, endpoint string) *Account {
 	return tAcc
 }
 
-func NewKlaytnAccount(id int) *Account {
+func NewKaiaAccount(id int) *Account {
 	acc, err := crypto.GenerateKey()
 	if err != nil {
 		log.Fatalf("crypto.GenerateKey() : Failed to generateKey %v", err)
@@ -206,7 +206,7 @@ func NewKlaytnAccount(id int) *Account {
 	return &tAcc
 }
 
-func NewKlaytnAccountWithAddr(id int, addr common.Address) *Account {
+func NewKaiaAccountWithAddr(id int, addr common.Address) *Account {
 	acc, err := crypto.GenerateKey()
 	if err != nil {
 		log.Fatalf("crypto.GenerateKey() : Failed to generateKey %v", err)
@@ -228,7 +228,7 @@ func NewKlaytnAccountWithAddr(id int, addr common.Address) *Account {
 	return &tAcc
 }
 
-func NewKlaytnMultisigAccount(id int) *Account {
+func NewKaiaMultisigAccount(id int) *Account {
 	k1, err := crypto.GenerateKey()
 	if err != nil {
 		log.Fatalf("crypto.GenerateKey() : Failed to generateKey %v", err)
@@ -1647,7 +1647,7 @@ func (self *Account) TransferNewEthereumAccessListTx(c *client.Client, to *Accou
 	if to != nil {
 		toAddress = &to.address
 	}
-	callMsg := klaytn.CallMsg{
+	callMsg := kaia.CallMsg{
 		From:     self.address,
 		To:       toAddress,
 		Gas:      gas,
@@ -1709,7 +1709,7 @@ func (self *Account) TransferNewEthereumDynamicFeeTx(c *client.Client, to *Accou
 	if to != nil {
 		toAddress = &to.address
 	}
-	callMsg := klaytn.CallMsg{
+	callMsg := kaia.CallMsg{
 		From:     self.address,
 		To:       toAddress,
 		Gas:      gas,
@@ -1939,7 +1939,7 @@ func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, 
 		addr   common.Address
 		lastTx *types.Transaction
 
-		contractAddress = NewKlaytnAccountWithAddr(1, crypto.CreateAddress(self.GetAddress(), 0))
+		contractAddress = NewKaiaAccountWithAddr(1, crypto.CreateAddress(self.GetAddress(), 0))
 	)
 
 	// fast track - if already deployed by other slave, return immediately

@@ -10,7 +10,7 @@ import "../../introspection/KIP13.sol";
 
 /**
  * @title KIP17 Non-Fungible Token Standard basic implementation
- * @dev see http://kips.klaytn.com/KIPs/kip-17-non_fungible_token
+ * @dev see https://kips.kaia.io/KIPs/kip-17
  */
 contract KIP17 is KIP13, IKIP17 {
     using SafeMath for uint256;

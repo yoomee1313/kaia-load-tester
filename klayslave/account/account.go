@@ -348,7 +348,7 @@ func (self *Account) TransferSignedTxWithGuaranteeRetry(c *client.Client, to *Ac
 		if err == nil {
 			break // Succeed, let's break the loop
 		}
-		log.Printf("Failed to execute %s: err %s", lastTx.String(), err.Error())
+		log.Printf("Failed to execute: err=%s", err.Error())
 		time.Sleep(1 * time.Second) // Mostly, the err is `txpool is full`, retry after a while.
 		//numChargedAcc, lastFailedNum = estimateRemainingTime(accGrp, numChargedAcc, lastFailedNum)
 	}
@@ -360,7 +360,7 @@ func (self *Account) TransferSignedTxWithGuaranteeRetry(c *client.Client, to *Ac
 	cancelFn()
 	if err != nil || (receipt != nil && receipt.Status == 0) {
 		// shouldn't happen. must check if contract is correct.
-		log.Fatalf("tx mined but failed, err=%s, txHash=%s, receipt=%s", err, lastTx.Hash().String(), receipt)
+		log.Fatalf("tx mined but failed, err=%s, txHash=%s", err, lastTx.Hash().String())
 	}
 	return lastTx
 }
@@ -1958,7 +1958,6 @@ func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, 
 		time.Sleep(5 * time.Second) // Mostly, the err is `txpool is full`, retry after a while.
 	}
 
-	fmt.Println("lastTx:", lastTx)
 	log.Printf("Start waiting the receipt of the tx(%v).\n", lastTx.Hash().String())
 	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancelFn()
@@ -1990,7 +1989,7 @@ func (a *Account) SmartContractExecutionWithGuaranteeRetry(gCli *client.Client, 
 		if err == nil {
 			break
 		}
-		log.Printf("Failed to execute %s: err %s", lastTx.String(), err.Error())
+		log.Printf("Failed to execute: err=%s", err.Error())
 		time.Sleep(1 * time.Second) // Mostly, the err is `txpool is full`, retry after a while.
 	}
 	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
@@ -2000,7 +1999,7 @@ func (a *Account) SmartContractExecutionWithGuaranteeRetry(gCli *client.Client, 
 	cancelFn()
 	if err != nil || (receipt != nil && receipt.Status == 0) {
 		// shouldn't happen. must check if contract is correct.
-		log.Fatalf("tx mined but failed, err=%s, txHash=%s, receipt=%s", err, lastTx.Hash().String(), receipt)
+		log.Fatalf("tx mined but failed, err=%s, txHash=%s", err, lastTx.Hash().String())
 	}
 }
 

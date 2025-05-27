@@ -6,9 +6,9 @@ import (
 
 // sets build options from ldflags.
 const (
-	Major = 1
+	Major = 2
 	Minor = 0
-	Patch = 1
+	Patch = 0
 )
 
 var (

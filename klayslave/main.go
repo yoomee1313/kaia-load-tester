@@ -19,6 +19,7 @@ import (
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxDynamicFeeTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxLegacyTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/gaslessTransactionTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumAccessListTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumDynamicFeeTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractExecutionTC"
@@ -27,6 +28,7 @@ import (
 	"github.com/kaiachain/kaia-load-tester/testcase/storageTrieWriteTC"
 	"github.com/kaiachain/kaia/accounts/abi/bind"
 	"github.com/kaiachain/kaia/api/debug"
+	"github.com/kaiachain/kaia/common"
 	"github.com/kaiachain/kaia/console"
 	"github.com/myzhan/boomer"
 	"github.com/urfave/cli"
@@ -81,7 +83,7 @@ func RunAction(ctx *cli.Context) {
 }
 
 // TODO-kaia-load-tester: remove global variables in the tc packages
-func setSmartContractAddressPerPackage(a *account.AccGroup) {
+func setSmartContractAddressPerPackage(cfg *config.Config, a *account.AccGroup) {
 	erc20TransferTC.SmartContractAccount = a.GetTestContractByName(account.ContractErc20)
 	erc721TransferTC.SmartContractAccount = a.GetTestContractByName(account.ContractErc721)
 	storageTrieWriteTC.SmartContractAccount = a.GetTestContractByName(account.ContractStorageTrie)
@@ -94,6 +96,9 @@ func setSmartContractAddressPerPackage(a *account.AccGroup) {
 	ethereumTxDynamicFeeTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
 	newEthereumAccessListTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
 	newEthereumDynamicFeeTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
+
+	gaslessTransactionTC.TestTokenAccount = account.NewKaiaAccountWithAddr(0, common.HexToAddress(cfg.GetTestTokenAddress()))
+	gaslessTransactionTC.GsrAccount = account.NewKaiaAccountWithAddr(0, common.HexToAddress(cfg.GetGsrAddress()))
 }
 
 // createTestAccGroupsAndPrepareContracts do every init steps before task.Init
@@ -123,6 +128,9 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	accs := accGrp.GetValidAccGrp()
 	for _, acc := range accs {
 		localReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue())
+		if cfg.InTheTcList("gaslessTransactionTC") {
+			globalReservoirAccount.TransferTestTokenSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue(), common.HexToAddress(cfg.GetTestTokenAddress()))
+		}
 	}
 	log.Printf("Finished charging KLAY to %d test account(s)\n", len(accs))
 
@@ -134,7 +142,7 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	accGrp.DeployTestContracts(cfg.GetTcStrList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue())
 
 	// Set SmartContractAddress value in each packages if needed
-	setSmartContractAddressPerPackage(accGrp)
+	setSmartContractAddressPerPackage(cfg, accGrp)
 	return localReservoirAccount
 }
 

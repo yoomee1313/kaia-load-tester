@@ -365,6 +365,38 @@ func (self *Account) TransferSignedTxWithGuaranteeRetry(c *client.Client, to *Ac
 	return lastTx
 }
 
+func (self *Account) TransferTestTokenSignedTxWithGuaranteeRetry(c *client.Client, to *Account, value *big.Int, testTokenAddr common.Address) *types.Transaction {
+	var (
+		err    error
+		lastTx *types.Transaction
+	)
+
+	for {
+		testToken := NewKaiaAccountWithAddr(0, testTokenAddr)
+		data := TestContractInfos[ContractErc20].GenData(to.GetAddress(), value)
+		lastTx, _, err = self.TransferNewSmartContractExecutionTx(c, testToken, common.Big0, data)
+		// TODO-kaia-load-tester: return error if the error isn't able to handle
+		if err == nil {
+			break // Succeed, let's break the loop
+		}
+		log.Printf("Failed to execute: err=%s", err.Error())
+		time.Sleep(1 * time.Second) // Mostly, the err is `txpool is full`, retry after a while.
+		//numChargedAcc, lastFailedNum = estimateRemainingTime(accGrp, numChargedAcc, lastFailedNum)
+	}
+
+	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelFn()
+
+	receipt, err := bind.WaitMined(ctx, c, lastTx)
+	cancelFn()
+	if err != nil || (receipt != nil && receipt.Status == 0) {
+		// shouldn't happen. must check if contract is correct.
+		fmt.Println(receipt, lastTx)
+		log.Fatalf("tx mined but failed, err=%s, txHash=%s", err, lastTx.Hash().String())
+	}
+	return lastTx
+}
+
 func (self *Account) TransferSignedTxWithoutLock(c *client.Client, to *Account, value *big.Int) (common.Hash, *big.Int, error) {
 	tx, gasPrice, err := self.TransferSignedTxReturnTx(false, c, to, value)
 	return tx.Hash(), gasPrice, err
@@ -1807,6 +1839,87 @@ func (self *Account) TransferNewLegacyTxWithEth(c *client.Client, endpoint strin
 	return common.HexToHash(strResult), gasPrice, nil
 }
 
+// This function is responsible for sending both Gasless Approve Transactions and Gasless Swap Transactions.
+func (self *Account) TransferNewGaslessTx(c *client.Client, endpoint string, testToken, gsr *Account) (common.Hash, common.Hash, *big.Int, error) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+
+	nonce := self.GetNonce(c)
+
+	approveInput, err := MakeApproveFunctionCall(gsr.GetAddress())
+	if err != nil {
+		fmt.Printf("Failed to creat arguments to send approve Tx: %v\n", err.Error())
+		return common.Hash{0}, common.Hash{0}, gasPrice, err
+	}
+
+	ctx := context.Background()
+	suggestedGasPrice, err := c.SuggestGasPrice(ctx)
+	if err != nil {
+		fmt.Printf("Failed to fetch suggest gas price: %v\n", err.Error())
+		return common.Hash{0}, common.Hash{0}, gasPrice, err
+	}
+	swapInput, err := MakeSwapFunctionCall(testToken.GetAddress(), suggestedGasPrice)
+	if err != nil {
+		fmt.Printf("Failed to creat arguments to send swap Tx: %v\n", err.Error())
+		return common.Hash{0}, common.Hash{0}, gasPrice, err
+	}
+
+	approveTx := types.NewTransaction(
+		nonce,
+		testToken.address,
+		common.Big0,
+		100000,
+		suggestedGasPrice,
+		approveInput)
+	signApproveTx, err := types.SignTx(approveTx, types.NewEIP155Signer(chainID), self.privateKey[0])
+	if err != nil {
+		log.Fatalf("Failed to encode approve tx: %v", err)
+	}
+
+	swapTx := types.NewTransaction(
+		nonce+1,
+		gsr.address,
+		common.Big0,
+		500000,
+		suggestedGasPrice,
+		swapInput)
+	signSwapTx, err := types.SignTx(swapTx, types.NewEIP155Signer(chainID), self.privateKey[0])
+	if err != nil {
+		log.Fatalf("Failed to encode swap tx: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
+	_, err = c.SendRawTransaction(ctx, signApproveTx)
+	if err != nil {
+		if err.Error() == blockchain.ErrNonceTooLow.Error() || err.Error() == blockchain.ErrReplaceUnderpriced.Error() {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
+			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
+			self.nonce++
+		} else {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
+		}
+		return approveTx.Hash(), swapTx.Hash(), suggestedGasPrice, err
+	}
+
+	_, err = c.SendRawTransaction(ctx, signSwapTx)
+	if err != nil {
+		if err.Error() == blockchain.ErrNonceTooLow.Error() || err.Error() == blockchain.ErrReplaceUnderpriced.Error() {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
+			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
+			self.nonce++
+		} else {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
+		}
+		return approveTx.Hash(), swapTx.Hash(), suggestedGasPrice, err
+	}
+
+	self.nonce += 2
+
+	return approveTx.Hash(), swapTx.Hash(), suggestedGasPrice, nil
+}
+
 func (self *Account) TransferNewEthAccessListTxWithEth(c *client.Client, endpoint string, to *Account, value *big.Int, input string, exePath string) (common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
@@ -2011,4 +2124,46 @@ func (a *Account) CheckBalance(expectedBalance *big.Int, cli *client.Client) err
 	}
 
 	return nil
+}
+
+func MakeApproveFunctionCall(spender common.Address) ([]byte, error) {
+	abiStr := `[{"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"}]`
+	abii, err := abi.JSON(strings.NewReader(abiStr))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse ABI: %v", err)
+	}
+
+	data, err := abii.Pack("approve", spender, abi.MaxUint256) // Approve maximum amount
+	if err != nil {
+		return nil, fmt.Errorf("failed to pack approve data: %v", err)
+	}
+
+	return data, nil
+}
+
+func MakeSwapFunctionCall(testTokenAddress common.Address, suggestedGasPrice *big.Int) ([]byte, error) {
+	abiStr := `[{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"minAmountOut","type":"uint256"},{"internalType":"uint256","name":"amountRepay","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapForGas","outputs":[],"stateMutability":"nonpayable","type":"function"}]`
+	abii, err := abi.JSON(strings.NewReader(abiStr))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse ABI: %v", err)
+	}
+
+	var (
+		R1          = new(big.Int).Mul(big.NewInt(21000), suggestedGasPrice)
+		R2          = new(big.Int).Mul(big.NewInt(100000), suggestedGasPrice)
+		R3          = new(big.Int).Mul(big.NewInt(500000), suggestedGasPrice)
+		amountRepay = new(big.Int).Add(R1, new(big.Int).Add(R2, R3)) // Amount to repay
+	)
+
+	// Set parameters for swap
+	amountIn := new(big.Int).Mul(amountRepay, big.NewInt(10))    // There must be enough input to output amountRepay.
+	minAmountOut := amountRepay                                  // Since nothing will be done after the swap, the amountRepay is sufficient.
+	deadline := big.NewInt(time.Now().Add(1 * time.Hour).Unix()) // Deadline 1 hour from now
+
+	data, err := abii.Pack("swapForGas", testTokenAddress, amountIn, minAmountOut, amountRepay, deadline)
+	if err != nil {
+		return nil, fmt.Errorf("failed to pack swap data: %v", err)
+	}
+
+	return data, nil
 }

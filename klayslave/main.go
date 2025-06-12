@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/klayslave/config"
@@ -126,12 +127,21 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	// 3. charge KAIA
 	log.Printf("Start charging KLAY to test accounts")
 	accs := accGrp.GetValidAccGrp()
+	ch := make(chan int, runtime.NumCPU()*10)
+	wg := sync.WaitGroup{}
 	for _, acc := range accs {
-		localReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue())
-		if cfg.InTheTcList("gaslessTransactionTC") {
-			globalReservoirAccount.TransferTestTokenSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue(), common.HexToAddress(cfg.GetTestTokenAddress()))
-		}
+		ch <- 1
+		wg.Add(1)
+		go func() {
+			localReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue())
+			if cfg.InTheTcList("gaslessTransactionTC") {
+				globalReservoirAccount.TransferTestTokenSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue(), common.HexToAddress(cfg.GetTestTokenAddress()))
+			}
+			<-ch
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 	log.Printf("Finished charging KLAY to %d test account(s)\n", len(accs))
 
 	// Wait, charge KAIA happen in 100% of all created test accounts

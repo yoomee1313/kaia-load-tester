@@ -353,7 +353,7 @@ func (self *Account) TransferSignedTxWithGuaranteeRetry(c *client.Client, to *Ac
 		//numChargedAcc, lastFailedNum = estimateRemainingTime(accGrp, numChargedAcc, lastFailedNum)
 	}
 
-	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancelFn := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelFn()
 
 	receipt, err := bind.WaitMined(ctx, c, lastTx)
@@ -384,7 +384,7 @@ func (self *Account) TransferTestTokenSignedTxWithGuaranteeRetry(c *client.Clien
 		//numChargedAcc, lastFailedNum = estimateRemainingTime(accGrp, numChargedAcc, lastFailedNum)
 	}
 
-	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancelFn := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelFn()
 
 	receipt, err := bind.WaitMined(ctx, c, lastTx)

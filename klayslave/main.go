@@ -20,6 +20,7 @@ import (
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxDynamicFeeTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxLegacyTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/gaslessRevertTransactionTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/gaslessTransactionTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumAccessListTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumDynamicFeeTC"
@@ -100,6 +101,8 @@ func setSmartContractAddressPerPackage(cfg *config.Config, a *account.AccGroup) 
 
 	gaslessTransactionTC.TestTokenAccount = account.NewKaiaAccountWithAddr(0, common.HexToAddress(cfg.GetTestTokenAddress()))
 	gaslessTransactionTC.GsrAccount = account.NewKaiaAccountWithAddr(0, common.HexToAddress(cfg.GetGsrAddress()))
+	gaslessRevertTransactionTC.TestTokenAccount = account.NewKaiaAccountWithAddr(0, common.HexToAddress(cfg.GetTestTokenAddress()))
+	gaslessRevertTransactionTC.GsrAccount = account.NewKaiaAccountWithAddr(0, common.HexToAddress(cfg.GetGsrAddress()))
 }
 
 // createTestAccGroupsAndPrepareContracts do every init steps before task.Init

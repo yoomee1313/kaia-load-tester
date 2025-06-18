@@ -71,8 +71,8 @@ func (cfg *Config) setBoomerFlags(ctx *cli.Context) {
 func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 	// Directly store the flag value
 	cfg.gEndpoint = ctx.String("endpoint")
-	cfg.nUserForUnsigned = ctx.Int("vusigned")
-	cfg.nUserForSigned = ctx.Int("vuunsigned")
+	cfg.nUserForSigned = ctx.Int("vusigned")
+	cfg.nUserForUnsigned = ctx.Int("vuunsigned")
 	cfg.nUserForNewAccounts = 5
 	cfg.activeUserPercent = ctx.Int("activeUserPercent")
 	cfg.chargeKLAYAmount = ctx.Int("charge")

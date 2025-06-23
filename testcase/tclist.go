@@ -434,13 +434,13 @@ var TcList = map[string]*ExtendedTask{
 		Init:   readApiCallContractTC.Init,
 	},
 	"gaslessTransactionTC": {
-		Name:   "gaslessTransactionTC",
+		Name:   gaslessTransactionTC.Name,
 		Weight: 10,
 		Fn:     gaslessTransactionTC.Run,
 		Init:   gaslessTransactionTC.Init,
 	},
 	"gaslessRevertTransactionTC": {
-		Name:   "gaslessRevertTransactionTC",
+		Name:   gaslessRevertTransactionTC.Name,
 		Weight: 10,
 		Fn:     gaslessRevertTransactionTC.Run,
 		Init:   gaslessRevertTransactionTC.Init,

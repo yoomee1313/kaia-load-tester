@@ -15,7 +15,6 @@ import (
 	"github.com/kaiachain/kaia-load-tester/testcase"
 	klay "github.com/kaiachain/kaia/client"
 	"github.com/kaiachain/kaia/params"
-	"github.com/myzhan/boomer"
 	"github.com/urfave/cli"
 )
 
@@ -175,27 +174,16 @@ func (cfg *Config) setConfigsFromNode() {
 	//}
 }
 
-func (cfg *Config) GetBoomerTasksList() []*boomer.Task {
-	var tasks []*boomer.Task
-	for i, name := range cfg.tcNameList {
-		// skip unknown tc
-		if _, ok := testcase.TcList[name]; !ok {
-			continue
-		}
-		// add known tc
-		extendedTask := testcase.TcList[name]
-		if len(cfg.tcWeights) > i {
-			extendedTask.Weight = cfg.tcWeights[i]
-		}
-		tasks = append(tasks, &boomer.Task{Weight: extendedTask.Weight, Fn: extendedTask.Fn, Name: extendedTask.Name})
-	}
-	return tasks
-}
-
-func (cfg *Config) GetExtendedTasksList() []*testcase.ExtendedTask {
+func (cfg *Config) GetExtendedTasks() []*testcase.ExtendedTask {
 	var tasks []*testcase.ExtendedTask
-	for _, name := range cfg.tcNameList {
-		tasks = append(tasks, testcase.TcList[name])
+	for i, name := range cfg.tcNameList {
+		if task := testcase.TcList[name]; task != nil { // if unknown, skip.
+			var weight int = task.Weight
+			if len(cfg.tcWeights) > i {
+				weight = cfg.tcWeights[i]
+			}
+			tasks = append(tasks, &testcase.ExtendedTask{Name: task.Name, Weight: weight, Fn: task.Fn, Init: task.Init})
+		}
 	}
 	return tasks
 }

@@ -13,6 +13,7 @@ import (
 
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/klayslave/config"
+	"github.com/kaiachain/kaia-load-tester/testcase"
 	"github.com/kaiachain/kaia-load-tester/testcase/erc20TransferTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/erc721TransferTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
@@ -74,8 +75,9 @@ func RunAction(ctx *cli.Context) {
 	accGrp.CreateAccountsPerAccGrp(cfg.GetNUserForSigned(), cfg.GetNUserForUnsigned(), cfg.GetNUserForNewAccounts(), cfg.GetTcStrList(), cfg.GetGEndpoint())
 
 	createTestAccGroupsAndPrepareContracts(cfg, accGrp)
-	initializeTasks(cfg, accGrp)
-	boomer.Run(cfg.GetBoomerTasksList()...)
+	tasks := cfg.GetExtendedTasks()
+	initializeTasks(cfg, accGrp, tasks)
+	boomer.Run(toBoomerTasks(tasks)...)
 }
 
 // TODO-kaia-load-tester: remove global variables in the tc packages
@@ -136,11 +138,11 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	return localReservoirAccount
 }
 
-func initializeTasks(cfg *config.Config, accGrp *account.AccGroup) {
+func initializeTasks(cfg *config.Config, accGrp *account.AccGroup, tasks []*testcase.ExtendedTask) {
 	println("Initializing tasks")
 
 	// Tc package initializes the task
-	for _, extendedTask := range cfg.GetExtendedTasksList() {
+	for _, extendedTask := range tasks {
 		accs := accGrp.GetAccListByName(account.AccListForSignedTx)
 		if extendedTask.Name == "transferUnsignedTx" {
 			accs = accGrp.GetAccListByName(account.AccListForUnsignedTx)
@@ -148,4 +150,12 @@ func initializeTasks(cfg *config.Config, accGrp *account.AccGroup) {
 		extendedTask.Init(accs, cfg.GetGEndpoint(), cfg.GetGasPrice())
 		println("=> " + extendedTask.Name + " extendedTask is initialized.")
 	}
+}
+
+func toBoomerTasks(tasks []*testcase.ExtendedTask) []*boomer.Task {
+	var boomerTasks []*boomer.Task
+	for _, task := range tasks {
+		boomerTasks = append(boomerTasks, &boomer.Task{Weight: task.Weight, Fn: task.Fn, Name: task.Name})
+	}
+	return boomerTasks
 }

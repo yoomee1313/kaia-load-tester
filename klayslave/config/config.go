@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -14,7 +15,6 @@ import (
 	"github.com/kaiachain/kaia-load-tester/testcase"
 	klay "github.com/kaiachain/kaia/client"
 	"github.com/kaiachain/kaia/params"
-	"github.com/myzhan/boomer"
 	"github.com/urfave/cli"
 )
 
@@ -27,6 +27,7 @@ type Config struct {
 
 	richWalletPrivateKey string
 	tcNameList           []string
+	tcWeights            []int
 
 	chargeKLAYAmount  int
 	chargeParallelNum int
@@ -97,6 +98,21 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 		// add known tc
 		cfg.tcNameList = append(cfg.tcNameList, name)
 	}
+	// Parse tcWeights
+	tcWeights := ctx.String("weights")
+	for _, sWeight := range strings.Split(tcWeights, ",") {
+		iWeight, err := strconv.Atoi(sWeight)
+		if err != nil {
+			cfg.tcWeights = []int{}
+			fmt.Printf("Default weight will be used. (Failed to parse weights: %v: %s)\n", err, sWeight)
+			break
+		}
+		cfg.tcWeights = append(cfg.tcWeights, iWeight)
+	}
+	if len(cfg.tcWeights) != 0 && len(cfg.tcWeights) != len(cfg.tcNameList) {
+		cfg.tcWeights = []int{}
+		fmt.Println("The length of --weights must match --tc.")
+	}
 	if len(cfg.tcNameList) == 0 {
 		log.Fatal("No valid Tc is set. Please set valid TcList. \n Input tcList was '" + tcNames + "'")
 	}
@@ -109,6 +125,7 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 	fmt.Printf("- coinbasePrivatekey = %v\n", cfg.richWalletPrivateKey)
 	fmt.Printf("- charging KLAY Amount = %v\n", cfg.chargeKLAYAmount)
 	fmt.Printf("- tc = %v\n", cfg.tcNameList)
+	fmt.Printf("- weights = %v\n", cfg.tcWeights)
 }
 
 func (cfg *Config) setConfigsFromNode() {
@@ -157,24 +174,16 @@ func (cfg *Config) setConfigsFromNode() {
 	//}
 }
 
-func (cfg *Config) GetBoomerTasksList() []*boomer.Task {
-	var tasks []*boomer.Task
-	for _, name := range cfg.tcNameList {
-		// skip unknown tc
-		if _, ok := testcase.TcList[name]; !ok {
-			continue
-		}
-		// add known tc
-		extendedTask := testcase.TcList[name]
-		tasks = append(tasks, &boomer.Task{Weight: extendedTask.Weight, Fn: extendedTask.Fn, Name: extendedTask.Name})
-	}
-	return tasks
-}
-
-func (cfg *Config) GetExtendedTasksList() []*testcase.ExtendedTask {
+func (cfg *Config) GetExtendedTasks() []*testcase.ExtendedTask {
 	var tasks []*testcase.ExtendedTask
-	for _, name := range cfg.tcNameList {
-		tasks = append(tasks, testcase.TcList[name])
+	for i, name := range cfg.tcNameList {
+		if task := testcase.TcList[name]; task != nil { // if unknown, skip.
+			var weight int = task.Weight
+			if len(cfg.tcWeights) > i {
+				weight = cfg.tcWeights[i]
+			}
+			tasks = append(tasks, &testcase.ExtendedTask{Name: task.Name, Weight: weight, Fn: task.Fn, Init: task.Init})
+		}
 	}
 	return tasks
 }
@@ -216,6 +225,7 @@ var Flags = []cli.Flag{
 	cli.IntFlag{Name: "maxidleconns", Value: 100, Usage: "maximum number of idle connections in default http client"},
 	cli.StringFlag{Name: "key", Usage: "private key of rich account for kaia charging of test accounts"},
 	cli.StringFlag{Name: "tc", Value: "", Usage: "tasks which user want to run, multiple tasks are separated by comma."},
+	cli.StringFlag{Name: "weights", Value: "", Usage: "weights which user want to run, multiple weights are separated by comma."},
 }
 
 var BoomerFlags = []cli.Flag{

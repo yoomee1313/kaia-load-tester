@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -353,7 +354,7 @@ func (self *Account) TransferSignedTxWithGuaranteeRetry(c *client.Client, to *Ac
 		//numChargedAcc, lastFailedNum = estimateRemainingTime(accGrp, numChargedAcc, lastFailedNum)
 	}
 
-	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancelFn := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelFn()
 
 	receipt, err := bind.WaitMined(ctx, c, lastTx)
@@ -1807,6 +1808,76 @@ func (self *Account) TransferNewLegacyTxWithEth(c *client.Client, endpoint strin
 	return common.HexToHash(strResult), gasPrice, nil
 }
 
+// This function is responsible for sending both Gasless Approve Transactions and Gasless Swap Transactions.
+func (self *Account) TransferNewGaslessTx(c *client.Client, endpoint string, testToken, gsr *Account) (common.Hash, common.Hash, *big.Int, error) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+
+	nonce := self.GetNonce(c)
+
+	ctx := context.Background()
+	suggestedGasPrice, err := c.SuggestGasPrice(ctx)
+	if err != nil {
+		fmt.Printf("Failed to fetch suggest gas price: %v\n", err.Error())
+		return common.Hash{0}, common.Hash{0}, gasPrice, err
+	}
+
+	approveTx := types.NewTransaction(
+		nonce,
+		testToken.address,
+		common.Big0,
+		100000,
+		suggestedGasPrice,
+		TestContractInfos[ContractGaslessToken].GenData(gsr.GetAddress(), abi.MaxUint256)) // Approve maximum amount
+	signApproveTx, err := types.SignTx(approveTx, types.NewEIP155Signer(chainID), self.privateKey[0])
+	if err != nil {
+		log.Fatalf("Failed to encode approve tx: %v", err)
+	}
+
+	swapTx := types.NewTransaction(
+		nonce+1,
+		gsr.address,
+		common.Big0,
+		500000,
+		suggestedGasPrice,
+		TestContractInfos[ContractGaslessSwapRouter].GenData(testToken.GetAddress(), suggestedGasPrice))
+	signSwapTx, err := types.SignTx(swapTx, types.NewEIP155Signer(chainID), self.privateKey[0])
+	if err != nil {
+		log.Fatalf("Failed to encode swap tx: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
+	_, err = c.SendRawTransaction(ctx, signApproveTx)
+	if err != nil {
+		if err.Error() == blockchain.ErrNonceTooLow.Error() || err.Error() == blockchain.ErrReplaceUnderpriced.Error() {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
+			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
+			self.nonce++
+		} else {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
+		}
+		return approveTx.Hash(), swapTx.Hash(), suggestedGasPrice, err
+	}
+
+	_, err = c.SendRawTransaction(ctx, signSwapTx)
+	if err != nil {
+		if err.Error() == blockchain.ErrNonceTooLow.Error() || err.Error() == blockchain.ErrReplaceUnderpriced.Error() {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
+			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
+			self.nonce++
+		} else {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
+		}
+		return approveTx.Hash(), swapTx.Hash(), suggestedGasPrice, err
+	}
+
+	self.nonce += 2
+
+	return approveTx.Hash(), swapTx.Hash(), suggestedGasPrice, nil
+}
+
 func (self *Account) TransferNewEthAccessListTxWithEth(c *client.Client, endpoint string, to *Account, value *big.Int, input string, exePath string) (common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
@@ -1985,7 +2056,7 @@ func (a *Account) SmartContractExecutionWithGuaranteeRetry(gCli *client.Client, 
 	)
 
 	for {
-		lastTx, _, err = TestContractInfos[ContractErc20].deployer.TransferNewSmartContractExecutionTx(gCli, to, nil, data)
+		lastTx, _, err = a.TransferNewSmartContractExecutionTx(gCli, to, nil, data)
 		if err == nil {
 			break
 		}
@@ -2011,4 +2082,19 @@ func (a *Account) CheckBalance(expectedBalance *big.Int, cli *client.Client) err
 	}
 
 	return nil
+}
+
+func ConcurrentTransactionSend(accs []*Account, transactionSend func(*Account)) {
+	ch := make(chan int, runtime.NumCPU()*10)
+	wg := sync.WaitGroup{}
+	for _, acc := range accs {
+		ch <- 1
+		wg.Add(1)
+		go func() {
+			transactionSend(acc)
+			<-ch
+			wg.Done()
+		}()
+	}
+	wg.Wait()
 }

@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"github.com/kaiachain/kaia/client"
+	"github.com/kaiachain/kaia/common"
 )
 
 // AccList defines the enum for accList
@@ -26,6 +27,8 @@ const (
 	ContractErc721
 	ContractStorageTrie
 	ContractGeneral
+	ContractGaslessToken
+	ContractGaslessSwapRouter
 	ContractEnd
 )
 
@@ -113,7 +116,7 @@ func (a *AccGroup) GetValidAccGrp() []*Account {
 	return accGrp
 }
 
-func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account, gCli *client.Client, chargeValue *big.Int) {
+func (a *AccGroup) DeployTestContracts(tcList []string, globalReservoir, localReservoir *Account, gCli *client.Client, chargeValue *big.Int, skipDeploys map[TestContract]common.Address) {
 	inTheTcList := func(testNames []string) bool {
 		for _, tcName := range tcList {
 			for _, target := range testNames {
@@ -130,19 +133,32 @@ func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account,
 		if testContractType != ContractGeneral && !inTheTcList(info.testNames) {
 			continue
 		}
-		localReservoir.TransferSignedTxWithGuaranteeRetry(gCli, info.deployer, chargeValue)
-		a.contracts[idx] = info.deployer.SmartContractDeployWithGuaranteeRetry(gCli, info.Bytecode, info.contractName)
+
+		if address, skip := skipDeploys[testContractType]; skip {
+			a.contracts[idx] = NewKaiaAccountWithAddr(0, address)
+		} else {
+			localReservoir.TransferSignedTxWithGuaranteeRetry(gCli, info.deployer, chargeValue)
+			a.contracts[idx] = info.deployer.SmartContractDeployWithGuaranteeRetry(gCli, info.Bytecode, info.contractName)
+		}
 
 		// additional work - erc20 token charging or erc721 minting
 		if TestContract(idx) == ContractErc20 {
 			log.Printf("Start erc20 token charging to the test account group")
 			TestContractInfos[ContractErc20].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], TestContractInfos[ContractErc20].GenData(localReservoir.address, big.NewInt(1e11)))
-			for _, recipientAccount := range a.GetValidAccGrp() {
-				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], TestContractInfos[ContractErc20].GenData(recipientAccount.address, big.NewInt(1e4)))
-			}
+			ConcurrentTransactionSend(a.GetValidAccGrp(), func(acc *Account) {
+				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], TestContractInfos[ContractErc20].GenData(acc.address, big.NewInt(1e4)))
+			})
 		} else if TestContract(idx) == ContractErc721 {
 			log.Printf("Start erc721 nft minting to the test account group(similar to erc20 token charging)")
 			localReservoir.MintERC721ToTestAccounts(gCli, a.GetValidAccGrp(), a.GetTestContractByName(ContractErc721).GetAddress(), 5)
+		} else if TestContract(idx) == ContractGaslessToken {
+			log.Printf("Start gasless test token charging to the test account group")
+			totalChargeValue := new(big.Int).Mul(chargeValue, big.NewInt(int64(len(a.GetValidAccGrp()))))
+			// ContractGaslessToken's GenData generate data of approve. So can use ERC20's genData for transfer.
+			globalReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], TestContractInfos[ContractErc20].GenData(localReservoir.address, totalChargeValue))
+			ConcurrentTransactionSend(a.GetValidAccGrp(), func(acc *Account) {
+				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], TestContractInfos[ContractErc20].GenData(acc.address, chargeValue))
+			})
 		}
 	}
 }

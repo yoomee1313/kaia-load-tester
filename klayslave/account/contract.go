@@ -22,6 +22,8 @@ import (
 // (2) ERC721 value transfer
 // (3) storage trie write performance test
 // (4) other general contract calls
+// (5) TestToken approve
+// (6) Gasless Swap Router swap
 // TODO-kaia-load-tester: register GenData at TcList extendedTask or find other way to register it.
 var TestContractInfos = []struct {
 	testNames    []string
@@ -78,6 +80,57 @@ var TestContractInfos = []struct {
 			if err != nil {
 				log.Fatalf("failed to abi.Pack: %v", err)
 			}
+			return data
+		},
+	},
+	{
+		[]string{"gaslessTransactionTC", "gaslessRevertTransactionTC"},
+		[]byte{},
+		&Account{},
+		"ERC20 Test Token for gasless swap",
+		func(gsrAddress common.Address, approveAmount *big.Int) []byte {
+			abiStr := `[{"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"}]`
+			abii, err := abi.JSON(strings.NewReader(abiStr))
+			if err != nil {
+				log.Fatalf("failed to parse ABI: %v", err)
+			}
+
+			data, err := abii.Pack("approve", gsrAddress, approveAmount)
+			if err != nil {
+				log.Fatalf("failed to pack approve data: %v", err)
+			}
+			return data
+		},
+	},
+	{
+		[]string{"gaslessTransactionTC", "gaslessRevertTransactionTC"},
+		[]byte{},
+		&Account{},
+		"Gasless Swap Router for testing GA",
+		func(testTokenAddress common.Address, suggestedGasPrice *big.Int) []byte {
+			abiStr := `[{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"minAmountOut","type":"uint256"},{"internalType":"uint256","name":"amountRepay","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapForGas","outputs":[],"stateMutability":"nonpayable","type":"function"}]`
+			abii, err := abi.JSON(strings.NewReader(abiStr))
+			if err != nil {
+				log.Fatalf("failed to parse ABI: %v", err)
+			}
+
+			var (
+				R1          = new(big.Int).Mul(big.NewInt(21000), suggestedGasPrice)
+				R2          = new(big.Int).Mul(big.NewInt(100000), suggestedGasPrice)
+				R3          = new(big.Int).Mul(big.NewInt(500000), suggestedGasPrice)
+				amountRepay = new(big.Int).Add(R1, new(big.Int).Add(R2, R3)) // Amount to repay
+			)
+
+			// Set parameters for swap
+			amountIn := new(big.Int).Mul(amountRepay, big.NewInt(10))    // There must be enough input to output amountRepay.
+			minAmountOut := amountRepay                                  // Since nothing will be done after the swap, the amountRepay is sufficient.
+			deadline := big.NewInt(time.Now().Add(1 * time.Hour).Unix()) // Deadline 1 hour from now
+
+			data, err := abii.Pack("swapForGas", testTokenAddress, amountIn, minAmountOut, amountRepay, deadline)
+			if err != nil {
+				log.Fatalf("failed to pack swap data: %v", err)
+			}
+
 			return data
 		},
 	},

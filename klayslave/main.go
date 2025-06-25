@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sync"
 
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/klayslave/config"
@@ -99,10 +98,10 @@ func setSmartContractAddressPerPackage(cfg *config.Config, a *account.AccGroup) 
 	newEthereumAccessListTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
 	newEthereumDynamicFeeTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
 
-	gaslessTransactionTC.TestTokenAccount = account.NewKaiaAccountWithAddr(0, common.HexToAddress(cfg.GetTestTokenAddress()))
-	gaslessTransactionTC.GsrAccount = account.NewKaiaAccountWithAddr(0, common.HexToAddress(cfg.GetGsrAddress()))
-	gaslessRevertTransactionTC.TestTokenAccount = account.NewKaiaAccountWithAddr(0, common.HexToAddress(cfg.GetTestTokenAddress()))
-	gaslessRevertTransactionTC.GsrAccount = account.NewKaiaAccountWithAddr(0, common.HexToAddress(cfg.GetGsrAddress()))
+	gaslessTransactionTC.TestTokenAccount = a.GetTestContractByName(account.ContractGaslessToken)
+	gaslessTransactionTC.GsrAccount = a.GetTestContractByName(account.ContractGaslessSwapRouter)
+	gaslessRevertTransactionTC.TestTokenAccount = a.GetTestContractByName(account.ContractGaslessToken)
+	gaslessRevertTransactionTC.GsrAccount = a.GetTestContractByName(account.ContractGaslessSwapRouter)
 }
 
 // createTestAccGroupsAndPrepareContracts do every init steps before task.Init
@@ -130,21 +129,9 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	// 3. charge KAIA
 	log.Printf("Start charging KLAY to test accounts")
 	accs := accGrp.GetValidAccGrp()
-	ch := make(chan int, runtime.NumCPU()*10)
-	wg := sync.WaitGroup{}
-	for _, acc := range accs {
-		ch <- 1
-		wg.Add(1)
-		go func() {
-			localReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue())
-			if cfg.InTheTcList("gaslessTransactionTC") {
-				globalReservoirAccount.TransferTestTokenSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue(), common.HexToAddress(cfg.GetTestTokenAddress()))
-			}
-			<-ch
-			wg.Done()
-		}()
-	}
-	wg.Wait()
+	account.ConcurrentTransactionSend(accs, func(acc *account.Account) {
+		localReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue())
+	})
 	log.Printf("Finished charging KLAY to %d test account(s)\n", len(accs))
 
 	// Wait, charge KAIA happen in 100% of all created test accounts
@@ -152,7 +139,12 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	accGrp.SetAccGrpByActivePercent(cfg.GetActiveUserPercent())
 
 	// 4. Deploy the test contracts which will be used in various TCs. If needed, charge tokens to test accounts.
-	accGrp.DeployTestContracts(cfg.GetTcStrList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue())
+	// Register the addresses of Contracts that will not be deployed with DeployTestContracts.
+	skipDeploys := map[account.TestContract]common.Address{
+		account.ContractGaslessToken:      common.HexToAddress(cfg.GetTestTokenAddress()),
+		account.ContractGaslessSwapRouter: common.HexToAddress(cfg.GetGsrAddress()),
+	}
+	accGrp.DeployTestContracts(cfg.GetTcStrList(), globalReservoirAccount, localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), skipDeploys)
 
 	// Set SmartContractAddress value in each packages if needed
 	setSmartContractAddressPerPackage(cfg, accGrp)

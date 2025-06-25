@@ -105,14 +105,14 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 		iWeight, err := strconv.Atoi(sWeight)
 		if err != nil {
 			cfg.tcWeights = []int{}
-			fmt.Printf("Default weight will be used. (Failed to parse weights: %s)\n", err)
+			fmt.Printf("Default weight will be used. (Failed to parse weights: %v: %s)\n", err, sWeight)
 			break
 		}
 		cfg.tcWeights = append(cfg.tcWeights, iWeight)
 	}
 	if len(cfg.tcWeights) != 0 && len(cfg.tcWeights) != len(cfg.tcNameList) {
 		cfg.tcWeights = []int{}
-		log.Fatal("The length of tcWeights must match tcNameList.")
+		fmt.Println("The length of --weights must match --tc.")
 	}
 	if len(cfg.tcNameList) == 0 {
 		log.Fatal("No valid Tc is set. Please set valid TcList. \n Input tcList was '" + tcNames + "'")

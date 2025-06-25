@@ -84,7 +84,7 @@ func RunAction(ctx *cli.Context) {
 }
 
 // TODO-kaia-load-tester: remove global variables in the tc packages
-func setSmartContractAddressPerPackage(cfg *config.Config, a *account.AccGroup) {
+func setSmartContractAddressPerPackage(a *account.AccGroup) {
 	erc20TransferTC.SmartContractAccount = a.GetTestContractByName(account.ContractErc20)
 	erc721TransferTC.SmartContractAccount = a.GetTestContractByName(account.ContractErc721)
 	storageTrieWriteTC.SmartContractAccount = a.GetTestContractByName(account.ContractStorageTrie)
@@ -147,7 +147,7 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	accGrp.DeployTestContracts(cfg.GetTcStrList(), globalReservoirAccount, localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), skipDeploys)
 
 	// Set SmartContractAddress value in each packages if needed
-	setSmartContractAddressPerPackage(cfg, accGrp)
+	setSmartContractAddressPerPackage(accGrp)
 	return localReservoirAccount
 }
 

@@ -75,7 +75,11 @@ func main() {
 func RunAction(ctx *cli.Context) {
 	cfg := config.NewConfig(ctx)
 	accGrp := account.NewAccGroup(cfg.GetChainID(), cfg.GetGasPrice(), cfg.GetBaseFee(), cfg.InTheTcList("transferUnsignedTx"))
-	accGrp.CreateAccountsPerAccGrp(cfg.GetNUserForSigned(), cfg.GetNUserForUnsigned(), cfg.GetNUserForNewAccounts(), cfg.GetTcStrList(), cfg.GetGEndpoint())
+	var nUserForGaslessRevertTx int = 0
+	if cfg.InTheTcList("gaslessRevertTransactionTC") {
+		nUserForGaslessRevertTx = cfg.GetNUserForSigned() // same as nUserForSignedTx
+	}
+	accGrp.CreateAccountsPerAccGrp(cfg.GetNUserForSigned(), cfg.GetNUserForUnsigned(), cfg.GetNUserForNewAccounts(), nUserForGaslessRevertTx, cfg.GetTcStrList(), cfg.GetGEndpoint())
 
 	createTestAccGroupsAndPrepareContracts(cfg, accGrp)
 	tasks := cfg.GetExtendedTasks()
@@ -159,6 +163,8 @@ func initializeTasks(cfg *config.Config, accGrp *account.AccGroup, tasks []*test
 		accs := accGrp.GetAccListByName(account.AccListForSignedTx)
 		if extendedTask.Name == "transferUnsignedTx" {
 			accs = accGrp.GetAccListByName(account.AccListForUnsignedTx)
+		} else if extendedTask.Name == "gaslessRevertTransactionTC" {
+			accs = accGrp.GetAccListByName(account.AccListForGaslessRevertTx)
 		}
 		extendedTask.Init(accs, cfg.GetGEndpoint(), cfg.GetGasPrice())
 		println("=> " + extendedTask.Name + " extendedTask is initialized.")

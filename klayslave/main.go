@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -121,7 +122,8 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 
 	// 2. charge local reservoir
 	_ = globalReservoirAccount.GetNonce(cfg.GetGCli())
-	tx := globalReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), localReservoirAccount, cfg.GetTotalChargeValue())
+	revertGroupChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForGaslessRevertTx)))))
+	tx := globalReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), localReservoirAccount, new(big.Int).Add(cfg.GetTotalChargeValue(), revertGroupChargeValue))
 	receipt, err := bind.WaitMined(context.Background(), cfg.GetGCli(), tx)
 	if err != nil {
 		log.Fatalf("receipt failed, err:%v", err.Error())
@@ -133,6 +135,7 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	// 3. charge KAIA
 	log.Printf("Start charging KLAY to test accounts")
 	accs := accGrp.GetValidAccGrp()
+	accs = append(accs, accGrp.GetAccListByName(account.AccListForGaslessRevertTx)...) // for avoid validation
 	account.ConcurrentTransactionSend(accs, func(acc *account.Account) {
 		localReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue())
 	})

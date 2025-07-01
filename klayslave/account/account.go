@@ -1878,6 +1878,50 @@ func (self *Account) TransferNewGaslessTx(c *client.Client, endpoint string, tes
 	return approveTx.Hash(), swapTx.Hash(), suggestedGasPrice, nil
 }
 
+// This function is responsible for sending only Gasless Approve Transactions.
+// This function won't increase nonce.
+func (self *Account) TransferNewGaslessApproveTx(c *client.Client, endpoint string, testToken, gsr *Account) (common.Hash, *big.Int, error) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+
+	nonce := self.GetNonce(c)
+
+	ctx := context.Background()
+	suggestedGasPrice, err := c.SuggestGasPrice(ctx)
+	if err != nil {
+		fmt.Printf("Failed to fetch suggest gas price: %v\n", err.Error())
+		return common.Hash{0}, gasPrice, err
+	}
+
+	approveTx := types.NewTransaction(
+		nonce,
+		testToken.address,
+		common.Big0,
+		100000,
+		suggestedGasPrice,
+		TestContractInfos[ContractGaslessToken].GenData(gsr.GetAddress(), abi.MaxUint256)) // Approve maximum amount
+	signApproveTx, err := types.SignTx(approveTx, types.NewEIP155Signer(chainID), self.privateKey[0])
+	if err != nil {
+		log.Fatalf("Failed to encode approve tx: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
+	_, err = c.SendRawTransaction(ctx, signApproveTx)
+	if err != nil {
+		if err.Error() == blockchain.ErrNonceTooLow.Error() || err.Error() == blockchain.ErrReplaceUnderpriced.Error() {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
+			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
+		} else {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
+		}
+		return approveTx.Hash(), suggestedGasPrice, err
+	}
+
+	return approveTx.Hash(), suggestedGasPrice, nil
+}
+
 func (self *Account) TransferNewEthAccessListTxWithEth(c *client.Client, endpoint string, to *Account, value *big.Int, input string, exePath string) (common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()

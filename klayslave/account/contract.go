@@ -84,7 +84,7 @@ var TestContractInfos = []struct {
 		},
 	},
 	{
-		[]string{"gaslessTransactionTC", "gaslessRevertTransactionTC"},
+		[]string{"gaslessTransactionTC", "gaslessRevertTransactionTC", "gaslessOnlyApproveTC"},
 		[]byte{},
 		&Account{},
 		"ERC20 Test Token for gasless swap",
@@ -103,7 +103,7 @@ var TestContractInfos = []struct {
 		},
 	},
 	{
-		[]string{"gaslessTransactionTC", "gaslessRevertTransactionTC"},
+		[]string{"gaslessTransactionTC", "gaslessRevertTransactionTC", "gaslessOnlyApproveTC"},
 		[]byte{},
 		&Account{},
 		"Gasless Swap Router for testing GA",

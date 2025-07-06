@@ -145,7 +145,7 @@ func initializeTasks(cfg *config.Config, accGrp *account.AccGroup) {
 		if extendedTask.Name == "transferUnsignedTx" {
 			accs = accGrp.GetAccListByName(account.AccListForUnsignedTx)
 		}
-		extendedTask.Init(accs, cfg.GetGEndpoint(), cfg.GetGasPrice())
+		extendedTask.Config = extendedTask.Init(accs, cfg.GetGEndpoint(), cfg.GetGasPrice())
 		println("=> " + extendedTask.Name + " extendedTask is initialized.")
 	}
 }

@@ -4,461 +4,407 @@ import (
 	"math/big"
 
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
-	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/analyticTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/doNothingTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/ioHeavyTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/smallBankTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/ycsbTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/cpuHeavyTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/erc20TransferTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/erc721TransferTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxDynamicFeeTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxLegacyTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/internalTxTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/largeMemoTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newAccountCreationTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newAccountUpdateTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newCancelTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumAccessListTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumDynamicFeeTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedAccountUpdateTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedAccountUpdateWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedCancelTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedCancelWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractDeployTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractDeployWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractExecutionTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractExecutionWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedValueTransferMemoTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedValueTransferMemoWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedValueTransferTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedValueTransferWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newSmartContractDeployTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newSmartContractExecutionTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newValueTransferLargeMemoTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newValueTransferMemoTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newValueTransferSmallMemoTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newValueTransferTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newValueTransferWithCancelTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/readApiCallContractTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/readApiCallTC"
-	receiptCheckTc "github.com/kaiachain/kaia-load-tester/testcase/receiptCheckTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/storageTrieWriteTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/transferSignedTc"
-	"github.com/kaiachain/kaia-load-tester/testcase/transferSignedWithCheckTc"
-	"github.com/kaiachain/kaia-load-tester/testcase/transferUnsignedTc"
-	"github.com/kaiachain/kaia-load-tester/testcase/userStorageTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/tcutil"
 )
 
 type ExtendedTask struct {
 	Name   string
 	Weight int
-	Fn     func()
-	Init   func(accs []*account.Account, endpoint string, gp *big.Int)
+	Init   func(accs []*account.Account, endpoint string, gp *big.Int) *tcutil.TcConfig
+	Run    func(config *tcutil.TcConfig)
+	Config *tcutil.TcConfig
 }
-type ExtendedTaskSet []*ExtendedTask
 
-// TcList initializes TCs and returns a slice of TCs.
+// TcList holds all available test operations in EVM-style
 var TcList = map[string]*ExtendedTask{
-	"analyticTx": {
-		Name:   "analyticTx",
-		Weight: 10,
-		Fn:     analyticTC.Run,
-		Init:   analyticTC.Init,
-	},
 	"analyticQueryLargestAccBalTx": {
 		Name:   "analyticQueryLargestAccBalTx",
 		Weight: 10,
-		Fn:     analyticTC.QueryLargestAccBal,
-		Init:   analyticTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    queryLargestAccBalRun,
 	},
 	"analyticQueryLargestTxValTx": {
 		Name:   "analyticQueryLargestTxValTx",
 		Weight: 10,
-		Fn:     analyticTC.QueryLargestTxVal,
-		Init:   analyticTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    queryLargestTxValRun,
 	},
 	"analyticQueryTotalTxValTx": {
 		Name:   "analyticQueryTotalTxValTx",
 		Weight: 10,
-		Fn:     analyticTC.QueryTotalTxVal,
-		Init:   analyticTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    queryTotalTxValRun,
 	},
 	"cpuHeavyTx": {
 		Name:   "cpuHeavyTx",
 		Weight: 10,
-		Fn:     cpuHeavyTC.Run,
-		Init:   cpuHeavyTC.Init,
-		//AccGrp:  accGrpForSignedTx, //[nUserForSigned/2:],
-		//EndPint: gEndpoint,
+		Init:   cpuHeavyInit,
+		Run:    cpuHeavyRun,
 	},
 	"doNothingTx": {
 		Name:   "doNothingTx",
 		Weight: 10,
-		Fn:     doNothingTC.Run,
-		Init:   doNothingTC.Init,
+		Init:   doNothingInit,
+		Run:    doNothingRun,
 	},
-	internalTxTC.Name: {
-		Name:   internalTxTC.Name,
+	"internalTxTC": {
+		Name:   "internalTxTC",
 		Weight: 10,
-		Fn:     internalTxTC.Run,
-		Init:   internalTxTC.Init,
+		Init:   internalTxInit,
+		Run:    internalTxRun,
 	},
-	internalTxTC.NameMintNFT: &ExtendedTask{
-		Name:   internalTxTC.NameMintNFT,
+	"internalTxMintNFTTC": {
+		Name:   "internalTxMintNFTTC",
 		Weight: 10,
-		Fn:     internalTxTC.RunMintNFT,
-		Init:   internalTxTC.Init,
+		Init:   internalTxInit,
+		Run:    internalTxMintNFTRun,
 	},
 	"ioHeavyTx": {
 		Name:   "ioHeavyTx",
 		Weight: 10,
-		Fn:     ioHeavyTC.Run,
-		Init:   ioHeavyTC.Init,
+		Init:   ioHeavyInit,
+		Run:    ioHeavyRun,
 	},
 	"ioHeavyScanTx": {
 		Name:   "ioHeavyScanTx",
 		Weight: 10,
-		Fn:     ioHeavyTC.Scan,
-		Init:   ioHeavyTC.Init,
+		Init:   ioHeavyInit,
+		Run:    ioHeavyScanRun,
 	},
 	"ioHeavyWriteTx": {
 		Name:   "ioHeavyWriteTx",
 		Weight: 10,
-		Fn:     ioHeavyTC.Write,
-		Init:   ioHeavyTC.Init,
+		Init:   ioHeavyInit,
+		Run:    ioHeavyWriteRun,
 	},
 	"largeMemoTC": {
 		Name:   "largeMemoTC",
 		Weight: 10,
-		Fn:     largeMemoTC.Run,
-		Init:   largeMemoTC.Init,
+		Init:   largeMemoInit,
+		Run:    largeMemoRun,
 	},
-	receiptCheckTc.Name: {
-		Name:   receiptCheckTc.Name,
+	"receiptCheckTC": {
+		Name:   "receiptCheckTC",
 		Weight: 10,
-		Fn:     receiptCheckTc.Run,
-		Init:   receiptCheckTc.Init,
+		Init:   receiptCheckInit,
+		Run:    receiptCheckRun,
 	},
 	"smallBankTx": {
 		Name:   "smallBankTx",
 		Weight: 10,
-		Fn:     smallBankTC.Run,
-		Init:   smallBankTC.Init,
+		Init:   smallBankInit,
+		Run:    smallBankRun,
 	},
 	"smallBankAlmagateTx": {
 		Name:   "smallBankAlmagateTx",
 		Weight: 10,
-		Fn:     smallBankTC.Almagate,
-		Init:   smallBankTC.Init,
+		Init:   smallBankInit,
+		Run:    smallBankAlmagateRun,
 	},
 	"smallBankGetBalanceTx": {
 		Name:   "smallBankGetBalanceTx",
 		Weight: 10,
-		Fn:     smallBankTC.GetBalance,
-		Init:   smallBankTC.Init,
+		Init:   smallBankInit,
+		Run:    smallBankGetBalanceRun,
 	},
 	"smallBankSendPaymentTx": {
 		Name:   "smallBankSendPaymentTx",
 		Weight: 10,
-		Fn:     smallBankTC.SendPayment,
-		Init:   smallBankTC.Init,
+		Init:   smallBankInit,
+		Run:    smallBankUpdateBalanceRun,
 	},
 	"smallBankUpdateBalanceTx": {
 		Name:   "smallBankUpdateBalanceTx",
 		Weight: 10,
-		Fn:     smallBankTC.UpdateBalance,
-		Init:   smallBankTC.Init,
+		Init:   smallBankInit,
+		Run:    smallBankUpdateSavingRun,
 	},
 	"smallBankUpdateSavingTx": {
 		Name:   "smallBankUpdateSavingTx",
 		Weight: 10,
-		Fn:     smallBankTC.UpdateSaving,
-		Init:   smallBankTC.Init,
+		Init:   smallBankInit,
+		Run:    smallBankSendPaymentRun,
 	},
 	"smallBankWriteCheckTx": {
 		Name:   "smallBankWriteCheckTx",
 		Weight: 10,
-		Fn:     smallBankTC.WriteCheck,
-		Init:   smallBankTC.Init,
+		Init:   smallBankInit,
+		Run:    smallBankWriteCheckRun,
 	},
 	"transferSignedTx": {
 		Name:   "transferSignedTx",
 		Weight: 10,
-		Fn:     transferSignedTc.Run,
-		Init:   transferSignedTc.Init,
-		//AccGrp:  accGrpForSignedTx, //[:nUserForSigned/2-1],
-		//EndPint: gEndpoint,
+		Init:   tcutil.InitTcConfig,
+		Run:    transferSignedRun,
 	},
 	"newValueTransferTC": {
 		Name:   "newValueTransferTC",
 		Weight: 10,
-		Fn:     newValueTransferTC.Run,
-		Init:   newValueTransferTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    valueTransferRun,
 	},
 	"newValueTransferWithCancelTC": {
 		Name:   "newValueTransferWithCancelTC",
 		Weight: 10,
-		Fn:     newValueTransferWithCancelTC.Run,
-		Init:   newValueTransferWithCancelTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newValueTransferWithCancelRun,
 	},
 	"newFeeDelegatedValueTransferTC": {
 		Name:   "newFeeDelegatedValueTransferTC",
 		Weight: 10,
-		Fn:     newFeeDelegatedValueTransferTC.Run,
-		Init:   newFeeDelegatedValueTransferTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newFeeDelegatedValueTransferRun,
 	},
 	"newFeeDelegatedValueTransferWithRatioTC": {
 		Name:   "newFeeDelegatedValueTransferWithRatioTC",
 		Weight: 10,
-		Fn:     newFeeDelegatedValueTransferWithRatioTC.Run,
-		Init:   newFeeDelegatedValueTransferWithRatioTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newFeeDelegatedValueTransferWithRatioRun,
 	},
 	"newValueTransferMemoTC": {
 		Name:   "newValueTransferMemoTC",
 		Weight: 10,
-		Fn:     newValueTransferMemoTC.Run,
-		Init:   newValueTransferMemoTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newValueTransferMemoRun,
 	},
 	"newValueTransferLargeMemoTC": {
 		Name:   "newValueTransferLargeMemoTC",
 		Weight: 10,
-		Fn:     newValueTransferLargeMemoTC.Run,
-		Init:   newValueTransferLargeMemoTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newValueTransferLargeMemoRun,
 	},
 	"newValueTransferSmallMemoTC": {
 		Name:   "newValueTransferSmallMemoTC",
 		Weight: 10,
-		Fn:     newValueTransferSmallMemoTC.Run,
-		Init:   newValueTransferSmallMemoTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newValueTransferSmallMemoRun,
 	},
 	"newFeeDelegatedValueTransferMemoTC": {
 		Name:   "newFeeDelegatedValueTransferMemoTC",
 		Weight: 10,
-		Fn:     newFeeDelegatedValueTransferMemoTC.Run,
-		Init:   newFeeDelegatedValueTransferMemoTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newFeeDelegatedValueTransferMemoRun,
 	},
 	"newFeeDelegatedValueTransferMemoWithRatioTC": {
 		Name:   "newFeeDelegatedValueTransferMemoWithRatioTC",
 		Weight: 10,
-		Fn:     newFeeDelegatedValueTransferMemoWithRatioTC.Run,
-		Init:   newFeeDelegatedValueTransferMemoWithRatioTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newFeeDelegatedValueTransferMemoWithRatioRun,
 	},
 	"newAccountCreationTC": {
 		Name:   "newAccountCreationTC",
 		Weight: 10,
-		Fn:     newAccountCreationTC.Run,
-		Init:   newAccountCreationTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newAccountCreationRun,
 	},
 	"newAccountUpdateTC": {
 		Name:   "newAccountUpdateTC",
 		Weight: 10,
-		Fn:     newAccountUpdateTC.Run,
-		Init:   newAccountUpdateTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newAccountUpdateRun,
 	},
 	"newFeeDelegatedAccountUpdateTC": {
 		Name:   "newFeeDelegatedAccountUpdateTC",
 		Weight: 10,
-		Fn:     newFeeDelegatedAccountUpdateTC.Run,
-		Init:   newFeeDelegatedAccountUpdateTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newFeeDelegatedAccountUpdateRun,
 	},
 	"newFeeDelegatedAccountUpdateWithRatioTC": {
 		Name:   "newFeeDelegatedAccountUpdateWithRatioTC",
 		Weight: 10,
-		Fn:     newFeeDelegatedAccountUpdateWithRatioTC.Run,
-		Init:   newFeeDelegatedAccountUpdateWithRatioTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newFeeDelegatedAccountUpdateWithRatioRun,
 	},
 	"newSmartContractDeployTC": {
 		Name:   "newSmartContractDeployTC",
 		Weight: 10,
-		Fn:     newSmartContractDeployTC.Run,
-		Init:   newSmartContractDeployTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newSmartContractDeployRun,
 	},
 	"newFeeDelegatedSmartContractDeployTC": {
 		Name:   "newFeeDelegatedSmartContractDeployTC",
 		Weight: 10,
-		Fn:     newFeeDelegatedSmartContractDeployTC.Run,
-		Init:   newFeeDelegatedSmartContractDeployTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newFeeDelegatedSmartContractDeployRun,
 	},
 	"newFeeDelegatedSmartContractDeployWithRatioTC": {
 		Name:   "newFeeDelegatedSmartContractDeployWithRatioTC",
 		Weight: 10,
-		Fn:     newFeeDelegatedSmartContractDeployWithRatioTC.Run,
-		Init:   newFeeDelegatedSmartContractDeployWithRatioTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newFeeDelegatedSmartContractDeployWithRatioRun,
 	},
 	"newSmartContractExecutionTC": {
 		Name:   "newSmartContractExecutionTC",
 		Weight: 10,
-		Fn:     newSmartContractExecutionTC.Run,
-		Init:   newSmartContractExecutionTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newSmartContractExecutionRun,
 	},
-	storageTrieWriteTC.Name: {
-		Name:   storageTrieWriteTC.Name,
+	"storageTrieWriteTC": {
+		Name:   "storageTrieWriteTC",
 		Weight: 10,
-		Fn:     storageTrieWriteTC.Run,
-		Init:   storageTrieWriteTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    storageTrieWriteRun,
 	},
 	"newFeeDelegatedSmartContractExecutionTC": {
 		Name:   "newFeeDelegatedSmartContractExecutionTC",
 		Weight: 10,
-		Fn:     newFeeDelegatedSmartContractExecutionTC.Run,
-		Init:   newFeeDelegatedSmartContractExecutionTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newFeeDelegatedSmartContractExecutionRun,
 	},
 	"newFeeDelegatedSmartContractExecutionWithRatioTC": {
 		Name:   "newFeeDelegatedSmartContractExecutionWithRatioTC",
 		Weight: 10,
-		Fn:     newFeeDelegatedSmartContractExecutionWithRatioTC.Run,
-		Init:   newFeeDelegatedSmartContractExecutionWithRatioTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newFeeDelegatedSmartContractExecutionWithRatioRun,
 	},
 	"newCancelTC": {
 		Name:   "newCancelTC",
 		Weight: 10,
-		Fn:     newCancelTC.Run,
-		Init:   newCancelTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newCancelRun,
 	},
 	"newFeeDelegatedCancelTC": {
 		Name:   "newFeeDelegatedCancelTC",
 		Weight: 10,
-		Fn:     newFeeDelegatedCancelTC.Run,
-		Init:   newFeeDelegatedCancelTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newFeeDelegatedCancelRun,
 	},
 	"newFeeDelegatedCancelWithRatioTC": {
 		Name:   "newFeeDelegatedCancelWithRatioTC",
 		Weight: 10,
-		Fn:     newFeeDelegatedCancelWithRatioTC.Run,
-		Init:   newFeeDelegatedCancelWithRatioTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    newFeeDelegatedCancelWithRatioRun,
 	},
 	"transferSignedWithCheckTx": {
 		Name:   "transferSignedWithCheckTx",
 		Weight: 10,
-		Fn:     transferSignedWithCheckTc.Run,
-		Init:   transferSignedWithCheckTc.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    transferSignedWithCheckRun,
 	},
 	"transferUnsignedTx": {
 		Name:   "transferUnsignedTx",
 		Weight: 10,
-		Fn:     transferUnsignedTc.Run,
-		Init:   transferUnsignedTc.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    transferUnsignedRun,
 	},
 	"userStorageSetTx": {
 		Name:   "userStorageSetTx",
 		Weight: 10,
-		Fn:     userStorageTC.RunSet,
-		Init:   userStorageTC.Init,
+		Init:   storageTrieWriteInit,
+		Run:    storageTrieWriteSetRun,
 	},
 	"userStorageSetGetTx": {
 		Name:   "userStorageSetGetTx",
 		Weight: 10,
-		Fn:     userStorageTC.RunSetGet,
-		Init:   userStorageTC.Init,
+		Init:   storageTrieWriteInit,
+		Run:    storageTrieWriteSetGetRun,
 	},
 	"ycsbTx": {
 		Name:   "ycsbTx",
 		Weight: 10,
-		Fn:     ycsbTC.Run,
-		Init:   ycsbTC.Init,
+		Init:   ycsbInit,
+		Run:    ycsbRun,
 	},
 	"ycsbGetTx": {
 		Name:   "ycsbGetTx",
 		Weight: 10,
-		Fn:     ycsbTC.Get,
-		Init:   ycsbTC.Init,
+		Init:   ycsbInit,
+		Run:    ycsbSetRun,
 	},
 	"ycsbSetTx": {
 		Name:   "ycsbSetTx",
 		Weight: 10,
-		Fn:     ycsbTC.Set,
-		Init:   ycsbTC.Init,
+		Init:   ycsbInit,
+		Run:    ycsbGetRun,
 	},
-	erc20TransferTC.Name: {
-		Name:   erc20TransferTC.Name,
+	"erc20TransferTC": {
+		Name:   "erc20TransferTC",
 		Weight: 10,
-		Fn:     erc20TransferTC.Run,
-		Init:   erc20TransferTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    erc20TransferRun,
 	},
-	erc721TransferTC.Name: {
-		Name:   erc721TransferTC.Name,
+	"erc721TransferTC": {
+		Name:   "erc721TransferTC",
 		Weight: 10,
-		Fn:     erc721TransferTC.Run,
-		Init:   erc721TransferTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    erc721TransferRun,
 	},
 	"readGasPrice": {
 		Name:   "readGasPrice",
 		Weight: 10,
-		Fn:     readApiCallTC.GasPrice,
-		Init:   readApiCallTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    readApiCallGasPriceRun,
 	},
 	"readBlockNumber": {
 		Name:   "readBlockNumber",
 		Weight: 10,
-		Fn:     readApiCallTC.BlockNumber,
-		Init:   readApiCallTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    readApiCallBlockNumberRun,
 	},
 	"readGetBlockByNumber": {
 		Name:   "readGetBlockByNumber",
 		Weight: 10,
-		Fn:     readApiCallTC.GetBlockByNumber,
-		Init:   readApiCallTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    readApiCallGetBlockByNumberRun,
 	},
 	"readGetAccount": {
 		Name:   "readGetAccount",
 		Weight: 10,
-		Fn:     readApiCallTC.GetAccount,
-		Init:   readApiCallTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    readApiCallGetAccountRun,
 	},
 	"readGetBlockWithConsensusInfoByNumber": {
 		Name:   "readGetBlockWithConsensusInfoByNumber",
 		Weight: 10,
-		Fn:     readApiCallTC.GetBlockWithConsensusInfoByNumber,
-		Init:   readApiCallTC.Init,
+		Init:   tcutil.InitTcConfig,
+		Run:    readApiCallGetBlockWithConsensusInfoByNumberRun,
 	},
 	"readGetStorageAt": {
 		Name:   "readGetStorageAt",
 		Weight: 10,
-		Fn:     readApiCallContractTC.GetStorageAt,
-		Init:   readApiCallContractTC.Init,
+		Init:   readApiCallContractInit,
+		Run:    readApiCallContractGetStorageAtRun,
 	},
 	"readCall": {
 		Name:   "readCall",
 		Weight: 10,
-		Fn:     readApiCallContractTC.Call,
-		Init:   readApiCallContractTC.Init,
+		Init:   readApiCallContractInit,
+		Run:    readApiCallContractCallRun,
 	},
 	"readEstimateGas": {
 		Name:   "readEstimateGas",
 		Weight: 10,
-		Fn:     readApiCallContractTC.EstimateGas,
-		Init:   readApiCallContractTC.Init,
+		Init:   readApiCallContractInit,
+		Run:    readApiCallContractEstimateGasRun,
 	},
 	"ethereumTxLegacyTC": {
 		Name:   "ethereumTxLegacyTC",
 		Weight: 10,
-		Fn:     ethereumTxLegacyTC.Run,
-		Init:   ethereumTxLegacyTC.Init,
+		Init:   ethereumTxInit,
+		Run:    ethereumTxLegacyRun,
 	},
 	"ethereumTxAccessListTC": {
 		Name:   "ethereumTxAccessListTC",
 		Weight: 10,
-		Fn:     ethereumTxAccessListTC.Run,
-		Init:   ethereumTxAccessListTC.Init,
+		Init:   ethereumTxInit,
+		Run:    ethereumTxAccessListRun,
 	},
 	"ethereumTxDynamicFeeTC": {
 		Name:   "ethereumTxDynamicFeeTC",
 		Weight: 10,
-		Fn:     ethereumTxDynamicFeeTC.Run,
-		Init:   ethereumTxDynamicFeeTC.Init,
+		Init:   ethereumTxInit,
+		Run:    ethereumTxDynamicFeeRun,
 	},
 	"newEthereumAccessListTC": {
 		Name:   "newEthereumAccessListTC",
 		Weight: 10,
-		Fn:     newEthereumAccessListTC.Run,
-		Init:   newEthereumAccessListTC.Init,
+		Init:   ethereumTxInit,
+		Run:    newEthereumAccessListRun,
 	},
 	"newEthereumDynamicFeeTC": {
 		Name:   "newEthereumDynamicFeeTC",
 		Weight: 10,
-		Fn:     newEthereumDynamicFeeTC.Run,
-		Init:   newEthereumDynamicFeeTC.Init,
+		Init:   ethereumTxInit,
+		Run:    newEthereumDynamicFeeRun,
 	},
 }

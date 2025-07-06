@@ -165,8 +165,12 @@ func (cfg *Config) GetBoomerTasksList() []*boomer.Task {
 			continue
 		}
 		// add known tc
-		extendedTask := testcase.TcList[name]
-		tasks = append(tasks, &boomer.Task{Weight: extendedTask.Weight, Fn: extendedTask.Fn, Name: extendedTask.Name})
+		tc := testcase.TcList[name]
+		tasks = append(tasks, &boomer.Task{
+			Weight: tc.Weight,
+			Fn:     func() { tc.Run(tc.Config) },
+			Name:   tc.Name,
+		})
 	}
 	return tasks
 }

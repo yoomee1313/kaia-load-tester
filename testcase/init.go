@@ -25,55 +25,26 @@ import (
 )
 
 func cpuHeavyInit(accs []*account.Account, endpoint string, gp *big.Int) *tcutil.TcConfig {
-	config := tcutil.InitTcConfig(accs, endpoint, gp)
-
-	// deploy heavy cpu contract
-	conn := config.CliPool.Alloc().(*client.Client)
-	defer config.CliPool.Free(conn)
-
-	coinbase := accs[0]
-	auth := bind.NewKeyedTransactor(coinbase.GetKey())
-	auth.GasLimit = 999999
-	auth.GasPrice = config.GasPrice
-	auth.Nonce = big.NewInt(int64(coinbase.GetNonce(conn)))
-
-	var address common.Address
-	var tx *types.Transaction
-	println("Deploying new smart contract")
-
-	for {
-		addr, tTx, cpuHeavy, err := cpuHeavyTC.DeployCpuHeavyTC(auth, conn)
-		address = addr
-		tx = tTx
-		if err != nil {
-			coinbase.UpdateNonce()
-		}
-		config.GCPUHeavy = cpuHeavy
-
-		if err != nil {
-			//log.Printf("Failed to deploy new contract: %v\n", err)
-		} else {
-			break
-		}
-		auth.Nonce = big.NewInt(int64(coinbase.GetNonceFromBlock(conn)))
-		time.Sleep(1 * time.Second) // Avoiding Nonce corruption
+	// Use the new factory function to create the config
+	config := tcutil.NewCpuHeavyTestConfig(accs, endpoint, gp)
+	
+	// For backward compatibility, convert to the old TcConfig type
+	// This will be removed once all test cases are updated to use the new config types
+	oldConfig := &tcutil.TcConfig{
+		EndPoint:  config.GetEndPoint(),
+		NAcc:      config.GetNAcc(),
+		AccGrp:    config.GetAccGrp(),
+		CliPool:   config.GetCliPool(),
+		GasPrice:  config.GetGasPrice(),
+		GCPUHeavy: config.CpuHeavyContract, // Directly access the field
 	}
-	fmt.Printf("=> Contract pending deploy: 0x%x\n", address)
-
-	fmt.Printf("Transaction waiting to be mined: 0x%x\n", tx.Hash())
-	ctx := context.Background()
-	defer ctx.Done()
-	for {
-		time.Sleep(500 * time.Millisecond) // Allow it to be processed by the local node :P
-		receipt, err := conn.TransactionReceipt(ctx, tx.Hash())
-		if err != nil {
-			//fmt.Printf("Failed to check receipt: %v\n", err)
-			continue
-		}
-		fmt.Printf("=> Contract Receipt Status: %v\n", receipt.Status)
-		break
+	
+	// Set the contract address if available
+	if config.CpuHeavyContract != nil {
+		oldConfig.GCPUHeavyAddress = config.CpuHeavyContract.Address()
 	}
-	return config
+	
+	return oldConfig
 }
 
 func largeMemoInit(accs []*account.Account, endpoint string, gp *big.Int) *tcutil.TcConfig {

@@ -3,23 +3,10 @@ package tcutil
 import (
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/klayslave/clipool"
-	"github.com/kaiachain/kaia-load-tester/testcase/contracts/blockbench/IOHeavyTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/contracts/blockbench/doNothingTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/contracts/blockbench/smallBankTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/contracts/blockbench/ycsbTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/contracts/cpuHeavyTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/contracts/largeMemoTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/contracts/readApiCallContractTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/contracts/userStorageTC"
-	"github.com/kaiachain/kaia/accounts/abi/bind"
-	"github.com/kaiachain/kaia/client"
-	"github.com/kaiachain/kaia/common"
-	"log"
 	"math/big"
-	"math/rand"
-	"sync"
 )
 
+// Deprecated: TcConfig is deprecated. Use specific config types from the config package instead.
 // TcConfig holds the common configuration for test cases
 type TcConfig struct {
 	EndPoint string
@@ -76,31 +63,24 @@ type TcConfig struct {
 }
 
 // NewTcConfig creates a new TcConfig instance
+// Deprecated: Use specific config initializers from the tcutil package instead
 func NewTcConfig() *TcConfig {
 	return &TcConfig{}
 }
 
 // InitTcConfig initializes a TcConfig with common settings
+// Deprecated: Use InitBaseConfig or specific config initializers instead
 func InitTcConfig(accs []*account.Account, endpoint string, gp *big.Int) *TcConfig {
-	config := NewTcConfig()
-	config.GasPrice = gp
-	config.EndPoint = endpoint
-
-	cliCreate := func() interface{} {
-		c, err := client.Dial(config.EndPoint)
-		if err != nil {
-			log.Fatalf("Failed to connect RPC: %v", err)
-		}
-		return c
+	base := InitBaseConfig(accs, endpoint, gp)
+	
+	// Convert to the old TcConfig for backward compatibility
+	config := &TcConfig{
+		EndPoint: base.EndPoint,
+		NAcc:     base.NAcc,
+		AccGrp:   base.AccGrp,
+		CliPool:  base.CliPool,
+		GasPrice: base.GasPrice,
 	}
-
-	config.CliPool.Init(20, 300, cliCreate)
-
-	for _, acc := range accs {
-		config.AccGrp = append(config.AccGrp, acc)
-	}
-
-	config.NAcc = len(config.AccGrp)
 
 	return config
 }

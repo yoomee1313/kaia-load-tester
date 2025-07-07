@@ -81,6 +81,9 @@ var TestContractInfos = []struct {
 			return data
 		},
 	},
+	{
+		[]
+	}
 }
 
 // This file is dedicated for handling ABI and byte code of ERC721Metadata

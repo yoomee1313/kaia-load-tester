@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -19,6 +20,7 @@ import (
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxDynamicFeeTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxLegacyTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/gaslessOnlyApproveTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/gaslessRevertTransactionTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/gaslessTransactionTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumAccessListTC"
@@ -75,7 +77,14 @@ func main() {
 func RunAction(ctx *cli.Context) {
 	cfg := config.NewConfig(ctx)
 	accGrp := account.NewAccGroup(cfg.GetChainID(), cfg.GetGasPrice(), cfg.GetBaseFee(), cfg.InTheTcList("transferUnsignedTx"))
-	accGrp.CreateAccountsPerAccGrp(cfg.GetNUserForSigned(), cfg.GetNUserForUnsigned(), cfg.GetNUserForNewAccounts(), cfg.GetTcStrList(), cfg.GetGEndpoint())
+	var nUserForGaslessRevertTx, nUserForGaslessApproveTx int = 0, 0
+	if cfg.InTheTcList("gaslessRevertTransactionTC") {
+		nUserForGaslessRevertTx = cfg.GetNUserForSigned() // same as nUserForSignedTx
+	}
+	if cfg.InTheTcList("gaslessOnlyApproveTC") {
+		nUserForGaslessApproveTx = cfg.GetNUserForSigned() // same as nUserForSignedTx
+	}
+	accGrp.CreateAccountsPerAccGrp(cfg.GetNUserForSigned(), cfg.GetNUserForUnsigned(), cfg.GetNUserForNewAccounts(), nUserForGaslessRevertTx, nUserForGaslessApproveTx, cfg.GetTcStrList(), cfg.GetGEndpoint())
 
 	createTestAccGroupsAndPrepareContracts(cfg, accGrp)
 	tasks := cfg.GetExtendedTasks()
@@ -102,6 +111,8 @@ func setSmartContractAddressPerPackage(a *account.AccGroup) {
 	gaslessTransactionTC.GsrAccount = a.GetTestContractByName(account.ContractGaslessSwapRouter)
 	gaslessRevertTransactionTC.TestTokenAccount = a.GetTestContractByName(account.ContractGaslessToken)
 	gaslessRevertTransactionTC.GsrAccount = a.GetTestContractByName(account.ContractGaslessSwapRouter)
+	gaslessOnlyApproveTC.TestTokenAccount = a.GetTestContractByName(account.ContractGaslessToken)
+	gaslessOnlyApproveTC.GsrAccount = a.GetTestContractByName(account.ContractGaslessSwapRouter)
 }
 
 // createTestAccGroupsAndPrepareContracts do every init steps before task.Init
@@ -117,7 +128,9 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 
 	// 2. charge local reservoir
 	_ = globalReservoirAccount.GetNonce(cfg.GetGCli())
-	tx := globalReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), localReservoirAccount, cfg.GetTotalChargeValue())
+	revertGroupChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForGaslessRevertTx)))))
+	approveGroupChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForGaslessApproveTx)))))
+	tx := globalReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), localReservoirAccount, new(big.Int).Add(cfg.GetTotalChargeValue(), new(big.Int).Add(revertGroupChargeValue, approveGroupChargeValue)))
 	receipt, err := bind.WaitMined(context.Background(), cfg.GetGCli(), tx)
 	if err != nil {
 		log.Fatalf("receipt failed, err:%v", err.Error())
@@ -129,6 +142,8 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	// 3. charge KAIA
 	log.Printf("Start charging KLAY to test accounts")
 	accs := accGrp.GetValidAccGrp()
+	accs = append(accs, accGrp.GetAccListByName(account.AccListForGaslessRevertTx)...)  // for avoid validation
+	accs = append(accs, accGrp.GetAccListByName(account.AccListForGaslessApproveTx)...) // for avoid validation
 	account.ConcurrentTransactionSend(accs, func(acc *account.Account) {
 		localReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue())
 	})
@@ -159,6 +174,10 @@ func initializeTasks(cfg *config.Config, accGrp *account.AccGroup, tasks []*test
 		accs := accGrp.GetAccListByName(account.AccListForSignedTx)
 		if extendedTask.Name == "transferUnsignedTx" {
 			accs = accGrp.GetAccListByName(account.AccListForUnsignedTx)
+		} else if extendedTask.Name == "gaslessRevertTransactionTC" {
+			accs = accGrp.GetAccListByName(account.AccListForGaslessRevertTx)
+		} else if extendedTask.Name == "gaslessOnlyApproveTC" {
+			accs = accGrp.GetAccListByName(account.AccListForGaslessApproveTx)
 		}
 		extendedTask.Init(accs, cfg.GetGEndpoint(), cfg.GetGasPrice())
 		println("=> " + extendedTask.Name + " extendedTask is initialized.")

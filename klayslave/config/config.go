@@ -121,7 +121,7 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 	if len(cfg.tcNameList) == 0 {
 		log.Fatal("No valid Tc is set. Please set valid TcList. \n Input tcList was '" + tcNames + "'")
 	}
-	if (cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC")) && (cfg.testTokenAddress == "" || cfg.gsrAddress == "") {
+	if (cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC") || cfg.InTheTcList("gaslessOnlyApproveTC")) && (cfg.testTokenAddress == "" || cfg.gsrAddress == "") {
 		log.Fatal("When executing gaslessTransactionTC, the flags: testTokenAddr and gsrAddr are required. e.g) -testTokenAddr $Address -gsrAddr $Address")
 	}
 

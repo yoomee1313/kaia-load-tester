@@ -16,6 +16,8 @@ const (
 	AccListForSignedTx AccList = iota
 	AccListForUnsignedTx
 	AccListForNewAccounts
+	AccListForGaslessRevertTx
+	AccListForGaslessApproveTx
 	AccListEnd
 )
 
@@ -66,8 +68,8 @@ func (a *AccGroup) SetAccListByName(accs []*Account, t AccList) {
 func (a *AccGroup) AddAccToListByName(acc *Account, t AccList) {
 	a.accLists[t] = append(a.accLists[t], acc)
 }
-func (a *AccGroup) CreateAccountsPerAccGrp(nUserForSignedTx int, nUserForUnsignedTx int, nUserForNewAccounts int, tcStrList []string, gEndpoint string) {
-	for idx, nUser := range []int{nUserForSignedTx, nUserForUnsignedTx, nUserForNewAccounts} {
+func (a *AccGroup) CreateAccountsPerAccGrp(nUserForSignedTx int, nUserForUnsignedTx int, nUserForNewAccounts int, nUserForGaslessRevertTx int, nUserForGaslessApproveTx int, tcStrList []string, gEndpoint string) {
+	for idx, nUser := range []int{nUserForSignedTx, nUserForUnsignedTx, nUserForNewAccounts, nUserForGaslessRevertTx, nUserForGaslessApproveTx} {
 		println(idx, " Account Group Preparation...")
 		for i := 0; i < nUser; i++ {
 			account := NewAccount(i)
@@ -90,14 +92,14 @@ func (a *AccGroup) CreateAccountsPerAccGrp(nUserForSignedTx int, nUserForUnsigne
 }
 
 func (a *AccGroup) SetAccGrpByActivePercent(activeUserPercent int) {
-	for _, accGrp := range a.accLists {
+	for i, accGrp := range a.accLists {
 		numActiveAccGrpForSignedTx := len(accGrp) * activeUserPercent / 100
-		// Not to assign 0 account for some cases.
 		if numActiveAccGrpForSignedTx == 0 {
-			numActiveAccGrpForSignedTx = 1
+			a.accLists[i] = nil
+			continue
 		}
 
-		accGrp = accGrp[:numActiveAccGrpForSignedTx]
+		a.accLists[i] = accGrp[:numActiveAccGrpForSignedTx]
 	}
 }
 
@@ -151,12 +153,18 @@ func (a *AccGroup) DeployTestContracts(tcList []string, globalReservoir, localRe
 		} else if TestContract(idx) == ContractErc721 {
 			log.Printf("Start erc721 nft minting to the test account group(similar to erc20 token charging)")
 			localReservoir.MintERC721ToTestAccounts(gCli, a.GetValidAccGrp(), a.GetTestContractByName(ContractErc721).GetAddress(), 5)
-		} else if TestContract(idx) == ContractGaslessToken {
+		} else if TestContract(idx) == ContractGaslessToken && inTheTcList([]string{"gaslessTransactionTC", "gaslessOnlyApproveTC"}) {
 			log.Printf("Start gasless test token charging to the test account group")
-			totalChargeValue := new(big.Int).Mul(chargeValue, big.NewInt(int64(len(a.GetValidAccGrp()))))
+			lenValidAccGrp := big.NewInt(int64(len(a.GetValidAccGrp())))
+			lenGaslessApproveAccGrp := big.NewInt(int64(len(a.GetAccListByName(AccListForGaslessApproveTx))))
+			totalChargeValue := new(big.Int).Mul(chargeValue, new(big.Int).Add(lenValidAccGrp, lenGaslessApproveAccGrp))
 			// ContractGaslessToken's GenData generate data of approve. So can use ERC20's genData for transfer.
 			globalReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], TestContractInfos[ContractErc20].GenData(localReservoir.address, totalChargeValue))
-			ConcurrentTransactionSend(a.GetValidAccGrp(), func(acc *Account) {
+
+			// accounts(validAccGrp + gaslessApproveAccGrp) should be charged.
+			accounts := a.GetValidAccGrp()
+			accounts = append(accounts, a.GetAccListByName(AccListForGaslessApproveTx)...)
+			ConcurrentTransactionSend(accounts, func(acc *Account) {
 				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], TestContractInfos[ContractErc20].GenData(acc.address, chargeValue))
 			})
 		}

@@ -15,6 +15,7 @@ import (
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxDynamicFeeTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxLegacyTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/gaslessOnlyApproveTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/gaslessRevertTransactionTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/gaslessTransactionTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/internalTxTC"
@@ -444,6 +445,12 @@ var TcList = map[string]*ExtendedTask{
 		Weight: 10,
 		Fn:     gaslessRevertTransactionTC.Run,
 		Init:   gaslessRevertTransactionTC.Init,
+	},
+	"gaslessOnlyApproveTC": {
+		Name:   gaslessOnlyApproveTC.Name,
+		Weight: 10,
+		Fn:     gaslessOnlyApproveTC.Run,
+		Init:   gaslessOnlyApproveTC.Init,
 	},
 	"ethereumTxLegacyTC": {
 		Name:   "ethereumTxLegacyTC",

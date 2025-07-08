@@ -2053,16 +2053,9 @@ func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, 
 		err    error
 		addr   common.Address
 		lastTx *types.Transaction
-
-		contractAddress = NewKaiaAccountWithAddr(1, crypto.CreateAddress(self.GetAddress(), 0))
 	)
 
-	// fast track - if already deployed by other slave, return immediately
 	nonce := self.GetNonce(gCli)
-	if nonce != 0 {
-		fmt.Println("Contract seems to already have been deployed!", "nonce", nonce)
-		return contractAddress
-	}
 
 	for {
 		addr, lastTx, _, err = self.TransferNewSmartContractDeployTx(gCli, nil, common.Big0, byteCode)
@@ -2083,13 +2076,9 @@ func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, 
 		log.Fatalf("tx mined but failed, err=%s, receipt=%s", err, receipt)
 		return nil
 	}
-	if !strings.EqualFold(addr.String(), contractAddress.address.String()) {
-		log.Fatalf("address is wrong, expected=%v,real=%v", contractAddress.address.String(), addr.String())
-		return nil
-	}
 
 	log.Printf("%s has been deployed to : %s\n", contractName, addr.String())
-	return contractAddress
+	return NewKaiaAccountWithAddr(1, crypto.CreateAddress(self.GetAddress(), nonce))
 }
 
 // TODO-kaia-load-tester: unify Retry functions into one function

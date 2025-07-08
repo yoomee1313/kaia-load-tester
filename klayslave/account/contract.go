@@ -165,7 +165,7 @@ var TestContractInfos = []struct {
 			}
 			return append(bin, data...)
 		},
-		IsGSRExist,
+		ShouldDeployRelatedGSR,
 		getGaslessTokenAddress,
 	},
 	{
@@ -177,7 +177,7 @@ var TestContractInfos = []struct {
 		func(bin []byte, _ []*Account, _ *Account) []byte {
 			return bin
 		},
-		IsGSRExist,
+		ShouldDeployRelatedGSR,
 		func(_ *client.Client) common.Address {
 			return common.Address{}
 		},
@@ -199,7 +199,7 @@ var TestContractInfos = []struct {
 			}
 			return append(bin, data...)
 		},
-		IsGSRExist,
+		ShouldDeployRelatedGSR,
 		func(_ *client.Client) common.Address {
 			return common.Address{}
 		},
@@ -221,7 +221,7 @@ var TestContractInfos = []struct {
 			}
 			return append(bin, data...)
 		},
-		IsGSRExist,
+		ShouldDeployRelatedGSR,
 		func(_ *client.Client) common.Address {
 			return common.Address{}
 		},
@@ -268,9 +268,13 @@ var TestContractInfos = []struct {
 			}
 			return append(bin, data...)
 		},
-		IsGSRExist,
+		ShouldDeployRelatedGSR,
 		getGSRAddress,
 	},
+}
+
+func ShouldDeployRelatedGSR(gCli *client.Client) bool {
+	return !IsGSRExist(gCli)
 }
 
 func IsGSRExist(gCli *client.Client) bool {
@@ -323,7 +327,7 @@ func SetupLiquidity(gCli *client.Client, accGrp *AccGroup, globalReservoir *Acco
 		gsrAddr          = accGrp.contracts[ContractGaslessSwapRouter].address
 		ctx              = context.Background()
 		transactOpts     = bind.NewKeyedTransactor(globalReservoir.privateKey[0])
-		initialLiquidity = new(big.Int).Mul(big.NewInt(10000000), big.NewInt(params.KAIA))
+		initialLiquidity = new(big.Int).Mul(big.NewInt(100000), big.NewInt(params.KAIA))
 	)
 
 	testTokenContract, err := testingGaslessContracts.NewTestToken(testTokenAddr, gCli)

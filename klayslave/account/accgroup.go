@@ -138,14 +138,14 @@ func (a *AccGroup) DeployTestContracts(tcList []string, globalReservoir, localRe
 			continue
 		}
 
-		if !info.ShouldDeploy(gCli) {
-			a.contracts[idx] = NewKaiaAccountWithAddr(0, info.GetAddressFromChain(gCli))
-		} else {
+		if info.ShouldDeploy(gCli) {
 			if info.deployer == nil {
 				info.deployer = globalReservoir
 			}
 			localReservoir.TransferSignedTxWithGuaranteeRetry(gCli, info.deployer, chargeValue)
 			a.contracts[idx] = info.deployer.SmartContractDeployWithGuaranteeRetry(gCli, info.GetBytecodeWithConstructorParam(info.Bytecode, a.contracts, info.deployer), info.contractName)
+		} else {
+			a.contracts[idx] = NewKaiaAccountWithAddr(0, info.GetAddressFromChain(gCli))
 		}
 
 		// additional work - erc20 token charging or erc721 minting

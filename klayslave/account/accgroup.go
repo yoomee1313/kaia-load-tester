@@ -6,7 +6,6 @@ import (
 	"math/big"
 
 	"github.com/kaiachain/kaia/client"
-	"github.com/kaiachain/kaia/common"
 )
 
 // AccList defines the enum for accList
@@ -30,6 +29,9 @@ const (
 	ContractStorageTrie
 	ContractGeneral
 	ContractGaslessToken
+	ContractWKaia
+	ContractUniswapV2Factory
+	ContractUniswapV2Router
 	ContractGaslessSwapRouter
 	ContractEnd
 )
@@ -118,7 +120,7 @@ func (a *AccGroup) GetValidAccGrp() []*Account {
 	return accGrp
 }
 
-func (a *AccGroup) DeployTestContracts(tcList []string, globalReservoir, localReservoir *Account, gCli *client.Client, chargeValue *big.Int, skipDeploys map[TestContract]common.Address) {
+func (a *AccGroup) DeployTestContracts(tcList []string, globalReservoir, localReservoir *Account, gCli *client.Client, chargeValue *big.Int) {
 	inTheTcList := func(testNames []string) bool {
 		for _, tcName := range tcList {
 			for _, target := range testNames {
@@ -136,11 +138,14 @@ func (a *AccGroup) DeployTestContracts(tcList []string, globalReservoir, localRe
 			continue
 		}
 
-		if address, skip := skipDeploys[testContractType]; skip {
-			a.contracts[idx] = NewKaiaAccountWithAddr(0, address)
+		if !info.ShouldDeploy(gCli) {
+			a.contracts[idx] = NewKaiaAccountWithAddr(0, info.GetAddressFromChain(gCli))
 		} else {
+			if info.deployer == nil {
+				info.deployer = globalReservoir
+			}
 			localReservoir.TransferSignedTxWithGuaranteeRetry(gCli, info.deployer, chargeValue)
-			a.contracts[idx] = info.deployer.SmartContractDeployWithGuaranteeRetry(gCli, info.Bytecode, info.contractName)
+			a.contracts[idx] = info.deployer.SmartContractDeployWithGuaranteeRetry(gCli, info.GetBytecodeWithConstructorParam(info.Bytecode, a.contracts, info.deployer), info.contractName)
 		}
 
 		// additional work - erc20 token charging or erc721 minting

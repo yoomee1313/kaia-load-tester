@@ -31,7 +31,6 @@ import (
 	"github.com/kaiachain/kaia-load-tester/testcase/storageTrieWriteTC"
 	"github.com/kaiachain/kaia/accounts/abi/bind"
 	"github.com/kaiachain/kaia/api/debug"
-	"github.com/kaiachain/kaia/common"
 	"github.com/kaiachain/kaia/console"
 	"github.com/myzhan/boomer"
 	"github.com/urfave/cli"
@@ -155,11 +154,11 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 
 	// 4. Deploy the test contracts which will be used in various TCs. If needed, charge tokens to test accounts.
 	// Register the addresses of Contracts that will not be deployed with DeployTestContracts.
-	skipDeploys := map[account.TestContract]common.Address{
-		account.ContractGaslessToken:      common.HexToAddress(cfg.GetTestTokenAddress()),
-		account.ContractGaslessSwapRouter: common.HexToAddress(cfg.GetGsrAddress()),
+	accGrp.DeployTestContracts(cfg.GetTcStrList(), globalReservoirAccount, localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue())
+	if !account.IsGSRExist(cfg.GetGCli()) && (cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC")) {
+		account.RegisterGSR(cfg.GetGCli(), accGrp, globalReservoirAccount)
+		account.SetupLiquidity(cfg.GetGCli(), accGrp, globalReservoirAccount)
 	}
-	accGrp.DeployTestContracts(cfg.GetTcStrList(), globalReservoirAccount, localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), skipDeploys)
 
 	// Set SmartContractAddress value in each packages if needed
 	setSmartContractAddressPerPackage(accGrp)

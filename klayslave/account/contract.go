@@ -10,27 +10,44 @@ import (
 	"time"
 
 	"github.com/kaiachain/kaia/accounts/abi"
+	"github.com/kaiachain/kaia/accounts/abi/bind"
 	"github.com/kaiachain/kaia/blockchain"
+	"github.com/kaiachain/kaia/blockchain/system"
 	"github.com/kaiachain/kaia/blockchain/types"
 	"github.com/kaiachain/kaia/client"
 	"github.com/kaiachain/kaia/common"
+	uniswapFactoryContracts "github.com/kaiachain/kaia/contracts/contracts/libs/uniswap/factory"
+	uniswapRouterContracts "github.com/kaiachain/kaia/contracts/contracts/libs/uniswap/router"
+	kip149contract "github.com/kaiachain/kaia/contracts/contracts/system_contracts/kip149"
+	gaslessContract "github.com/kaiachain/kaia/contracts/contracts/system_contracts/kip247"
+	testingContracts "github.com/kaiachain/kaia/contracts/contracts/testing/system_contracts"
+	testingGaslessContracts "github.com/kaiachain/kaia/contracts/contracts/testing/system_contracts/gasless"
+	gaslessImpl "github.com/kaiachain/kaia/kaiax/gasless/impl"
+	"github.com/kaiachain/kaia/params"
 )
 
 // TestContractInfos stores some dedicated and fixed private key used to deploy a smart contracts for TCs.
+// Whether or not to deploy a Gasless-related contract is determined by whether gsr is registered in the registry.
 // GenData is a data which
 // (1) ERC20 value transfer
 // (2) ERC721 value transfer
 // (3) storage trie write performance test
 // (4) other general contract calls
 // (5) TestToken approve
-// (6) Gasless Swap Router swap
+// (6) -
+// (7) -
+// (8) -
+// (9) Gasless Swap Router swap
 // TODO-kaia-load-tester: register GenData at TcList extendedTask or find other way to register it.
 var TestContractInfos = []struct {
-	testNames    []string
-	Bytecode     []byte
-	deployer     *Account
-	contractName string
-	GenData      func(addr common.Address, value *big.Int) []byte
+	testNames                       []string
+	Bytecode                        []byte
+	deployer                        *Account
+	contractName                    string
+	GenData                         func(addr common.Address, value *big.Int) []byte
+	GetBytecodeWithConstructorParam func(bin []byte, contracts []*Account, deployer *Account) []byte
+	ShouldDeploy                    func(gCli *client.Client) bool
+	GetAddressFromChain             func(gCli *client.Client) common.Address
 }{
 	{
 		[]string{"erc20TransferTC"},
@@ -49,6 +66,15 @@ var TestContractInfos = []struct {
 			}
 			return data
 		},
+		func(bin []byte, _ []*Account, _ *Account) []byte {
+			return bin
+		},
+		func(_ *client.Client) bool {
+			return true
+		},
+		func(_ *client.Client) common.Address {
+			return common.Address{}
+		},
 	},
 	{
 		[]string{"erc721TransferTC"},
@@ -56,6 +82,15 @@ var TestContractInfos = []struct {
 		GetAccountFromKey(0, "45c40d95c9b7898a21e073b5bf952bcb05f2e70072e239a8bbd87bb74a53355e"),
 		"ERC721 Performance Test Contract",
 		nil,
+		func(bin []byte, _ []*Account, _ *Account) []byte {
+			return bin
+		},
+		func(_ *client.Client) bool {
+			return true
+		},
+		func(_ *client.Client) common.Address {
+			return common.Address{}
+		},
 	},
 	{
 		[]string{"storageTrieWriteTC"},
@@ -63,6 +98,15 @@ var TestContractInfos = []struct {
 		GetAccountFromKey(0, "3737c381633deaaa4c0bdbc64728f6ef7d381b17e1d30bbb74665839cec942b8"),
 		"Storage Trie Performance Test Contract",
 		nil,
+		func(bin []byte, _ []*Account, _ *Account) []byte {
+			return bin
+		},
+		func(_ *client.Client) bool {
+			return true
+		},
+		func(_ *client.Client) common.Address {
+			return common.Address{}
+		},
 	},
 	{
 		[]string{"newSmartContractExecutionTC", " newFeeDelegatedSmartContractExecutionTC", "newFeeDelegatedSmartContractExecutionWithRatioTC", "ethereumTxLegacyTC", "ethereumTxAccessListTC", "newEthereumAccessListTC", "newEthereumDynamicFeeTC"},
@@ -82,11 +126,20 @@ var TestContractInfos = []struct {
 			}
 			return data
 		},
+		func(bin []byte, _ []*Account, _ *Account) []byte {
+			return bin
+		},
+		func(_ *client.Client) bool {
+			return true
+		},
+		func(_ *client.Client) common.Address {
+			return common.Address{}
+		},
 	},
 	{
 		[]string{"gaslessTransactionTC", "gaslessRevertTransactionTC", "gaslessOnlyApproveTC"},
-		[]byte{},
-		&Account{},
+		common.FromHex(testingGaslessContracts.TestTokenBin),
+		nil,
 		"ERC20 Test Token for gasless swap",
 		func(gsrAddress common.Address, approveAmount *big.Int) []byte {
 			abiStr := `[{"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"}]`
@@ -101,11 +154,82 @@ var TestContractInfos = []struct {
 			}
 			return data
 		},
+		func(bin []byte, _ []*Account, initialHolder *Account) []byte {
+			parsed, err := testingGaslessContracts.TestTokenMetaData.GetAbi()
+			if err != nil {
+				log.Fatalf("failed to get constructor abi: %v", err)
+			}
+			data, err := parsed.Pack("", initialHolder.address)
+			if err != nil {
+				log.Fatalf("failed to pack constructor data: %v", err)
+			}
+			return append(bin, data...)
+		},
+		IsGSRExist,
+		getGaslessTokenAddress,
 	},
 	{
 		[]string{"gaslessTransactionTC", "gaslessRevertTransactionTC", "gaslessOnlyApproveTC"},
-		[]byte{},
-		&Account{},
+		common.FromHex(testingContracts.WKAIABin),
+		nil,
+		"Wrapped Kaia Contract",
+		nil,
+		func(bin []byte, _ []*Account, _ *Account) []byte {
+			return bin
+		},
+		IsGSRExist,
+		func(_ *client.Client) common.Address {
+			return common.Address{}
+		},
+	},
+	{
+		[]string{"gaslessTransactionTC", "gaslessRevertTransactionTC", "gaslessOnlyApproveTC"},
+		common.FromHex(uniswapFactoryContracts.UniswapV2FactoryBin),
+		nil,
+		"Uniswap V2 Factory Contract",
+		nil,
+		func(bin []byte, _ []*Account, feeToSetter *Account) []byte {
+			parsed, err := uniswapFactoryContracts.UniswapV2FactoryMetaData.GetAbi()
+			if err != nil {
+				log.Fatalf("failed to get constructor abi: %v", err)
+			}
+			data, err := parsed.Pack("", feeToSetter.address)
+			if err != nil {
+				log.Fatalf("failed to pack constructor data: %v", err)
+			}
+			return append(bin, data...)
+		},
+		IsGSRExist,
+		func(_ *client.Client) common.Address {
+			return common.Address{}
+		},
+	},
+	{
+		[]string{"gaslessTransactionTC", "gaslessRevertTransactionTC", "gaslessOnlyApproveTC"},
+		common.FromHex(uniswapRouterContracts.UniswapV2Router02Bin),
+		nil,
+		"Uniswap V2 Router Contract",
+		nil,
+		func(bin []byte, contracts []*Account, _ *Account) []byte {
+			parsed, err := uniswapRouterContracts.UniswapV2Router02MetaData.GetAbi()
+			if err != nil {
+				log.Fatalf("failed to get constructor abi: %v", err)
+			}
+			data, err := parsed.Pack("", contracts[ContractUniswapV2Factory].address, contracts[ContractWKaia].address)
+			if err != nil {
+				log.Fatalf("failed to pack constructor data: %v", err)
+			}
+			return append(bin, data...)
+		},
+		IsGSRExist,
+		func(_ *client.Client) common.Address {
+			return common.Address{}
+		},
+	},
+	{
+		[]string{"gaslessTransactionTC", "gaslessRevertTransactionTC", "gaslessOnlyApproveTC"},
+		common.FromHex(gaslessContract.GaslessSwapRouterBin),
+		nil,
 		"Gasless Swap Router for testing GA",
 		func(testTokenAddress common.Address, suggestedGasPrice *big.Int) []byte {
 			abiStr := `[{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"minAmountOut","type":"uint256"},{"internalType":"uint256","name":"amountRepay","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapForGas","outputs":[],"stateMutability":"nonpayable","type":"function"}]`
@@ -133,7 +257,201 @@ var TestContractInfos = []struct {
 
 			return data
 		},
+		func(bin []byte, contracts []*Account, _ *Account) []byte {
+			parsed, err := gaslessContract.GaslessSwapRouterMetaData.GetAbi()
+			if err != nil {
+				log.Fatalf("failed to get constructor abi: %v", err)
+			}
+			data, err := parsed.Pack("", contracts[ContractWKaia].address)
+			if err != nil {
+				log.Fatalf("failed to pack constructor data: %v", err)
+			}
+			return append(bin, data...)
+		},
+		IsGSRExist,
+		getGSRAddress,
 	},
+}
+
+func IsGSRExist(gCli *client.Client) bool {
+	return getGSRAddress(gCli) != common.Address{}
+}
+
+func RegisterGSR(gCli *client.Client, accGrp *AccGroup, globalReservoir *Account) {
+	registry, err := kip149contract.NewRegistry(system.RegistryAddr, gCli)
+	if err != nil {
+		return
+	}
+	ctx := context.Background()
+	blockNum, err := gCli.BlockNumber(ctx)
+	if err != nil {
+		return
+	}
+	targetBlockNum := new(big.Int).Add(blockNum, big.NewInt(10))
+	registerTx, err := registry.Register(bind.NewKeyedTransactor(globalReservoir.privateKey[0]), gaslessImpl.GaslessSwapRouterName, accGrp.contracts[ContractGaslessSwapRouter].address, targetBlockNum)
+	if err != nil {
+		return
+	}
+	receipt, err := bind.WaitMined(ctx, gCli, registerTx)
+	if err != nil || (receipt != nil && receipt.Status == 0) {
+		// shouldn't happen. must check if contract is correct.
+		log.Fatalf("tx mined but failed, err=%s, txHash=%s", err, registerTx.Hash().String())
+	}
+
+	// wait target block
+	for {
+		time.Sleep(1 * time.Second)
+		blockNum, err := gCli.BlockNumber(ctx)
+		if err != nil {
+			continue
+		}
+		if blockNum.Cmp(targetBlockNum) >= 0 {
+			break
+		}
+		log.Printf("Waiting for target block %d, current block %d", targetBlockNum.Uint64(), blockNum.Uint64())
+	}
+	log.Printf("Registered GaslessSwapRouter address %s at block %d", accGrp.contracts[ContractGaslessSwapRouter].address.String(), targetBlockNum.Uint64())
+}
+
+func SetupLiquidity(gCli *client.Client, accGrp *AccGroup, globalReservoir *Account) {
+	/* ------------- contract initialization  ------------- */
+	var (
+		testTokenAddr    = accGrp.contracts[ContractGaslessToken].address
+		wkaiaAddr        = accGrp.contracts[ContractWKaia].address
+		factoryAddr      = accGrp.contracts[ContractUniswapV2Factory].address
+		routerAddr       = accGrp.contracts[ContractUniswapV2Router].address
+		gsrAddr          = accGrp.contracts[ContractGaslessSwapRouter].address
+		ctx              = context.Background()
+		transactOpts     = bind.NewKeyedTransactor(globalReservoir.privateKey[0])
+		initialLiquidity = new(big.Int).Mul(big.NewInt(10000000), big.NewInt(params.KAIA))
+	)
+
+	testTokenContract, err := testingGaslessContracts.NewTestToken(testTokenAddr, gCli)
+	if err != nil {
+		log.Fatalf("failed to get test token contract: %v", err)
+	}
+	wkaiaContract, err := testingContracts.NewWKAIA(wkaiaAddr, gCli)
+	if err != nil {
+		log.Fatalf("failed to get wkaia contract: %v", err)
+	}
+	factoryContract, err := uniswapFactoryContracts.NewUniswapV2Factory(factoryAddr, gCli)
+	if err != nil {
+		log.Fatalf("failed to get factory contract: %v", err)
+	}
+	routerContract, err := uniswapRouterContracts.NewUniswapV2Router02(routerAddr, gCli)
+	if err != nil {
+		log.Fatalf("failed to get router contract: %v", err)
+	}
+	gsrContract, err := gaslessContract.NewGaslessSwapRouter(gsrAddr, gCli)
+	if err != nil {
+		log.Fatalf("failed to get gsr contract: %v", err)
+	}
+
+	/* ------------- create pair ------------- */
+	createPairTx, err := factoryContract.CreatePair(transactOpts, testTokenAddr, wkaiaAddr)
+	if err != nil {
+		log.Fatalf("failed to create pair: %v", err)
+	}
+	createPairReceipt, err := bind.WaitMined(ctx, gCli, createPairTx)
+	if err != nil || (createPairReceipt != nil && createPairReceipt.Status == 0) {
+		// shouldn't happen. must check if contract is correct.
+		log.Fatalf("failed to create pair, err=%s, txHash=%s", err, createPairTx.Hash().String())
+	}
+
+	/* ------------- deposit ------------- */
+	optsForDeposit := bind.NewKeyedTransactor(globalReservoir.privateKey[0])
+	optsForDeposit.Value = initialLiquidity
+	optsForDeposit.GasLimit = 300000
+	depositTx, err := wkaiaContract.Deposit(optsForDeposit)
+	if err != nil {
+		log.Fatalf("failed to deposit: %v", err)
+	}
+	depositReceipt, err := bind.WaitMined(ctx, gCli, depositTx)
+	if err != nil || (depositReceipt != nil && depositReceipt.Status == 0) {
+		// shouldn't happen. must check if contract is correct.
+		log.Fatalf("failed to deposit, err=%s, txHash=%s", err, depositTx.Hash().String())
+	}
+
+	/* ------------- approve(TestToken) ------------- */
+	testTokenApproveTx, err := testTokenContract.Approve(transactOpts, routerAddr, initialLiquidity)
+	if err != nil {
+		log.Fatalf("failed to approve(TestToken): %v", err)
+	}
+	testTokenApproveReceipt, err := bind.WaitMined(ctx, gCli, testTokenApproveTx)
+	if err != nil || (testTokenApproveReceipt != nil && testTokenApproveReceipt.Status == 0) {
+		// shouldn't happen. must check if contract is correct.
+		log.Fatalf("failed to approve(TestToken), err=%s, txHash=%s", err, testTokenApproveTx.Hash().String())
+	}
+
+	/* ------------- approve(WKAIA) ------------- */
+	wkaiaApproveTx, err := wkaiaContract.Approve(transactOpts, routerAddr, initialLiquidity)
+	if err != nil {
+		log.Fatalf("failed to approve(WKAIA): %v", err)
+	}
+	wkaiaApproveReceipt, err := bind.WaitMined(ctx, gCli, wkaiaApproveTx)
+	if err != nil || (wkaiaApproveReceipt != nil && wkaiaApproveReceipt.Status == 0) {
+		// shouldn't happen. must check if contract is correct.
+		log.Fatalf("failed to approve(WKAIA), err=%s, txHash=%s", err, wkaiaApproveTx.Hash().String())
+	}
+
+	/* ------------- add liquidity ------------- */
+	optsForAddLiquidity := bind.NewKeyedTransactor(globalReservoir.privateKey[0])
+	optsForAddLiquidity.GasLimit = 3000000
+	deadline := time.Now().Unix() + 60*20
+	addLiquidityTx, err := routerContract.AddLiquidity(optsForAddLiquidity, testTokenAddr, wkaiaAddr,
+		initialLiquidity, initialLiquidity, common.Big0, common.Big0, globalReservoir.address, big.NewInt(deadline))
+	if err != nil {
+		log.Fatalf("failed to add liquidity: %v", err)
+	}
+	addLiquidityReceipt, err := bind.WaitMined(ctx, gCli, addLiquidityTx)
+	if err != nil || (addLiquidityReceipt != nil && addLiquidityReceipt.Status == 0) {
+		// shouldn't happen. must check if contract is correct.
+		log.Fatalf("failed to add liquidity, err=%s, txHash=%s", err, addLiquidityTx.Hash().String())
+	}
+
+	/* ------------- add token to gsr ------------- */
+	optsForAddToken := bind.NewKeyedTransactor(globalReservoir.privateKey[0])
+	optsForAddToken.GasLimit = 300000
+	addTokenTx, err := gsrContract.AddToken(optsForAddToken, testTokenAddr, factoryAddr, routerAddr)
+	if err != nil {
+		log.Fatalf("failed to add token to gsr: %v", err)
+	}
+	addTokenReceipt, err := bind.WaitMined(ctx, gCli, addTokenTx)
+	if err != nil || (addTokenReceipt != nil && addTokenReceipt.Status == 0) {
+		// shouldn't happen. must check if contract is correct.
+		log.Fatalf("failed to add token to gsr, err=%s, txHash=%s", err, addTokenTx.Hash().String())
+	}
+}
+
+func getGSRAddress(gCli *client.Client) common.Address {
+	registry, err := kip149contract.NewRegistry(system.RegistryAddr, gCli)
+	if err != nil {
+		return common.Address{}
+	}
+	addr, err := registry.GetActiveAddr(&bind.CallOpts{}, gaslessImpl.GaslessSwapRouterName)
+	if err != nil {
+		return common.Address{}
+	}
+	return addr
+}
+
+func getGaslessTokenAddress(gCli *client.Client) common.Address {
+	addr := getGSRAddress(gCli)
+	if addr == (common.Address{}) {
+		return common.Address{}
+	}
+	gaslessSwapRouter, err := gaslessContract.NewGaslessSwapRouter(addr, gCli)
+	if err != nil {
+		return common.Address{}
+	}
+	supportedTokens, err := gaslessSwapRouter.GetSupportedTokens(&bind.CallOpts{})
+	if err != nil {
+		return common.Address{}
+	}
+	if len(supportedTokens) == 0 {
+		return common.Address{}
+	}
+	return supportedTokens[0]
 }
 
 // This file is dedicated for handling ABI and byte code of ERC721Metadata

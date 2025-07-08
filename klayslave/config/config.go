@@ -29,9 +29,6 @@ type Config struct {
 	tcNameList           []string
 	tcWeights            []int
 
-	testTokenAddress string
-	gsrAddress       string
-
 	chargeKLAYAmount  int
 	chargeParallelNum int
 
@@ -82,8 +79,6 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 	cfg.chargeKLAYAmount = ctx.Int("charge")
 	cfg.chargeParallelNum = ctx.Int("chargeParallel")
 	cfg.richWalletPrivateKey = ctx.String("key")
-	cfg.testTokenAddress = ctx.String("testTokenAddr")
-	cfg.gsrAddress = ctx.String("gsrAddr")
 
 	// Do not allow null richWalletPrivateKey
 	if cfg.richWalletPrivateKey == "" {
@@ -121,9 +116,6 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 	if len(cfg.tcNameList) == 0 {
 		log.Fatal("No valid Tc is set. Please set valid TcList. \n Input tcList was '" + tcNames + "'")
 	}
-	if (cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC") || cfg.InTheTcList("gaslessOnlyApproveTC")) && (cfg.testTokenAddress == "" || cfg.gsrAddress == "") {
-		log.Fatal("When executing gaslessTransactionTC, the flags: testTokenAddr and gsrAddr are required. e.g) -testTokenAddr $Address -gsrAddr $Address")
-	}
 
 	fmt.Println("Arguments are set like the following:")
 	fmt.Printf("- Target EndPoint = %v\n", cfg.gEndpoint)
@@ -134,10 +126,6 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 	fmt.Printf("- charging KLAY Amount = %v\n", cfg.chargeKLAYAmount)
 	fmt.Printf("- tc = %v\n", cfg.tcNameList)
 	fmt.Printf("- weights = %v\n", cfg.tcWeights)
-	if cfg.InTheTcList("gaslessTransactionTC") {
-		fmt.Printf("- testTokenAddr = %v\n", cfg.testTokenAddress)
-		fmt.Printf("- gsrAddr = %v\n", cfg.gsrAddress)
-	}
 }
 
 func (cfg *Config) setConfigsFromNode() {
@@ -209,8 +197,6 @@ func (cfg *Config) GetNUserForNewAccounts() int     { return cfg.nUserForNewAcco
 func (cfg *Config) GetGEndpoint() string            { return cfg.gEndpoint }
 func (cfg *Config) GetActiveUserPercent() int       { return cfg.activeUserPercent }
 func (cfg *Config) GetTcStrList() []string          { return cfg.tcNameList }
-func (cfg *Config) GetTestTokenAddress() string     { return cfg.testTokenAddress }
-func (cfg *Config) GetGsrAddress() string           { return cfg.gsrAddress }
 func (cfg *Config) GetRichWalletPrivateKey() string { return cfg.richWalletPrivateKey }
 func (cfg *Config) GetGCli() *klay.Client           { return cfg.gCli }
 func (cfg *Config) InTheTcList(tcName string) bool {

@@ -22,6 +22,7 @@ import (
 	gaslessContract "github.com/kaiachain/kaia/contracts/contracts/system_contracts/kip247"
 	testingContracts "github.com/kaiachain/kaia/contracts/contracts/testing/system_contracts"
 	testingGaslessContracts "github.com/kaiachain/kaia/contracts/contracts/testing/system_contracts/gasless"
+	"github.com/kaiachain/kaia/crypto"
 	gaslessImpl "github.com/kaiachain/kaia/kaiax/gasless/impl"
 	"github.com/kaiachain/kaia/params"
 )
@@ -34,8 +35,8 @@ type TestContractInfo struct {
 	contractName                    string
 	GenData                         func(addr common.Address, value *big.Int) []byte
 	GetBytecodeWithConstructorParam func(bin []byte, contracts []*Account, deployer *Account) []byte
-	ShouldDeploy                    func(gCli *client.Client) bool
-	GetAddressFromChain             func(gCli *client.Client) common.Address
+	ShouldDeploy                    func(gCli *client.Client, deployer *Account) bool
+	GetAddressFromChain             func(gCli *client.Client, deployer *Account) common.Address
 }
 
 // TestContractInfos stores some dedicated and fixed private key used to deploy a smart contracts for TCs.
@@ -82,8 +83,8 @@ func createERC20ContractInfo() TestContractInfo {
 			return data
 		},
 		GetBytecodeWithConstructorParam: returnBinAsIs,
-		ShouldDeploy:                    returnTrue,
-		GetAddressFromChain:             returnEmptyAddress,
+		ShouldDeploy:                    isDeployerNonce0,
+		GetAddressFromChain:             getNonce0ContractAddress,
 	}
 }
 
@@ -95,8 +96,8 @@ func createERC721ContractInfo() TestContractInfo {
 		contractName:                    "ERC721 Performance Test Contract",
 		GenData:                         nil,
 		GetBytecodeWithConstructorParam: returnBinAsIs,
-		ShouldDeploy:                    returnTrue,
-		GetAddressFromChain:             returnEmptyAddress,
+		ShouldDeploy:                    isDeployerNonce0,
+		GetAddressFromChain:             getNonce0ContractAddress,
 	}
 }
 
@@ -108,8 +109,8 @@ func createStorageTrieContractInfo() TestContractInfo {
 		contractName:                    "Storage Trie Performance Test Contract",
 		GenData:                         nil,
 		GetBytecodeWithConstructorParam: returnBinAsIs,
-		ShouldDeploy:                    returnTrue,
-		GetAddressFromChain:             returnEmptyAddress,
+		ShouldDeploy:                    isDeployerNonce0,
+		GetAddressFromChain:             getNonce0ContractAddress,
 	}
 }
 
@@ -133,8 +134,8 @@ func createGeneralPurposeContractInfo() TestContractInfo {
 			return data
 		},
 		GetBytecodeWithConstructorParam: returnBinAsIs,
-		ShouldDeploy:                    returnTrue,
-		GetAddressFromChain:             returnEmptyAddress,
+		ShouldDeploy:                    isDeployerNonce0,
+		GetAddressFromChain:             getNonce0ContractAddress,
 	}
 }
 
@@ -182,7 +183,7 @@ func createWKaiaContractInfo() TestContractInfo {
 		GenData:                         nil,
 		GetBytecodeWithConstructorParam: returnBinAsIs,
 		ShouldDeploy:                    shouldDeployRelatedGSR,
-		GetAddressFromChain:             returnEmptyAddress,
+		GetAddressFromChain:             getNonce0ContractAddress,
 	}
 }
 
@@ -205,7 +206,7 @@ func createUniswapFactoryContractInfo() TestContractInfo {
 			return append(bin, data...)
 		},
 		ShouldDeploy:        shouldDeployRelatedGSR,
-		GetAddressFromChain: returnEmptyAddress,
+		GetAddressFromChain: getNonce0ContractAddress,
 	}
 }
 
@@ -228,7 +229,7 @@ func createUniswapRouterContractInfo() TestContractInfo {
 			return append(bin, data...)
 		},
 		ShouldDeploy:        shouldDeployRelatedGSR,
-		GetAddressFromChain: returnEmptyAddress,
+		GetAddressFromChain: getNonce0ContractAddress,
 	}
 }
 
@@ -281,7 +282,7 @@ func createGaslessSwapRouterContractInfo() TestContractInfo {
 }
 
 func IsGSRExist(gCli *client.Client) bool {
-	return getGSRAddress(gCli) != common.Address{}
+	return getGSRAddress(gCli, nil) != common.Address{}
 }
 
 func RegisterGSR(gCli *client.Client, accGrp *AccGroup, globalReservoir *Account) {
@@ -388,23 +389,35 @@ func SetupLiquidity(gCli *client.Client, accGrp *AccGroup, globalReservoir *Acco
 	})
 }
 
-func shouldDeployRelatedGSR(gCli *client.Client) bool {
-	return !IsGSRExist(gCli)
-}
-
 func returnBinAsIs(bin []byte, _ []*Account, _ *Account) []byte {
 	return bin
 }
 
-func returnEmptyAddress(_ *client.Client) common.Address {
-	return common.Address{}
+func getNonce0ContractAddress(_ *client.Client, deployer *Account) common.Address {
+	if deployer == nil {
+		return common.Address{}
+	}
+	return crypto.CreateAddress(deployer.GetAddress(), 0)
 }
 
-func returnTrue(_ *client.Client) bool {
+func isDeployerNonce0(gCli *client.Client, deployer *Account) bool {
+	if deployer == nil {
+		return false
+	}
+	// fast track - if already deployed by other slave, return immediately
+	nonce := deployer.GetNonce(gCli)
+	if nonce != 0 {
+		fmt.Println("Contract seems to already have been deployed!", "nonce", nonce)
+		return false
+	}
 	return true
 }
 
-func getGSRAddress(gCli *client.Client) common.Address {
+func shouldDeployRelatedGSR(gCli *client.Client, _ *Account) bool {
+	return !IsGSRExist(gCli)
+}
+
+func getGSRAddress(gCli *client.Client, _ *Account) common.Address {
 	registry, err := kip149contract.NewRegistry(system.RegistryAddr, gCli)
 	if err != nil {
 		return common.Address{}
@@ -416,8 +429,8 @@ func getGSRAddress(gCli *client.Client) common.Address {
 	return addr
 }
 
-func getGaslessTokenAddress(gCli *client.Client) common.Address {
-	addr := getGSRAddress(gCli)
+func getGaslessTokenAddress(gCli *client.Client, _ *Account) common.Address {
+	addr := getGSRAddress(gCli, nil)
 	if addr == (common.Address{}) {
 		return common.Address{}
 	}

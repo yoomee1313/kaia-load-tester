@@ -2107,6 +2107,31 @@ func (a *Account) SmartContractExecutionWithGuaranteeRetry(gCli *client.Client, 
 	}
 }
 
+func (a *Account) TryRunTxSendFunctionWithGuaranteeRetry(gCli *client.Client, txSendFunc func(gCli *client.Client, sender *Account) (*types.Transaction, error)) {
+	var (
+		err    error
+		lastTx *types.Transaction
+	)
+
+	for {
+		lastTx, err = txSendFunc(gCli, a)
+		if err == nil {
+			break
+		}
+		log.Printf("Failed to send tx: err=%s", err.Error())
+		time.Sleep(1 * time.Second)
+	}
+	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelFn()
+
+	receipt, err := bind.WaitMined(ctx, gCli, lastTx)
+	cancelFn()
+	if err != nil || (receipt != nil && receipt.Status == 0) {
+		// shouldn't happen. must check if contract is correct.
+		log.Fatalf("tx mined but failed, err=%s, txHash=%s", err, lastTx.Hash().String())
+	}
+}
+
 func (a *Account) CheckBalance(expectedBalance *big.Int, cli *client.Client) error {
 	balance, _ := a.GetBalance(cli)
 	if balance.Cmp(expectedBalance) != 0 {

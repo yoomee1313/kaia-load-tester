@@ -155,9 +155,10 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	// 4. Deploy the test contracts which will be used in various TCs. If needed, charge tokens to test accounts.
 	// Register the addresses of Contracts that will not be deployed with DeployTestContracts.
 	accGrp.DeployTestContracts(cfg.GetTcStrList(), globalReservoirAccount, localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue())
-	if !account.IsGSRExist(cfg.GetGCli()) && (cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC")) {
-		account.RegisterGSR(cfg.GetGCli(), accGrp, globalReservoirAccount)
+	if !account.IsGSRExist(cfg.GetGCli()) && (cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC") || cfg.InTheTcList("gaslessOnlyApproveTC")) {
+		log.Printf("GSR does not exist in registry, setting up liquidity and registering GSR...")
 		account.SetupLiquidity(cfg.GetGCli(), accGrp, globalReservoirAccount)
+		account.RegisterGSR(cfg.GetGCli(), accGrp, globalReservoirAccount)
 	}
 
 	// Set SmartContractAddress value in each packages if needed

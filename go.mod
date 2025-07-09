@@ -3,7 +3,7 @@ module github.com/kaiachain/kaia-load-tester
 go 1.23.7
 
 require (
-	github.com/kaiachain/kaia v2.0.0+incompatible
+	github.com/kaiachain/kaia v0.0.0-20250526043133-d227763a6613 // kaia v2.0.0
 	github.com/myzhan/boomer v1.6.0
 	github.com/tidwall/gjson v1.12.1
 	github.com/urfave/cli v1.20.0

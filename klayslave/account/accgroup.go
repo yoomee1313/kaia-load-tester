@@ -120,7 +120,7 @@ func (a *AccGroup) GetValidAccGrp() []*Account {
 	return accGrp
 }
 
-func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account, gCli *client.Client, chargeValue *big.Int) {
+func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account, gCli *client.Client, chargeValue *big.Int, maxConcurrency int) {
 	inTheTcList := func(testNames []string) bool {
 		for _, tcName := range tcList {
 			for _, target := range testNames {
@@ -154,7 +154,7 @@ func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account,
 			TestContractInfos[ContractErc20].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], TestContractInfos[ContractErc20].GenData(localReservoir.address, big.NewInt(1e11)))
 			ConcurrentTransactionSend(a.GetValidAccGrp(), func(acc *Account) {
 				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], TestContractInfos[ContractErc20].GenData(acc.address, big.NewInt(1e4)))
-			})
+			}, maxConcurrency)
 		} else if TestContract(idx) == ContractErc721 {
 			log.Printf("Start erc721 nft minting to the test account group(similar to erc20 token charging)")
 			localReservoir.MintERC721ToTestAccounts(gCli, a.GetValidAccGrp(), a.GetTestContractByName(ContractErc721).GetAddress(), 5)
@@ -171,7 +171,7 @@ func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account,
 			accounts = append(accounts, a.GetAccListByName(AccListForGaslessApproveTx)...)
 			ConcurrentTransactionSend(accounts, func(acc *Account) {
 				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], TestContractInfos[ContractErc20].GenData(acc.address, chargeValue))
-			})
+			}, maxConcurrency)
 		}
 	}
 }

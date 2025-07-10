@@ -68,6 +68,7 @@ Parameters
 * --vuunsigned: number of accounts for unsigned transaction to use in test case.
 * --endpoint: kaia node rpc endpoint(e.g. http://localhost:8551).
 * --http.maxidleconns: maximum number of idle connections in default http client (default 100).
+* --chargeParallel: number of parallel transactions for charging accounts (default: 0, auto-detect based on CPU cores). Controls concurrency when funding test accounts with KLAY and tokens.
 
 ## How to contribute?
 * issue: Please make an issue if there's bug, improvement, docs suggestion, etc.

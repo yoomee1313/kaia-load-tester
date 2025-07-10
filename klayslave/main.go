@@ -147,7 +147,7 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	accs = append(accs, accGrp.GetAccListByName(account.AccListForGaslessApproveTx)...) // for avoid validation
 	account.ConcurrentTransactionSend(accs, func(acc *account.Account) {
 		localReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue())
-	})
+	}, cfg.GetChargeParallelNum())
 	log.Printf("Finished charging KLAY to %d test account(s)\n", len(accs))
 
 	// Wait, charge KAIA happen in 100% of all created test accounts
@@ -155,7 +155,7 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	accGrp.SetAccGrpByActivePercent(cfg.GetActiveUserPercent())
 
 	// 4. Deploy the test contracts which will be used in various TCs. If needed, charge tokens to test accounts.
-	accGrp.DeployTestContracts(cfg.GetTcStrList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue())
+	accGrp.DeployTestContracts(cfg.GetTcStrList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), cfg.GetChargeParallelNum())
 	if !account.IsGSRExistInRegistry(cfg.GetGCli()) && (cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC") || cfg.InTheTcList("gaslessOnlyApproveTC")) {
 		log.Printf("GSR does not exist in registry, setting up liquidity and registering GSR...")
 
@@ -173,6 +173,7 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 		// Register GSR
 		account.RegisterGSR(cfg.GetGCli(), accGrp, globalReservoirAccount)
 	}
+	accGrp.DeployTestContracts(cfg.GetTcStrList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), cfg.GetChargeParallelNum())
 
 	// Set SmartContractAddress value in each packages if needed
 	setSmartContractAddressPerPackage(accGrp)

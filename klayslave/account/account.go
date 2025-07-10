@@ -2150,7 +2150,7 @@ func (a *Account) CheckBalance(expectedBalance *big.Int, cli *client.Client) err
 	return nil
 }
 
-func ConcurrentTransactionSend(accs []*Account, transactionSend func(*Account), maxConcurrency int) {
+func ConcurrentTransactionSend(accs []*Account, maxConcurrency int, transactionSend func(*Account)) {
 	if maxConcurrency <= 0 {
 		maxConcurrency = runtime.NumCPU() * 10 // default value
 	}

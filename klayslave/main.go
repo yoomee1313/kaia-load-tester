@@ -145,9 +145,9 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	accs := accGrp.GetValidAccGrp()
 	accs = append(accs, accGrp.GetAccListByName(account.AccListForGaslessRevertTx)...)  // for avoid validation
 	accs = append(accs, accGrp.GetAccListByName(account.AccListForGaslessApproveTx)...) // for avoid validation
-	account.ConcurrentTransactionSend(accs, func(acc *account.Account) {
+	account.ConcurrentTransactionSend(accs, cfg.GetChargeParallelNum(), func(acc *account.Account) {
 		localReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue())
-	}, cfg.GetChargeParallelNum())
+	})
 	log.Printf("Finished charging KLAY to %d test account(s)\n", len(accs))
 
 	// Wait, charge KAIA happen in 100% of all created test accounts

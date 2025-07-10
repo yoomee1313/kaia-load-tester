@@ -120,7 +120,7 @@ func (a *AccGroup) GetValidAccGrp() []*Account {
 	return accGrp
 }
 
-func (a *AccGroup) DeployTestContracts(tcList []string, globalReservoir, localReservoir *Account, gCli *client.Client, chargeValue *big.Int) {
+func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account, gCli *client.Client, chargeValue *big.Int) {
 	inTheTcList := func(testNames []string) bool {
 		for _, tcName := range tcList {
 			for _, target := range testNames {
@@ -140,7 +140,7 @@ func (a *AccGroup) DeployTestContracts(tcList []string, globalReservoir, localRe
 
 		if info.ShouldDeploy(gCli, info.deployer) {
 			if info.deployer == nil {
-				info.deployer = globalReservoir
+				info.deployer = localReservoir
 			}
 			localReservoir.TransferSignedTxWithGuaranteeRetry(gCli, info.deployer, chargeValue)
 			a.contracts[idx] = info.deployer.SmartContractDeployWithGuaranteeRetry(gCli, info.GetBytecodeWithConstructorParam(info.Bytecode, a.contracts, info.deployer), info.contractName)
@@ -164,7 +164,7 @@ func (a *AccGroup) DeployTestContracts(tcList []string, globalReservoir, localRe
 			lenGaslessApproveAccGrp := big.NewInt(int64(len(a.GetAccListByName(AccListForGaslessApproveTx))))
 			totalChargeValue := new(big.Int).Mul(chargeValue, new(big.Int).Add(lenValidAccGrp, lenGaslessApproveAccGrp))
 			// ContractGaslessToken's GenData generate data of approve. So can use ERC20's genData for transfer.
-			globalReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], TestContractInfos[ContractErc20].GenData(localReservoir.address, totalChargeValue))
+			TestContractInfos[ContractGaslessToken].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], TestContractInfos[ContractErc20].GenData(localReservoir.address, totalChargeValue))
 
 			// accounts(validAccGrp + gaslessApproveAccGrp) should be charged.
 			accounts := a.GetValidAccGrp()

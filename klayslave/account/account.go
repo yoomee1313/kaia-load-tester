@@ -2107,7 +2107,7 @@ func (a *Account) SmartContractExecutionWithGuaranteeRetry(gCli *client.Client, 
 	}
 }
 
-func (a *Account) TryRunTxSendFunctionWithGuaranteeRetry(gCli *client.Client, txSendFunc func(gCli *client.Client, sender *Account) (*types.Transaction, error)) {
+func (a *Account) TryRunTxSendFunctionWithGuaranteeRetry(gCli *client.Client, allowedErrors []error, txSendFunc func(gCli *client.Client, sender *Account) (*types.Transaction, error)) {
 	var (
 		err    error
 		lastTx *types.Transaction
@@ -2118,6 +2118,14 @@ func (a *Account) TryRunTxSendFunctionWithGuaranteeRetry(gCli *client.Client, tx
 		if err == nil {
 			break
 		}
+
+		for _, allowError := range allowedErrors {
+			if err.Error() == allowError.Error() {
+				log.Printf("Skipping the transaction: err=%s", err.Error())
+				return
+			}
+		}
+
 		log.Printf("Failed to send tx: err=%s", err.Error())
 		time.Sleep(1 * time.Second)
 	}

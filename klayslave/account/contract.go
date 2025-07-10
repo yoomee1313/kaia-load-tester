@@ -50,7 +50,7 @@ type TestContractInfo struct {
 	GenData                         func(addr common.Address, value *big.Int) []byte
 	GetBytecodeWithConstructorParam func(bin []byte, contracts []*Account, deployer *Account) []byte
 	ShouldDeploy                    func(gCli *client.Client, deployer *Account) bool
-	GetAddressFromChain             func(gCli *client.Client, deployer *Account) common.Address
+	GetAddress                      func(gCli *client.Client, deployer *Account) common.Address
 }
 
 // TestContractInfos stores some dedicated and fixed private key used to deploy a smart contracts for TCs.
@@ -98,7 +98,7 @@ func createERC20ContractInfo() TestContractInfo {
 		},
 		GetBytecodeWithConstructorParam: returnBinAsIs,
 		ShouldDeploy:                    isDeployerNonce0,
-		GetAddressFromChain:             getNonce0ContractAddress,
+		GetAddress:                      getNonce0ContractAddress,
 	}
 }
 
@@ -111,7 +111,7 @@ func createERC721ContractInfo() TestContractInfo {
 		GenData:                         nil,
 		GetBytecodeWithConstructorParam: returnBinAsIs,
 		ShouldDeploy:                    isDeployerNonce0,
-		GetAddressFromChain:             getNonce0ContractAddress,
+		GetAddress:                      getNonce0ContractAddress,
 	}
 }
 
@@ -124,7 +124,7 @@ func createStorageTrieContractInfo() TestContractInfo {
 		GenData:                         nil,
 		GetBytecodeWithConstructorParam: returnBinAsIs,
 		ShouldDeploy:                    isDeployerNonce0,
-		GetAddressFromChain:             getNonce0ContractAddress,
+		GetAddress:                      getNonce0ContractAddress,
 	}
 }
 
@@ -149,7 +149,7 @@ func createGeneralPurposeContractInfo() TestContractInfo {
 		},
 		GetBytecodeWithConstructorParam: returnBinAsIs,
 		ShouldDeploy:                    isDeployerNonce0,
-		GetAddressFromChain:             getNonce0ContractAddress,
+		GetAddress:                      getNonce0ContractAddress,
 	}
 }
 
@@ -183,8 +183,8 @@ func createGaslessTokenContractInfo() TestContractInfo {
 			}
 			return append(bin, data...)
 		},
-		ShouldDeploy:        shouldDeployRelatedGSR,
-		GetAddressFromChain: getGaslessTokenAddress,
+		ShouldDeploy: shouldDeployRelatedGSR,
+		GetAddress:   getGaslessTokenAddress,
 	}
 }
 
@@ -197,7 +197,7 @@ func createWKaiaContractInfo() TestContractInfo {
 		GenData:                         nil,
 		GetBytecodeWithConstructorParam: returnBinAsIs,
 		ShouldDeploy:                    shouldDeployRelatedGSR,
-		GetAddressFromChain:             getNonce0ContractAddress,
+		GetAddress:                      getNonce0ContractAddress,
 	}
 }
 
@@ -219,8 +219,8 @@ func createUniswapFactoryContractInfo() TestContractInfo {
 			}
 			return append(bin, data...)
 		},
-		ShouldDeploy:        shouldDeployRelatedGSR,
-		GetAddressFromChain: getNonce0ContractAddress,
+		ShouldDeploy: shouldDeployRelatedGSR,
+		GetAddress:   getNonce0ContractAddress,
 	}
 }
 
@@ -242,8 +242,8 @@ func createUniswapRouterContractInfo() TestContractInfo {
 			}
 			return append(bin, data...)
 		},
-		ShouldDeploy:        shouldDeployRelatedGSR,
-		GetAddressFromChain: getNonce0ContractAddress,
+		ShouldDeploy: shouldDeployRelatedGSR,
+		GetAddress:   getNonce0ContractAddress,
 	}
 }
 
@@ -290,8 +290,8 @@ func createGaslessSwapRouterContractInfo() TestContractInfo {
 			}
 			return append(bin, data...)
 		},
-		ShouldDeploy:        shouldDeployRelatedGSR,
-		GetAddressFromChain: getGSRAddress,
+		ShouldDeploy: shouldDeployRelatedGSR,
+		GetAddress:   getGSRAddress,
 	}
 }
 

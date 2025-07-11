@@ -31,7 +31,6 @@ import (
 	"github.com/kaiachain/kaia-load-tester/testcase/storageTrieWriteTC"
 	"github.com/kaiachain/kaia/accounts/abi/bind"
 	"github.com/kaiachain/kaia/api/debug"
-	"github.com/kaiachain/kaia/common"
 	"github.com/kaiachain/kaia/console"
 	"github.com/myzhan/boomer"
 	"github.com/urfave/cli"
@@ -130,7 +129,9 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	_ = globalReservoirAccount.GetNonce(cfg.GetGCli())
 	revertGroupChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForGaslessRevertTx)))))
 	approveGroupChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForGaslessApproveTx)))))
-	tx := globalReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), localReservoirAccount, new(big.Int).Add(cfg.GetTotalChargeValue(), new(big.Int).Add(revertGroupChargeValue, approveGroupChargeValue)))
+	initialLiquidity := account.GetInitialLiquidity()
+	totalChargeValue := new(big.Int).Add(cfg.GetTotalChargeValue(), new(big.Int).Add(initialLiquidity, new(big.Int).Add(revertGroupChargeValue, approveGroupChargeValue)))
+	tx := globalReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), localReservoirAccount, totalChargeValue)
 	receipt, err := bind.WaitMined(context.Background(), cfg.GetGCli(), tx)
 	if err != nil {
 		log.Fatalf("receipt failed, err:%v", err.Error())
@@ -154,12 +155,24 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	accGrp.SetAccGrpByActivePercent(cfg.GetActiveUserPercent())
 
 	// 4. Deploy the test contracts which will be used in various TCs. If needed, charge tokens to test accounts.
-	// Register the addresses of Contracts that will not be deployed with DeployTestContracts.
-	skipDeploys := map[account.TestContract]common.Address{
-		account.ContractGaslessToken:      common.HexToAddress(cfg.GetTestTokenAddress()),
-		account.ContractGaslessSwapRouter: common.HexToAddress(cfg.GetGsrAddress()),
+	accGrp.DeployTestContracts(cfg.GetTcStrList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue())
+	if !account.IsGSRExistInRegistry(cfg.GetGCli()) && (cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC") || cfg.InTheTcList("gaslessOnlyApproveTC")) {
+		log.Printf("GSR does not exist in registry, setting up liquidity and registering GSR...")
+
+		// Charge KAIA and gasless tokens to GSRSetupManager
+		localReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), account.GSRSetupManager, new(big.Int).Add(cfg.GetChargeValue(), account.GetInitialLiquidity()))
+		account.GaslessTokenDeployer.SmartContractExecutionWithGuaranteeRetry(
+			cfg.GetGCli(),
+			accGrp.GetTestContractByName(account.ContractGaslessToken),
+			account.TestContractInfos[account.ContractErc20].GenData(account.GSRSetupManager.GetAddress(), account.GetInitialLiquidity()),
+		)
+
+		// Setup liquidity
+		account.SetupLiquidity(cfg.GetGCli(), accGrp)
+
+		// Register GSR
+		account.RegisterGSR(cfg.GetGCli(), accGrp, globalReservoirAccount)
 	}
-	accGrp.DeployTestContracts(cfg.GetTcStrList(), globalReservoirAccount, localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), skipDeploys)
 
 	// Set SmartContractAddress value in each packages if needed
 	setSmartContractAddressPerPackage(accGrp)

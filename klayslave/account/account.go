@@ -2053,16 +2053,9 @@ func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, 
 		err    error
 		addr   common.Address
 		lastTx *types.Transaction
-
-		contractAddress = NewKaiaAccountWithAddr(1, crypto.CreateAddress(self.GetAddress(), 0))
 	)
 
-	// fast track - if already deployed by other slave, return immediately
 	nonce := self.GetNonce(gCli)
-	if nonce != 0 {
-		fmt.Println("Contract seems to already have been deployed!", "nonce", nonce)
-		return contractAddress
-	}
 
 	for {
 		addr, lastTx, _, err = self.TransferNewSmartContractDeployTx(gCli, nil, common.Big0, byteCode)
@@ -2083,13 +2076,9 @@ func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, 
 		log.Fatalf("tx mined but failed, err=%s, receipt=%s", err, receipt)
 		return nil
 	}
-	if !strings.EqualFold(addr.String(), contractAddress.address.String()) {
-		log.Fatalf("address is wrong, expected=%v,real=%v", contractAddress.address.String(), addr.String())
-		return nil
-	}
 
 	log.Printf("%s has been deployed to : %s\n", contractName, addr.String())
-	return contractAddress
+	return NewKaiaAccountWithAddr(1, crypto.CreateAddress(self.GetAddress(), nonce))
 }
 
 // TODO-kaia-load-tester: unify Retry functions into one function
@@ -2106,6 +2095,39 @@ func (a *Account) SmartContractExecutionWithGuaranteeRetry(gCli *client.Client, 
 		}
 		log.Printf("Failed to execute: err=%s", err.Error())
 		time.Sleep(1 * time.Second) // Mostly, the err is `txpool is full`, retry after a while.
+	}
+	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelFn()
+
+	receipt, err := bind.WaitMined(ctx, gCli, lastTx)
+	cancelFn()
+	if err != nil || (receipt != nil && receipt.Status == 0) {
+		// shouldn't happen. must check if contract is correct.
+		log.Fatalf("tx mined but failed, err=%s, txHash=%s", err, lastTx.Hash().String())
+	}
+}
+
+func (a *Account) TryRunTxSendFunctionWithGuaranteeRetry(gCli *client.Client, allowedErrors []error, txSendFunc func(gCli *client.Client, sender *Account) (*types.Transaction, error)) {
+	var (
+		err    error
+		lastTx *types.Transaction
+	)
+
+	for {
+		lastTx, err = txSendFunc(gCli, a)
+		if err == nil {
+			break
+		}
+
+		for _, allowError := range allowedErrors {
+			if err.Error() == allowError.Error() {
+				log.Printf("Skipping the transaction: err=%s", err.Error())
+				return
+			}
+		}
+
+		log.Printf("Failed to send tx: err=%s", err.Error())
+		time.Sleep(1 * time.Second)
 	}
 	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancelFn()

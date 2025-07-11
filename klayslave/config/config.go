@@ -124,6 +124,7 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 	fmt.Printf("- activeUserPercent = %v\n", cfg.activeUserPercent)
 	fmt.Printf("- coinbasePrivatekey = %v\n", cfg.richWalletPrivateKey)
 	fmt.Printf("- charging KLAY Amount = %v\n", cfg.chargeKLAYAmount)
+	fmt.Printf("- chargeParallel = %v\n", cfg.chargeParallelNum)
 	fmt.Printf("- tc = %v\n", cfg.tcNameList)
 	fmt.Printf("- weights = %v\n", cfg.tcWeights)
 }
@@ -199,6 +200,7 @@ func (cfg *Config) GetActiveUserPercent() int       { return cfg.activeUserPerce
 func (cfg *Config) GetTcStrList() []string          { return cfg.tcNameList }
 func (cfg *Config) GetRichWalletPrivateKey() string { return cfg.richWalletPrivateKey }
 func (cfg *Config) GetGCli() *klay.Client           { return cfg.gCli }
+func (cfg *Config) GetChargeParallelNum() int       { return cfg.chargeParallelNum }
 func (cfg *Config) InTheTcList(tcName string) bool {
 	for _, tc := range cfg.tcNameList {
 		if tcName == tc {
@@ -222,6 +224,7 @@ var Flags = []cli.Flag{
 	//cli.IntFlag{Name: "acc.nUserForNewAccounts", Value: 5, Usage: "num of new accounts"}, // TODO-kaia-load-tester: find out what this value for
 	cli.IntFlag{Name: "activeUserPercent", Value: 100, Usage: "percent of active accounts"},
 	cli.IntFlag{Name: "charge", Value: 1000000000, Usage: "charging amount for each test account in KLAY"},
+	cli.IntFlag{Name: "chargeParallel", Value: 0, Usage: "number of parallel transactions for charging accounts (0 = auto-detect based on CPU cores)"},
 	cli.IntFlag{Name: "maxidleconns", Value: 100, Usage: "maximum number of idle connections in default http client"},
 	cli.StringFlag{Name: "key", Usage: "private key of rich account for kaia charging of test accounts"},
 	cli.StringFlag{Name: "tc", Value: "", Usage: "tasks which user want to run, multiple tasks are separated by comma."},

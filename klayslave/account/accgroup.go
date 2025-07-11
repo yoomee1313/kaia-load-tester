@@ -120,7 +120,7 @@ func (a *AccGroup) GetValidAccGrp() []*Account {
 	return accGrp
 }
 
-func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account, gCli *client.Client, chargeValue *big.Int) {
+func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account, gCli *client.Client, chargeValue *big.Int, maxConcurrency int) {
 	inTheTcList := func(testNames []string) bool {
 		for _, tcName := range tcList {
 			for _, target := range testNames {
@@ -152,7 +152,7 @@ func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account,
 		if TestContract(idx) == ContractErc20 {
 			log.Printf("Start erc20 token charging to the test account group")
 			TestContractInfos[ContractErc20].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], TestContractInfos[ContractErc20].GenData(localReservoir.address, big.NewInt(1e11)))
-			ConcurrentTransactionSend(a.GetValidAccGrp(), func(acc *Account) {
+			ConcurrentTransactionSend(a.GetValidAccGrp(), maxConcurrency, func(acc *Account) {
 				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], TestContractInfos[ContractErc20].GenData(acc.address, big.NewInt(1e4)))
 			})
 		} else if TestContract(idx) == ContractErc721 {
@@ -169,7 +169,7 @@ func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account,
 			// accounts(validAccGrp + gaslessApproveAccGrp) should be charged.
 			accounts := a.GetValidAccGrp()
 			accounts = append(accounts, a.GetAccListByName(AccListForGaslessApproveTx)...)
-			ConcurrentTransactionSend(accounts, func(acc *Account) {
+			ConcurrentTransactionSend(accounts, maxConcurrency, func(acc *Account) {
 				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], TestContractInfos[ContractErc20].GenData(acc.address, chargeValue))
 			})
 		}

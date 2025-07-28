@@ -151,9 +151,9 @@ func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account,
 		// additional work - erc20 token charging or erc721 minting
 		if TestContract(idx) == ContractErc20 {
 			log.Printf("Start erc20 token charging to the test account group")
-			TestContractInfos[ContractErc20].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], TestContractInfos[ContractErc20].GenData(localReservoir.address, big.NewInt(1e11)))
+			TestContractInfos[ContractErc20].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], nil, TestContractInfos[ContractErc20].GenData(localReservoir.address, big.NewInt(1e11)))
 			ConcurrentTransactionSend(a.GetValidAccGrp(), maxConcurrency, func(acc *Account) {
-				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], TestContractInfos[ContractErc20].GenData(acc.address, big.NewInt(1e4)))
+				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], nil, TestContractInfos[ContractErc20].GenData(acc.address, big.NewInt(1e4)))
 			})
 		} else if TestContract(idx) == ContractErc721 {
 			log.Printf("Start erc721 nft minting to the test account group(similar to erc20 token charging)")
@@ -164,13 +164,13 @@ func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account,
 			lenGaslessApproveAccGrp := big.NewInt(int64(len(a.GetAccListByName(AccListForGaslessApproveTx))))
 			totalChargeValue := new(big.Int).Mul(chargeValue, new(big.Int).Add(lenValidAccGrp, lenGaslessApproveAccGrp))
 			// ContractGaslessToken's GenData generate data of approve. So can use ERC20's genData for transfer.
-			TestContractInfos[ContractGaslessToken].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], TestContractInfos[ContractErc20].GenData(localReservoir.address, totalChargeValue))
+			TestContractInfos[ContractGaslessToken].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], nil, TestContractInfos[ContractErc20].GenData(localReservoir.address, totalChargeValue))
 
 			// accounts(validAccGrp + gaslessApproveAccGrp) should be charged.
 			accounts := a.GetValidAccGrp()
 			accounts = append(accounts, a.GetAccListByName(AccListForGaslessApproveTx)...)
 			ConcurrentTransactionSend(accounts, maxConcurrency, func(acc *Account) {
-				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], TestContractInfos[ContractErc20].GenData(acc.address, chargeValue))
+				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], nil, TestContractInfos[ContractErc20].GenData(acc.address, chargeValue))
 			})
 		}
 	}

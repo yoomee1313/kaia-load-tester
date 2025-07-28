@@ -164,6 +164,7 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 		account.GaslessTokenDeployer.SmartContractExecutionWithGuaranteeRetry(
 			cfg.GetGCli(),
 			accGrp.GetTestContractByName(account.ContractGaslessToken),
+			nil,
 			account.TestContractInfos[account.ContractErc20].GenData(account.GSRSetupManager.GetAddress(), account.GetInitialLiquidity()),
 		)
 

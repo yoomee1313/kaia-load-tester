@@ -157,6 +157,8 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 
 	// 4. Deploy the test contracts which will be used in various TCs. If needed, charge tokens to test accounts.
 	accGrp.DeployTestContracts(cfg.GetTcStrList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), cfg.GetChargeParallelNum())
+
+	// 5. Setup liquidity and register GSR if tc is gaslessTransactionTC, gaslessRevertTransactionTC, or gaslessOnlyApproveTC
 	if !account.IsGSRExistInRegistry(cfg.GetGCli()) && (cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC") || cfg.InTheTcList("gaslessOnlyApproveTC")) {
 		log.Printf("GSR does not exist in registry, setting up liquidity and registering GSR...")
 
@@ -175,11 +177,27 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 		// Register GSR
 		account.RegisterGSR(cfg.GetGCli(), accGrp, globalReservoirAccount)
 	}
-	if !account.IsAuctionEntryPointExistInRegistry(cfg.GetGCli()) && (cfg.InTheTcList("auctionBidTC") || cfg.InTheTcList("auctionRevertedBidTC")) {
+
+	// 6. Register Auction Entry Point if tc is auctionBidTC or auctionRevertedBidTC
+	auctionInTc := cfg.InTheTcList("auctionBidTC") || cfg.InTheTcList("auctionRevertedBidTC")
+	if !account.IsAuctionEntryPointExistInRegistry(cfg.GetGCli()) && auctionInTc {
 		log.Printf("Auction Entry Point does not exist in registry, registering Auction Entry Point...")
 
 		// Register Auction Entry Point
 		account.RegisterAuctionEntryPoint(cfg.GetGCli(), accGrp, globalReservoirAccount)
+	}
+
+	// 7. Deposit to the Auction Contract for each account if tc is auctionBidTC or auctionRevertedBidTC
+	if auctionInTc {
+		log.Printf("Start depositing to the Auction Contract for each account")
+		account.ConcurrentTransactionSend(accGrp.GetValidAccGrp(), cfg.GetChargeParallelNum(), func(acc *account.Account) {
+			localReservoirAccount.SmartContractExecutionWithGuaranteeRetry(
+				cfg.GetGCli(),
+				accGrp.GetTestContractByName(account.ContractAuctionDepositVault),
+				cfg.GetChargeValue(),
+				account.TestContractInfos[account.ContractAuctionDepositVault].GenData(acc.GetAddress(), nil),
+			)
+		})
 	}
 
 	// Set SmartContractAddress value in each packages if needed

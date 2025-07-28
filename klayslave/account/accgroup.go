@@ -175,14 +175,6 @@ func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account,
 			ConcurrentTransactionSend(accounts, maxConcurrency, func(acc *Account) {
 				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], nil, TestContractInfos[ContractErc20].GenData(acc.address, chargeValue))
 			})
-		} else if TestContract(idx) == ContractAuctionEntryPoint && inTheTcList([]string{"auctionBidTC", "auctionRevertedBidTC"}) {
-			// The deposit will be made after ContractAuctionEntryPoint is deployed.
-			// This is because ContractAuctionDepositVault < ContractAuctionEntryPoint,
-			// and the deployment of AuctionEntryPoint is needed for the execution of the deposit.
-			log.Printf("Start depositing to the Auction Contract for each account")
-			ConcurrentTransactionSend(a.GetValidAccGrp(), maxConcurrency, func(acc *Account) {
-				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractAuctionDepositVault], chargeValue, TestContractInfos[ContractAuctionDepositVault].GenData(acc.address, nil))
-			})
 		}
 	}
 }

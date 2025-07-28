@@ -4,6 +4,8 @@ import (
 	"math/big"
 
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
+	"github.com/kaiachain/kaia-load-tester/testcase/auctionBidTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/auctionRevertedBidTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/analyticTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/doNothingTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/ioHeavyTC"
@@ -451,6 +453,18 @@ var TcList = map[string]*ExtendedTask{
 		Weight: 10,
 		Fn:     gaslessOnlyApproveTC.Run,
 		Init:   gaslessOnlyApproveTC.Init,
+	},
+	"auctionBidTC": {
+		Name:   auctionBidTC.Name,
+		Weight: 10,
+		Fn:     auctionBidTC.Run,
+		Init:   auctionBidTC.Init,
+	},
+	"auctionRevertedBidTC": {
+		Name:   auctionRevertedBidTC.Name,
+		Weight: 10,
+		Fn:     auctionRevertedBidTC.Run,
+		Init:   auctionRevertedBidTC.Init,
 	},
 	"ethereumTxLegacyTC": {
 		Name:   "ethereumTxLegacyTC",

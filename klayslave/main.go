@@ -129,8 +129,9 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	_ = globalReservoirAccount.GetNonce(cfg.GetGCli())
 	revertGroupChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForGaslessRevertTx)))))
 	approveGroupChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForGaslessApproveTx)))))
+	forAuctionDepositChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForSignedTx)))))
 	initialLiquidity := account.GetInitialLiquidity()
-	totalChargeValue := new(big.Int).Add(cfg.GetTotalChargeValue(), new(big.Int).Add(initialLiquidity, new(big.Int).Add(revertGroupChargeValue, approveGroupChargeValue)))
+	totalChargeValue := new(big.Int).Add(cfg.GetTotalChargeValue(), new(big.Int).Add(initialLiquidity, new(big.Int).Add(forAuctionDepositChargeValue, new(big.Int).Add(revertGroupChargeValue, approveGroupChargeValue))))
 	tx := globalReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), localReservoirAccount, totalChargeValue)
 	receipt, err := bind.WaitMined(context.Background(), cfg.GetGCli(), tx)
 	if err != nil {
@@ -173,6 +174,12 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 
 		// Register GSR
 		account.RegisterGSR(cfg.GetGCli(), accGrp, globalReservoirAccount)
+	}
+	if !account.IsAuctionEntryPointExistInRegistry(cfg.GetGCli()) && (cfg.InTheTcList("auctionBidTC") || cfg.InTheTcList("auctionRevertedBidTC")) {
+		log.Printf("Auction Entry Point does not exist in registry, registering Auction Entry Point...")
+
+		// Register Auction Entry Point
+		account.RegisterAuctionEntryPoint(cfg.GetGCli(), accGrp, globalReservoirAccount)
 	}
 	accGrp.DeployTestContracts(cfg.GetTcStrList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), cfg.GetChargeParallelNum())
 

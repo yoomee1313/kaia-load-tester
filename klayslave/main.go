@@ -181,7 +181,6 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 		// Register Auction Entry Point
 		account.RegisterAuctionEntryPoint(cfg.GetGCli(), accGrp, globalReservoirAccount)
 	}
-	accGrp.DeployTestContracts(cfg.GetTcStrList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), cfg.GetChargeParallelNum())
 
 	// Set SmartContractAddress value in each packages if needed
 	setSmartContractAddressPerPackage(accGrp)

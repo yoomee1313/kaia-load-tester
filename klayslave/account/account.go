@@ -1339,13 +1339,17 @@ func (self *Account) TransferNewSmartContractExecutionTx(c *client.Client, to *A
 
 	nonce := self.GetNonce(c)
 
+	if value == nil {
+		value = big.NewInt(0)
+	}
+
 	signer := types.NewEIP155Signer(chainID)
 	tx, err := types.NewTransactionWithMap(types.TxTypeSmartContractExecution, map[types.TxValueKeyType]interface{}{
 		types.TxValueKeyNonce:    nonce,
 		types.TxValueKeyGasPrice: gasPrice,
 		types.TxValueKeyGasLimit: uint64(5000000),
 		types.TxValueKeyFrom:     self.address,
-		types.TxValueKeyAmount:   big.NewInt(0),
+		types.TxValueKeyAmount:   value,
 		types.TxValueKeyTo:       to.address,
 		types.TxValueKeyData:     data,
 	})
@@ -2082,14 +2086,14 @@ func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, 
 }
 
 // TODO-kaia-load-tester: unify Retry functions into one function
-func (a *Account) SmartContractExecutionWithGuaranteeRetry(gCli *client.Client, to *Account, data []byte) {
+func (a *Account) SmartContractExecutionWithGuaranteeRetry(gCli *client.Client, to *Account, value *big.Int, data []byte) {
 	var (
 		err    error
 		lastTx *types.Transaction
 	)
 
 	for {
-		lastTx, _, err = a.TransferNewSmartContractExecutionTx(gCli, to, nil, data)
+		lastTx, _, err = a.TransferNewSmartContractExecutionTx(gCli, to, value, data)
 		if err == nil {
 			break
 		}

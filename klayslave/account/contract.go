@@ -9,6 +9,13 @@ import (
 	"strings"
 	"time"
 
+	// TODO: Change the import source to Kaia repo ---------
+	auctionDepositVaultContracts "github.com/kaiachain/kaia-load-tester/klayslave/account/contracts/auctionDepositVault"
+	auctionEntryPointContracts "github.com/kaiachain/kaia-load-tester/klayslave/account/contracts/auctionEntryPoint"
+	auctionFeeVaultContracts "github.com/kaiachain/kaia-load-tester/klayslave/account/contracts/auctionFeeVault"
+
+	// ----------------
+
 	"github.com/kaiachain/kaia/accounts/abi"
 	"github.com/kaiachain/kaia/accounts/abi/bind"
 	"github.com/kaiachain/kaia/blockchain"
@@ -29,16 +36,20 @@ import (
 
 // Contract deployer accounts
 var (
-	ERC20Deployer             = GetAccountFromKey(0, "eb2c84d41c639178ff26a81f488c196584d678bb1390cc20a3aeb536f3969a98")
-	ERC721Deployer            = GetAccountFromKey(0, "45c40d95c9b7898a21e073b5bf952bcb05f2e70072e239a8bbd87bb74a53355e")
-	StorageTrieDeployer       = GetAccountFromKey(0, "3737c381633deaaa4c0bdbc64728f6ef7d381b17e1d30bbb74665839cec942b8")
-	GeneralPurposeDeployer    = GetAccountFromKey(0, "c0cd1721f60535cb7779e5db43a94390aff9ead01ee3d654abffcb0453bdc927")
-	GaslessTokenDeployer      = GetAccountFromKey(0, "e095e5fdfc55ce9002edc26fdf402b8ece64586e9673f09b0a91dde39ccc8abe")
-	WKaiaDeployer             = GetAccountFromKey(0, "56f48de8c67737661df6b66d968e2597754051e9967dc665d901bc2e7aa2ee39")
-	UniswapFactoryDeployer    = GetAccountFromKey(0, "c6f61a31be1ca48b7774568bd47eacd03aed8fa9265d9eeb64a97136ea8e411a")
-	UniswapRouterDeployer     = GetAccountFromKey(0, "780d71b4ee7121673cf28492a3185bf97fcd9fe280c72d6df77d99648ba74541")
-	GaslessSwapRouterDeployer = GetAccountFromKey(0, "5a212da24b990b2164a2cbe070d15e8f2948b636cb224f9f72979faa564ef42f")
-	GSRSetupManager           = GetAccountFromKey(0, "76a5b8060388e1f83f7b3bdbcc5248d13b3c7e9771e8445afb2754ad5e192237")
+	ERC20Deployer               = GetAccountFromKey(0, "eb2c84d41c639178ff26a81f488c196584d678bb1390cc20a3aeb536f3969a98")
+	ERC721Deployer              = GetAccountFromKey(0, "45c40d95c9b7898a21e073b5bf952bcb05f2e70072e239a8bbd87bb74a53355e")
+	StorageTrieDeployer         = GetAccountFromKey(0, "3737c381633deaaa4c0bdbc64728f6ef7d381b17e1d30bbb74665839cec942b8")
+	GeneralPurposeDeployer      = GetAccountFromKey(0, "c0cd1721f60535cb7779e5db43a94390aff9ead01ee3d654abffcb0453bdc927")
+	GaslessTokenDeployer        = GetAccountFromKey(0, "e095e5fdfc55ce9002edc26fdf402b8ece64586e9673f09b0a91dde39ccc8abe")
+	WKaiaDeployer               = GetAccountFromKey(0, "56f48de8c67737661df6b66d968e2597754051e9967dc665d901bc2e7aa2ee39")
+	UniswapFactoryDeployer      = GetAccountFromKey(0, "c6f61a31be1ca48b7774568bd47eacd03aed8fa9265d9eeb64a97136ea8e411a")
+	UniswapRouterDeployer       = GetAccountFromKey(0, "780d71b4ee7121673cf28492a3185bf97fcd9fe280c72d6df77d99648ba74541")
+	GaslessSwapRouterDeployer   = GetAccountFromKey(0, "5a212da24b990b2164a2cbe070d15e8f2948b636cb224f9f72979faa564ef42f")
+	AuctionFeeVaultDeployer     = GetAccountFromKey(0, "34e4baf3acf5fe6eeda59ffbe7e7c525c835aa58c671889cab95c3210b27f2cf")
+	AuctionDepositVaultDeployer = GetAccountFromKey(0, "ae2a792e63ffe80c098d70f9d486e775790b6abb74db54dc5f0894965c3d9578")
+	AuctionEntryPointDeployer   = GetAccountFromKey(0, "2702a7f5f21a17ced7edd46f1d930e5b0d36d36278cfd343973b69a3673bce6c")
+	GSRSetupManager             = GetAccountFromKey(0, "76a5b8060388e1f83f7b3bdbcc5248d13b3c7e9771e8445afb2754ad5e192237")
+	Auctioneer                  = GetAccountFromKey(0, "b7dce0e6f88e4591bb8dc8c0f4d5082a10e38b4836e06a4a7f9d92cdb4a6f671")
 )
 
 // TestContractInfo represents a test contract configuration
@@ -76,6 +87,9 @@ var TestContractInfos = []TestContractInfo{
 	createUniswapFactoryContractInfo(),
 	createUniswapRouterContractInfo(),
 	createGaslessSwapRouterContractInfo(),
+	createAuctionFeeVaultContractInfo(),
+	createAuctionDepositVaultContractInfo(),
+	createAuctionEntryPointContractInfo(),
 }
 
 func createERC20ContractInfo() TestContractInfo {
@@ -295,8 +309,91 @@ func createGaslessSwapRouterContractInfo() TestContractInfo {
 	}
 }
 
+func createAuctionFeeVaultContractInfo() TestContractInfo {
+	return TestContractInfo{
+		testNames:    []string{"auctionBidTC", "auctionRevertedBidTC"},
+		Bytecode:     common.FromHex(auctionFeeVaultContracts.AuctionFeeVaultBin),
+		deployer:     AuctionFeeVaultDeployer,
+		contractName: "Auction Fee Vault",
+		GenData:      nil,
+		GetBytecodeWithConstructorParam: func(bin []byte, _ []*Account, _ *Account) []byte {
+			parsed, err := auctionFeeVaultContracts.AuctionFeeVaultMetaData.GetAbi()
+			if err != nil {
+				log.Fatalf("failed to get constructor abi: %v", err)
+			}
+			data, err := parsed.Pack("", Auctioneer.address, big.NewInt(1000), big.NewInt(1000))
+			if err != nil {
+				log.Fatalf("failed to pack constructor data: %v", err)
+			}
+			return append(bin, data...)
+		},
+		ShouldDeploy: shouldDeployRelatedAuction,
+		GetAddress:   getNonce0ContractAddress,
+	}
+}
+
+func createAuctionDepositVaultContractInfo() TestContractInfo {
+	return TestContractInfo{
+		testNames:    []string{"auctionBidTC", "auctionRevertedBidTC"},
+		Bytecode:     common.FromHex(auctionDepositVaultContracts.AuctionDepositVaultBin),
+		deployer:     AuctionDepositVaultDeployer,
+		contractName: "Auction Deposit Vault",
+		GenData: func(searcher common.Address, _ *big.Int) []byte {
+			abii, err := auctionDepositVaultContracts.AuctionDepositVaultMetaData.GetAbi()
+			if err != nil {
+				log.Fatalf("failed to get ABI: %v", err)
+			}
+			data, err := abii.Pack("depositFor", searcher)
+			if err != nil {
+				log.Fatalf("failed to pack deposit data: %v", err)
+			}
+			return data
+		},
+		GetBytecodeWithConstructorParam: func(bin []byte, contracts []*Account, _ *Account) []byte {
+			parsed, err := auctionDepositVaultContracts.AuctionDepositVaultMetaData.GetAbi()
+			if err != nil {
+				log.Fatalf("failed to get constructor abi: %v", err)
+			}
+			data, err := parsed.Pack("", Auctioneer.address, contracts[ContractAuctionFeeVault].address)
+			if err != nil {
+				log.Fatalf("failed to pack constructor data: %v", err)
+			}
+			return append(bin, data...)
+		},
+		ShouldDeploy: shouldDeployRelatedAuction,
+		GetAddress:   getNonce0ContractAddress,
+	}
+}
+
+func createAuctionEntryPointContractInfo() TestContractInfo {
+	return TestContractInfo{
+		testNames:    []string{"auctionBidTC", "auctionRevertedBidTC"},
+		Bytecode:     common.FromHex(auctionEntryPointContracts.AuctionEntryPointBin),
+		deployer:     AuctionEntryPointDeployer,
+		contractName: "Auction Entry Point",
+		GenData:      nil,
+		GetBytecodeWithConstructorParam: func(bin []byte, contracts []*Account, _ *Account) []byte {
+			parsed, err := auctionEntryPointContracts.AuctionEntryPointMetaData.GetAbi()
+			if err != nil {
+				log.Fatalf("failed to get constructor abi: %v", err)
+			}
+			data, err := parsed.Pack("", Auctioneer.address, contracts[ContractAuctionDepositVault].address, Auctioneer.address)
+			if err != nil {
+				log.Fatalf("failed to pack constructor data: %v", err)
+			}
+			return append(bin, data...)
+		},
+		ShouldDeploy: shouldDeployRelatedAuction,
+		GetAddress:   getAuctionEntryPointAddress,
+	}
+}
+
 func IsGSRExistInRegistry(gCli *client.Client) bool {
 	return getGSRAddressInRegistry(gCli, nil) != common.Address{}
+}
+
+func IsAuctionEntryPointExistInRegistry(gCli *client.Client) bool {
+	return getAuctionEntryPointAddressInRegistry(gCli, nil) != common.Address{}
 }
 
 func GetInitialLiquidity() *big.Int {
@@ -452,6 +549,53 @@ func RegisterGSR(gCli *client.Client, accGrp *AccGroup, globalReservoirAccount *
 	}
 }
 
+// RegisterAuctionEntryPoint registers a AuctionEntryPointAddress from a globalReservoirAccount.
+// The AuctionEntryPointAddress is always 0x259c74F5aBbc66D6015EfD15C2A80E8e10a1b435 because it is determined that it is created by the nonce0 of AuctionEntryPointDeployer.
+// Therefore, an address that conflicts with another slave will not be registered.
+func RegisterAuctionEntryPoint(gCli *client.Client, accGrp *AccGroup, globalReservoirAccount *Account) {
+	log.Printf("RegisterAuctionEntryPoint started...")
+	registry, err := kip149contract.NewRegistry(system.RegistryAddr, gCli)
+	if err != nil {
+		return
+	}
+	ctx := context.Background()
+	blockNum, err := gCli.BlockNumber(ctx)
+	if err != nil {
+		return
+	}
+
+	targetBlockNum := new(big.Int).Add(blockNum, big.NewInt(10))
+	globalReservoirAccount.TryRunTxSendFunctionWithGuaranteeRetry(gCli, []error{}, func(_ *client.Client, sender *Account) (*types.Transaction, error) {
+		transactOpts := bind.NewKeyedTransactor(sender.privateKey[0])
+		transactOpts.GasLimit = 3000000
+		return registry.Register(transactOpts, system.AuctionEntryPointName, accGrp.contracts[ContractAuctionEntryPoint].address, targetBlockNum)
+	})
+
+	// Wait until desired targetBlockNum plus 10 seconds margin
+	timeoutSec := targetBlockNum.Uint64() - blockNum.Uint64() + 10
+	timeout := time.NewTimer(time.Duration(timeoutSec) * time.Second)
+	defer timeout.Stop()
+
+	for {
+		select {
+		case <-timeout.C:
+			log.Fatalf("Timeout waiting for target block %d", targetBlockNum.Uint64())
+			return
+		default:
+			time.Sleep(1 * time.Second)
+			blockNum, err := gCli.BlockNumber(ctx)
+			if err != nil {
+				continue
+			}
+			if blockNum.Cmp(targetBlockNum) >= 0 {
+				log.Printf("Registered AuctionEntryPoint address %s at block %d", accGrp.contracts[ContractAuctionEntryPoint].address.String(), targetBlockNum.Uint64())
+				return
+			}
+			log.Printf("Waiting for target block %d, current block %d", targetBlockNum.Uint64(), blockNum.Uint64())
+		}
+	}
+}
+
 func returnBinAsIs(bin []byte, _ []*Account, _ *Account) []byte {
 	return bin
 }
@@ -481,6 +625,11 @@ func shouldDeployRelatedGSR(gCli *client.Client, deployer *Account) bool {
 	return !IsGSRExistInRegistry(gCli) && isDeployerNonce0(gCli, deployer)
 }
 
+// If the AuctionEntryPoint is not deployed in the registry, and the deployer is nonce0, deploy the related AuctionEntryPoint.
+func shouldDeployRelatedAuction(gCli *client.Client, deployer *Account) bool {
+	return !IsAuctionEntryPointExistInRegistry(gCli) && isDeployerNonce0(gCli, deployer)
+}
+
 func getGSRAddressInRegistry(gCli *client.Client, _ *Account) common.Address {
 	registry, err := kip149contract.NewRegistry(system.RegistryAddr, gCli)
 	if err != nil {
@@ -493,10 +642,32 @@ func getGSRAddressInRegistry(gCli *client.Client, _ *Account) common.Address {
 	return addr
 }
 
+func getAuctionEntryPointAddressInRegistry(gCli *client.Client, _ *Account) common.Address {
+	registry, err := kip149contract.NewRegistry(system.RegistryAddr, gCli)
+	if err != nil {
+		return common.Address{}
+	}
+	addr, err := registry.GetActiveAddr(&bind.CallOpts{}, system.AuctionEntryPointName)
+	if err != nil {
+		return common.Address{}
+	}
+	return addr
+}
+
 // Gives priority to data obtained from the chain.
 func getGSRAddress(gCli *client.Client, _ *Account) common.Address {
 	addressExpectedFromDeployer := getNonce0ContractAddress(gCli, GaslessSwapRouterDeployer)
 	addr := getGSRAddressInRegistry(gCli, nil)
+	if addr != (common.Address{}) {
+		return addr
+	}
+	return addressExpectedFromDeployer
+}
+
+// Gives priority to data obtained from the chain.
+func getAuctionEntryPointAddress(gCli *client.Client, _ *Account) common.Address {
+	addressExpectedFromDeployer := getNonce0ContractAddress(gCli, AuctionEntryPointDeployer)
+	addr := getAuctionEntryPointAddressInRegistry(gCli, nil)
 	if addr != (common.Address{}) {
 		return addr
 	}

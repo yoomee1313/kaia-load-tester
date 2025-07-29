@@ -16,6 +16,7 @@ import (
 	"github.com/kaiachain/kaia-load-tester/klayslave/config"
 	"github.com/kaiachain/kaia-load-tester/testcase"
 	"github.com/kaiachain/kaia-load-tester/testcase/auctionBidTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/auctionRevertedBidTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/erc20TransferTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/erc721TransferTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
@@ -116,6 +117,8 @@ func setSmartContractAddressPerPackage(a *account.AccGroup) {
 
 	auctionBidTC.AuctionEntryPointAccount = a.GetTestContractByName(account.ContractAuctionEntryPoint)
 	auctionBidTC.CounterForTestAuctionAccount = a.GetTestContractByName(account.ContractCounterForTestAuction)
+	auctionRevertedBidTC.AuctionEntryPointAccount = a.GetTestContractByName(account.ContractAuctionEntryPoint)
+	auctionRevertedBidTC.CounterForTestAuctionAccount = a.GetTestContractByName(account.ContractCounterForTestAuction)
 }
 
 // createTestAccGroupsAndPrepareContracts do every init steps before task.Init
@@ -227,6 +230,8 @@ func initializeTasks(cfg *config.Config, accGrp *account.AccGroup, tasks []*test
 		// Set TargetTxTypeList from config
 		if extendedTask.Name == "auctionBidTC" {
 			auctionBidTC.TargetTxTypeList = cfg.GetAuctionTargetTxTypeList()
+		} else if extendedTask.Name == "auctionRevertedBidTC" {
+			auctionRevertedBidTC.TargetTxTypeList = cfg.GetAuctionTargetTxTypeList()
 		}
 		extendedTask.Init(accs, cfg.GetGEndpoint(), cfg.GetGasPrice())
 		println("=> " + extendedTask.Name + " extendedTask is initialized.")

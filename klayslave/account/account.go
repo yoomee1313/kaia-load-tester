@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"math/big"
 	"math/rand"
 	"os"
@@ -1986,6 +1987,100 @@ func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryP
 			Sender:       self.address,
 			To:           targetContract.address,
 			Nonce:        appNonce.Uint64(),
+			Bid:          big.NewInt(2),
+			CallGasLimit: gas,
+			Data:         contractCallData,
+		},
+	}
+
+	// searcher sign bid
+	searcherSignedBid, err := self.signAuctionBidAsSearcher(bid, auctionEntryPoint)
+	if err != nil {
+		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, err
+	}
+
+	// auctioneer sign bid
+	bidInput, err := Auctioneer.signAuctionBidAsAuctioneer(searcherSignedBid, toRlp(targetTx))
+	if err != nil {
+		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, err
+	}
+
+	// send bid
+	var submitErr string
+	rpcOutput, err := c.SendAuctionTx(ctx, *bidInput)
+	if err != nil {
+		return targetTx.Hash(), bid.Hash(), suggestedGasPrice, err
+	}
+
+	/* ---------------- Handle rpc output -------------------------- */
+	if rpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP] != nil {
+		submitErr = rpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP].(string)
+	}
+	if submitErr != auction.ErrInvalidTargetTxHash.Error() && isAuctionErr(submitErr) {
+		// If the error happens in auction, we need to add native nonce of searcher.
+		targetTxType.PostSendBid(c, self, tmpAccount, nonce, suggestedGasPrice, blockNumber)
+		fmt.Printf("Auction error: %v\n", submitErr)
+		return targetTx.Hash(), bid.Hash(), suggestedGasPrice, err
+	}
+	targetTxType.PostSendBid(c, self, tmpAccount, nonce, suggestedGasPrice, blockNumber)
+
+	return targetTx.Hash(), bid.Hash(), suggestedGasPrice, nil
+}
+
+// AuctionRevertedBid is responsible for sending reverted bid.
+// Using an invalid nonce in a bid will cause the bid tx to be reverted.
+func (self *Account) AuctionRevertedBid(c *client.Client, endpoint string, auctionEntryPoint, targetContract *Account, targetTxTypeKey string) (common.Hash, common.Hash, *big.Int, error) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+
+	// create tmpAccount
+	tmpAccount := NewAccount(0)
+
+	/* ---------------- Generate target tx ---------------- */
+	nonce := self.GetNonce(c)
+	ctx := context.Background()
+	suggestedGasPrice, err := c.SuggestGasPrice(ctx)
+	if err != nil {
+		fmt.Printf("Failed to fetch suggest gas price: %v\n", err.Error())
+		return common.Hash{0}, common.Hash{0}, gasPrice, err
+	}
+
+	targetTxType := TargetTxTypeList[targetTxTypeKey]
+	targetTx := targetTxType.GenerateTx(c, self, tmpAccount, nonce, suggestedGasPrice)
+	if targetTx == nil {
+		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, errors.New("failed to generate target tx")
+	}
+	fmt.Println("targetTxHash:", targetTx.Hash().String())
+
+	/* ---------------- Send bid -------------------------- */
+	err = targetTxType.PreSendBid(c, self, tmpAccount, nonce, suggestedGasPrice)
+	if err != nil {
+		// If PreSendBid fails, the remaining steps do not need to be performed.
+		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, err
+	}
+
+	gas := uint64(5000000)
+
+	// Get current block number
+	blockNumber, err := c.BlockNumber(ctx)
+	if err != nil {
+		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, err
+	}
+	if self.isLastBlocknumSentTx(blockNumber.Uint64()) {
+		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, errors.New("this account has already sent a tx for the block")
+	}
+
+	// Create contract call data (CounterForAuction.incForAuction())
+	contractCallData := TestContractInfos[ContractCounterForTestAuction].GenData(common.Address{}, common.Big0) // 0 means calling incForAuction()
+
+	// Create the bid
+	bid := &auction.Bid{
+		BidData: auction.BidData{
+			TargetTxHash: targetTx.Hash(),
+			BlockNumber:  new(big.Int).Add(blockNumber, common.Big1).Uint64(),
+			Sender:       self.address,
+			To:           targetContract.address,
+			Nonce:        math.MaxUint64, // This causes a revert.
 			Bid:          big.NewInt(2),
 			CallGasLimit: gas,
 			Data:         contractCallData,

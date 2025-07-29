@@ -15,6 +15,7 @@ import (
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/klayslave/config"
 	"github.com/kaiachain/kaia-load-tester/testcase"
+	"github.com/kaiachain/kaia-load-tester/testcase/auctionBidTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/erc20TransferTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/erc721TransferTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
@@ -112,6 +113,9 @@ func setSmartContractAddressPerPackage(a *account.AccGroup) {
 	gaslessRevertTransactionTC.GsrAccount = a.GetTestContractByName(account.ContractGaslessSwapRouter)
 	gaslessOnlyApproveTC.TestTokenAccount = a.GetTestContractByName(account.ContractGaslessToken)
 	gaslessOnlyApproveTC.GsrAccount = a.GetTestContractByName(account.ContractGaslessSwapRouter)
+
+	auctionBidTC.AuctionEntryPointAccount = a.GetTestContractByName(account.ContractAuctionEntryPoint)
+	auctionBidTC.CounterForTestAuctionAccount = a.GetTestContractByName(account.ContractCounterForTestAuction)
 }
 
 // createTestAccGroupsAndPrepareContracts do every init steps before task.Init

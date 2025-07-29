@@ -28,7 +28,10 @@ import (
 	"github.com/kaiachain/kaia/common"
 	"github.com/kaiachain/kaia/common/hexutil"
 	"github.com/kaiachain/kaia/crypto"
+	"github.com/kaiachain/kaia/kaiax/auction"
+	auctionImpl "github.com/kaiachain/kaia/kaiax/auction/impl"
 	"github.com/kaiachain/kaia/params"
+	"github.com/kaiachain/kaia/rlp"
 )
 
 const Letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -40,13 +43,14 @@ var (
 )
 
 type Account struct {
-	id         int
-	privateKey []*ecdsa.PrivateKey
-	key        []string
-	address    common.Address
-	nonce      uint64
-	balance    *big.Int
-	mutex      sync.Mutex
+	id                 int
+	privateKey         []*ecdsa.PrivateKey
+	key                []string
+	address            common.Address
+	nonce              uint64
+	balance            *big.Int
+	mutex              sync.Mutex
+	lastBlocknumSentTx uint64
 }
 
 func init() {
@@ -89,7 +93,7 @@ func GetAccountFromKey(id int, key string) *Account {
 		0,
 		big.NewInt(0),
 		sync.Mutex{},
-		//make(TransactionMap),
+		0,
 	}
 
 	return &tAcc
@@ -145,7 +149,7 @@ func NewAccount(id int) *Account {
 		0,
 		big.NewInt(0),
 		sync.Mutex{},
-		//make(TransactionMap),
+		0,
 	}
 
 	return &tAcc
@@ -201,7 +205,7 @@ func NewKaiaAccount(id int) *Account {
 		0,
 		big.NewInt(0),
 		sync.Mutex{},
-		//make(TransactionMap),
+		0,
 	}
 
 	return &tAcc
@@ -223,7 +227,7 @@ func NewKaiaAccountWithAddr(id int, addr common.Address) *Account {
 		0,
 		big.NewInt(0),
 		sync.Mutex{},
-		//make(TransactionMap),
+		0,
 	}
 
 	return &tAcc
@@ -255,7 +259,7 @@ func NewKaiaMultisigAccount(id int) *Account {
 		0,
 		big.NewInt(0),
 		sync.Mutex{},
-		//make(TransactionMap),
+		0,
 	}
 
 	return &tAcc
@@ -1926,6 +1930,90 @@ func (self *Account) TransferNewGaslessApproveTx(c *client.Client, endpoint stri
 	return approveTx.Hash(), suggestedGasPrice, nil
 }
 
+func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryPoint, targetContract *Account) (common.Hash, common.Hash, *big.Int, error) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+
+	/* ---------------- Generate target tx ---------------- */
+	nonce := self.GetNonce(c)
+	gas := uint64(5000000)
+	ctx := context.Background()
+	suggestedGasPrice, err := c.SuggestGasPrice(ctx)
+	if err != nil {
+		fmt.Printf("Failed to fetch suggest gas price: %v\n", err.Error())
+		return common.Hash{0}, common.Hash{0}, gasPrice, err
+	}
+
+	targetTx := self.genTx(c, nonce, suggestedGasPrice)
+	fmt.Println("targetTxHash:", targetTx.Hash().String())
+
+	/* ---------------- Send bid -------------------------- */
+	// Get current block number
+	blockNumber, err := c.BlockNumber(ctx)
+	if err != nil {
+		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, err
+	}
+	if self.isLastBlocknumSentTx(blockNumber.Uint64()) {
+		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, errors.New("this account has already sent a tx for the block")
+	}
+
+	// Get entrypoint nonce
+	appNonce := getEntrypointNonce(c, self.GetAddress())
+	fmt.Printf("entrypoint nonce(%s): %d\n", self.GetAddress().String(), appNonce)
+
+	// Create contract call data (Counter.inc())
+	contractCallData := TestContractInfos[ContractCounterForTestAuction].GenData(common.Address{}, nil)
+
+	// Create the bid
+	bid := &auction.Bid{
+		BidData: auction.BidData{
+			TargetTxHash: targetTx.Hash(),
+			BlockNumber:  new(big.Int).Add(blockNumber, common.Big1).Uint64(),
+			Sender:       self.address,
+			To:           targetContract.address,
+			Nonce:        appNonce.Uint64(),
+			Bid:          big.NewInt(2),
+			CallGasLimit: gas,
+			Data:         contractCallData,
+		},
+	}
+
+	// searcher sign bid
+	searcherSignedBid, err := self.signAuctionBidAsSearcher(bid, auctionEntryPoint)
+	if err != nil {
+		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, err
+	}
+
+	// auctioneer sign bid
+	bidInput, err := Auctioneer.signAuctionBidAsAuctioneer(searcherSignedBid, toRlp(targetTx))
+	if err != nil {
+		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, err
+	}
+
+	// send bid
+	var submitErr string
+	rpcOutput, err := c.SendAuctionTx(ctx, *bidInput)
+	if err != nil {
+		return targetTx.Hash(), bid.Hash(), suggestedGasPrice, err
+	}
+
+	/* ---------------- Handle rpc output -------------------------- */
+	if rpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP] != nil {
+		submitErr = rpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP].(string)
+	}
+	if submitErr != auction.ErrInvalidTargetTxHash.Error() && isAuctionErr(submitErr) {
+		// If the error happens in auction, we need to add native nonce of searcher.
+		self.nonce++
+		self.updateLastBlocknumSentTx(blockNumber.Uint64())
+		fmt.Printf("Auction error: %v\n", submitErr)
+		return targetTx.Hash(), bid.Hash(), suggestedGasPrice, err
+	}
+	self.nonce++
+	self.updateLastBlocknumSentTx(blockNumber.Uint64())
+
+	return targetTx.Hash(), bid.Hash(), suggestedGasPrice, nil
+}
+
 func (self *Account) TransferNewEthAccessListTxWithEth(c *client.Client, endpoint string, to *Account, value *big.Int, input string, exePath string) (common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
@@ -2152,6 +2240,83 @@ func (a *Account) CheckBalance(expectedBalance *big.Int, cli *client.Client) err
 	}
 
 	return nil
+}
+
+func (a *Account) isLastBlocknumSentTx(blockNumber uint64) bool {
+	return a.lastBlocknumSentTx == blockNumber
+}
+
+func (a *Account) updateLastBlocknumSentTx(blockNumber uint64) {
+	a.lastBlocknumSentTx = blockNumber
+}
+
+func (a *Account) signAuctionBidAsSearcher(bid *auction.Bid, auctionEntryPoint *Account) (*auction.Bid, error) {
+	bidHash := bid.GetHashTypedData(chainID, auctionEntryPoint.GetAddress())
+	searcherSig, err := crypto.Sign(bidHash, a.privateKey[0])
+	if err != nil {
+		return nil, err
+	}
+	searcherSig[crypto.RecoveryIDOffset] += 27
+	bid.SearcherSig = searcherSig
+	return bid, nil
+}
+
+func (a *Account) signAuctionBidAsAuctioneer(auctionBid *auction.Bid, targetTxRaw []byte) (*auctionImpl.BidInput, error) {
+	msg := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(auctionBid.SearcherSig), auctionBid.SearcherSig)
+	hash := crypto.Keccak256([]byte(msg))
+	auctioneerSig, err := crypto.Sign(hash, a.privateKey[0])
+	if err != nil {
+		return nil, err
+	}
+
+	auctioneerSig[crypto.RecoveryIDOffset] += 27
+	bidInput := &auctionImpl.BidInput{
+		TargetTxRaw:   targetTxRaw,
+		TargetTxHash:  auctionBid.TargetTxHash,
+		BlockNumber:   auctionBid.BlockNumber,
+		Sender:        auctionBid.Sender,
+		To:            auctionBid.To,
+		Nonce:         auctionBid.Nonce,
+		Bid:           hexutil.Big(*auctionBid.Bid),
+		CallGasLimit:  auctionBid.CallGasLimit,
+		Data:          auctionBid.Data,
+		SearcherSig:   auctionBid.SearcherSig,
+		AuctioneerSig: auctioneerSig,
+	}
+	return bidInput, nil
+}
+
+func (self *Account) genTx(c *client.Client, nonce uint64, gasPrice *big.Int) *types.Transaction {
+	gas := uint64(21000)
+	var (
+		tx, _ = types.SignTx(types.NewTransaction(nonce, self.address, common.Big1, gas, gasPrice, nil), types.NewEIP155Signer(chainID), self.privateKey[0])
+	)
+	return tx
+}
+
+func toRlp(tx *types.Transaction) []byte {
+	rlp, _ := rlp.EncodeToBytes(tx)
+	return rlp
+}
+
+func isAuctionErr(err string) bool {
+	return err == auction.ErrInitUnexpectedNil.Error() ||
+		err == auction.ErrBlockNotFound.Error() ||
+		err == auction.ErrInvalidBlockNumber.Error() ||
+		err == auction.ErrInvalidSearcherSig.Error() ||
+		err == auction.ErrInvalidAuctioneerSig.Error() ||
+		err == auction.ErrNilChainId.Error() ||
+		err == auction.ErrNilVerifyingContract.Error() ||
+		err == auction.ErrInvalidTargetTxHash.Error() ||
+		err == auction.ErrAuctionDisabled.Error() ||
+		err == auction.ErrBidAlreadyExists.Error() ||
+		err == auction.ErrBidSenderExists.Error() ||
+		err == auction.ErrBidInvalidSearcherSig.Error() ||
+		err == auction.ErrBidInvalidAuctioneerSig.Error() ||
+		err == auction.ErrLowBid.Error() ||
+		err == auction.ErrZeroBid.Error() ||
+		err == auction.ErrBidPoolFull.Error() ||
+		err == auction.ErrAuctionPaused.Error()
 }
 
 func ConcurrentTransactionSend(accs []*Account, maxConcurrency int, transactionSend func(*Account)) {

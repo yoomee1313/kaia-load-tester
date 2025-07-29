@@ -117,6 +117,11 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 		log.Fatal("No valid Tc is set. Please set valid TcList. \n Input tcList was '" + tcNames + "'")
 	}
 
+	maxRPC := ctx.Int("max-rps")
+	if (cfg.InTheTcList("auctionBidTC") || cfg.InTheTcList("auctionRevertedBidTC")) && cfg.nUserForSigned < maxRPC {
+		log.Fatal("When auctionBidTC or auctionRevertedBidTC is set, nUserForSigned must be larger than max-rps")
+	}
+
 	fmt.Println("Arguments are set like the following:")
 	fmt.Printf("- Target EndPoint = %v\n", cfg.gEndpoint)
 	fmt.Printf("- nUserForSigned = %v\n", cfg.nUserForSigned)

@@ -715,6 +715,18 @@ func getAuctionEntryPointAddress(gCli *client.Client, _ *Account) common.Address
 	return addressExpectedFromDeployer
 }
 
+func getEntrypointNonce(gCli *client.Client, searcher common.Address) *big.Int {
+	auctionEntryPoint, err := auctionEntryPointContracts.NewAuctionEntryPoint(getAuctionEntryPointAddress(gCli, nil), gCli)
+	if err != nil {
+		return big.NewInt(0)
+	}
+	nonce, err := auctionEntryPoint.Nonces(&bind.CallOpts{}, searcher)
+	if err != nil {
+		return big.NewInt(0)
+	}
+	return nonce
+}
+
 // Gives priority to data obtained from the chain.
 func getGaslessTokenAddress(gCli *client.Client, deployer *Account) common.Address {
 	// If a supported token cannot be obtained from the registry, it will be assumed that the test token deployer has deployed it.

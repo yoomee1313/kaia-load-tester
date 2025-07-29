@@ -236,11 +236,21 @@ func (cfg *Config) InTheTcList(tcName string) bool {
 	}
 	return false
 }
+func (cfg *Config) InTheTargetTxTypeList(targetTxTypes ...string) bool {
+	for _, auctionTargetTxType := range cfg.auctionTargetTxTypeList {
+		for _, targetTxType := range targetTxTypes {
+			if auctionTargetTxType == targetTxType {
+				return true
+			}
+		}
+	}
+	return false
+}
 func (cfg *Config) GetChargeValue() *big.Int {
 	return new(big.Int).Mul(big.NewInt(int64(cfg.chargeKLAYAmount)), big.NewInt(params.KAIA))
 }
 func (cfg *Config) GetTotalChargeValue() *big.Int {
-	return new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(cfg.nUserForUnsigned+cfg.nUserForSigned+cfg.nUserForNewAccounts+1)))
+	return new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(cfg.nUserForUnsigned+cfg.nUserForSigned+cfg.nUserForNewAccounts+int(account.ContractEnd))))
 }
 
 // Flags TODO-kaia-load-tester: add env.var

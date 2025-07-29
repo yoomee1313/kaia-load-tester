@@ -160,10 +160,11 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	accGrp.SetAccGrpByActivePercent(cfg.GetActiveUserPercent())
 
 	// 4. Deploy the test contracts which will be used in various TCs. If needed, charge tokens to test accounts.
-	accGrp.DeployTestContracts(cfg.GetTcStrList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), cfg.GetChargeParallelNum())
+	accGrp.DeployTestContracts(cfg.GetTcStrList(), cfg.GetAuctionTargetTxTypeList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), cfg.GetChargeParallelNum())
 
 	// 5. Setup liquidity and register GSR if tc is gaslessTransactionTC, gaslessRevertTransactionTC, or gaslessOnlyApproveTC
-	if !account.IsGSRExistInRegistry(cfg.GetGCli()) && (cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC") || cfg.InTheTcList("gaslessOnlyApproveTC")) {
+	needGaslessSetup := cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC") || cfg.InTheTcList("gaslessOnlyApproveTC") || cfg.InTheTargetTxTypeList("GAA", "GAS", "rGAA", "rGAS")
+	if !account.IsGSRExistInRegistry(cfg.GetGCli()) && needGaslessSetup {
 		log.Printf("GSR does not exist in registry, setting up liquidity and registering GSR...")
 
 		// Charge KAIA and gasless tokens to GSRSetupManager

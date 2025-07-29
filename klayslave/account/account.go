@@ -1934,6 +1934,9 @@ func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryP
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
+	// create tmpAccount
+	tmpAccount := NewAccount(0)
+
 	/* ---------------- Generate target tx ---------------- */
 	nonce := self.GetNonce(c)
 	ctx := context.Background()
@@ -1944,13 +1947,19 @@ func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryP
 	}
 
 	targetTxType := TargetTxTypeList[targetTxTypeKey]
-	targetTx := targetTxType.GenerateTx(self, nonce, suggestedGasPrice)
+	targetTx := targetTxType.GenerateTx(c, self, tmpAccount, nonce, suggestedGasPrice)
 	if targetTx == nil {
 		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, errors.New("failed to generate target tx")
 	}
 	fmt.Println("targetTxHash:", targetTx.Hash().String())
 
 	/* ---------------- Send bid -------------------------- */
+	err = targetTxType.PreSendBid(c, self, tmpAccount, nonce, suggestedGasPrice)
+	if err != nil {
+		// If PreSendBid fails, the remaining steps do not need to be performed.
+		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, err
+	}
+
 	gas := uint64(5000000)
 
 	// Get current block number
@@ -1966,8 +1975,8 @@ func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryP
 	appNonce := getEntrypointNonce(c, self.GetAddress())
 	fmt.Printf("entrypoint nonce(%s): %d\n", self.GetAddress().String(), appNonce)
 
-	// Create contract call data (Counter.inc())
-	contractCallData := TestContractInfos[ContractCounterForTestAuction].GenData(common.Address{}, nil)
+	// Create contract call data (CounterForAuction.incForAuction())
+	contractCallData := TestContractInfos[ContractCounterForTestAuction].GenData(common.Address{}, common.Big0) // 0 means calling incForAuction()
 
 	// Create the bid
 	bid := &auction.Bid{
@@ -2008,13 +2017,11 @@ func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryP
 	}
 	if submitErr != auction.ErrInvalidTargetTxHash.Error() && isAuctionErr(submitErr) {
 		// If the error happens in auction, we need to add native nonce of searcher.
-		self.nonce++
-		self.updateLastBlocknumSentTx(blockNumber.Uint64())
+		targetTxType.PostSendBid(c, self, tmpAccount, nonce, suggestedGasPrice, blockNumber)
 		fmt.Printf("Auction error: %v\n", submitErr)
 		return targetTx.Hash(), bid.Hash(), suggestedGasPrice, err
 	}
-	self.nonce++
-	self.updateLastBlocknumSentTx(blockNumber.Uint64())
+	targetTxType.PostSendBid(c, self, tmpAccount, nonce, suggestedGasPrice, blockNumber)
 
 	return targetTx.Hash(), bid.Hash(), suggestedGasPrice, nil
 }

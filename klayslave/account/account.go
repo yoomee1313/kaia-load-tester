@@ -1930,13 +1930,12 @@ func (self *Account) TransferNewGaslessApproveTx(c *client.Client, endpoint stri
 	return approveTx.Hash(), suggestedGasPrice, nil
 }
 
-func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryPoint, targetContract *Account) (common.Hash, common.Hash, *big.Int, error) {
+func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryPoint, targetContract *Account, targetTxTypeKey string) (common.Hash, common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
 	/* ---------------- Generate target tx ---------------- */
 	nonce := self.GetNonce(c)
-	gas := uint64(5000000)
 	ctx := context.Background()
 	suggestedGasPrice, err := c.SuggestGasPrice(ctx)
 	if err != nil {
@@ -1944,10 +1943,16 @@ func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryP
 		return common.Hash{0}, common.Hash{0}, gasPrice, err
 	}
 
-	targetTx := self.genTx(c, nonce, suggestedGasPrice)
+	targetTxType := TargetTxTypeList[targetTxTypeKey]
+	targetTx := targetTxType.GenerateTx(self, nonce, suggestedGasPrice)
+	if targetTx == nil {
+		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, errors.New("failed to generate target tx")
+	}
 	fmt.Println("targetTxHash:", targetTx.Hash().String())
 
 	/* ---------------- Send bid -------------------------- */
+	gas := uint64(5000000)
+
 	// Get current block number
 	blockNumber, err := c.BlockNumber(ctx)
 	if err != nil {
@@ -2284,14 +2289,6 @@ func (a *Account) signAuctionBidAsAuctioneer(auctionBid *auction.Bid, targetTxRa
 		AuctioneerSig: auctioneerSig,
 	}
 	return bidInput, nil
-}
-
-func (self *Account) genTx(c *client.Client, nonce uint64, gasPrice *big.Int) *types.Transaction {
-	gas := uint64(21000)
-	var (
-		tx, _ = types.SignTx(types.NewTransaction(nonce, self.address, common.Big1, gas, gasPrice, nil), types.NewEIP155Signer(chainID), self.privateKey[0])
-	)
-	return tx
 }
 
 func toRlp(tx *types.Transaction) []byte {

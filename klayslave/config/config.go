@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/testcase"
 	klay "github.com/kaiachain/kaia/client"
 	"github.com/kaiachain/kaia/params"
@@ -28,6 +29,8 @@ type Config struct {
 	richWalletPrivateKey string
 	tcNameList           []string
 	tcWeights            []int
+
+	auctionTargetTxTypeList []string
 
 	chargeKLAYAmount  int
 	chargeParallelNum int
@@ -98,6 +101,7 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 		// add known tc
 		cfg.tcNameList = append(cfg.tcNameList, name)
 	}
+
 	// Parse tcWeights
 	tcWeights := ctx.String("weights")
 	for _, sWeight := range strings.Split(tcWeights, ",") {
@@ -109,6 +113,22 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 		}
 		cfg.tcWeights = append(cfg.tcWeights, iWeight)
 	}
+
+	// Parse auctionTargetTxTypeList when auctionBidTC or auctionRevertedBidTC is set
+	if cfg.InTheTcList("auctionBidTC") || cfg.InTheTcList("auctionRevertedBidTC") {
+		auctionTargetTxTypeList := ctx.String("auctionTargetTxTypeList")
+		if len(auctionTargetTxTypeList) == 0 {
+			log.Fatal("auctionTargetTxTypeList is not set. Please set auctionTargetTxTypeList.")
+		}
+		for _, sType := range strings.Split(auctionTargetTxTypeList, ",") {
+			// skip unknown targetTxType
+			if _, ok := account.TargetTxTypeList[sType]; !ok {
+				continue
+			}
+			cfg.auctionTargetTxTypeList = append(cfg.auctionTargetTxTypeList, sType)
+		}
+	}
+
 	if len(cfg.tcWeights) != 0 && len(cfg.tcWeights) != len(cfg.tcNameList) {
 		cfg.tcWeights = []int{}
 		fmt.Println("The length of --weights must match --tc.")
@@ -132,6 +152,7 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 	fmt.Printf("- chargeParallel = %v\n", cfg.chargeParallelNum)
 	fmt.Printf("- tc = %v\n", cfg.tcNameList)
 	fmt.Printf("- weights = %v\n", cfg.tcWeights)
+	fmt.Printf("- auctionTargetTxTypeList = %v\n", cfg.auctionTargetTxTypeList)
 }
 
 func (cfg *Config) setConfigsFromNode() {
@@ -194,18 +215,19 @@ func (cfg *Config) GetExtendedTasks() []*testcase.ExtendedTask {
 	return tasks
 }
 
-func (cfg *Config) GetChainID() *big.Int            { return cfg.chainID }
-func (cfg *Config) GetGasPrice() *big.Int           { return cfg.gasPrice }
-func (cfg *Config) GetBaseFee() *big.Int            { return cfg.baseFee }
-func (cfg *Config) GetNUserForUnsigned() int        { return cfg.nUserForUnsigned }
-func (cfg *Config) GetNUserForSigned() int          { return cfg.nUserForSigned }
-func (cfg *Config) GetNUserForNewAccounts() int     { return cfg.nUserForNewAccounts }
-func (cfg *Config) GetGEndpoint() string            { return cfg.gEndpoint }
-func (cfg *Config) GetActiveUserPercent() int       { return cfg.activeUserPercent }
-func (cfg *Config) GetTcStrList() []string          { return cfg.tcNameList }
-func (cfg *Config) GetRichWalletPrivateKey() string { return cfg.richWalletPrivateKey }
-func (cfg *Config) GetGCli() *klay.Client           { return cfg.gCli }
-func (cfg *Config) GetChargeParallelNum() int       { return cfg.chargeParallelNum }
+func (cfg *Config) GetChainID() *big.Int                 { return cfg.chainID }
+func (cfg *Config) GetGasPrice() *big.Int                { return cfg.gasPrice }
+func (cfg *Config) GetBaseFee() *big.Int                 { return cfg.baseFee }
+func (cfg *Config) GetNUserForUnsigned() int             { return cfg.nUserForUnsigned }
+func (cfg *Config) GetNUserForSigned() int               { return cfg.nUserForSigned }
+func (cfg *Config) GetNUserForNewAccounts() int          { return cfg.nUserForNewAccounts }
+func (cfg *Config) GetGEndpoint() string                 { return cfg.gEndpoint }
+func (cfg *Config) GetActiveUserPercent() int            { return cfg.activeUserPercent }
+func (cfg *Config) GetTcStrList() []string               { return cfg.tcNameList }
+func (cfg *Config) GetAuctionTargetTxTypeList() []string { return cfg.auctionTargetTxTypeList }
+func (cfg *Config) GetRichWalletPrivateKey() string      { return cfg.richWalletPrivateKey }
+func (cfg *Config) GetGCli() *klay.Client                { return cfg.gCli }
+func (cfg *Config) GetChargeParallelNum() int            { return cfg.chargeParallelNum }
 func (cfg *Config) InTheTcList(tcName string) bool {
 	for _, tc := range cfg.tcNameList {
 		if tcName == tc {
@@ -234,6 +256,7 @@ var Flags = []cli.Flag{
 	cli.StringFlag{Name: "key", Usage: "private key of rich account for kaia charging of test accounts"},
 	cli.StringFlag{Name: "tc", Value: "", Usage: "tasks which user want to run, multiple tasks are separated by comma."},
 	cli.StringFlag{Name: "weights", Value: "", Usage: "weights which user want to run, multiple weights are separated by comma."},
+	cli.StringFlag{Name: "auctionTargetTxTypeList", Value: "", Usage: "auction target tx types which user want to run, multiple target tx types are separated by comma."},
 	cli.StringFlag{Name: "testTokenAddr", Value: "", Usage: "Address of TestToken Contract"},
 	cli.StringFlag{Name: "gsrAddr", Value: "", Usage: "Address of Gasless Swap Router"},
 }

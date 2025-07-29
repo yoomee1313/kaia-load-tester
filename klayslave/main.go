@@ -222,6 +222,11 @@ func initializeTasks(cfg *config.Config, accGrp *account.AccGroup, tasks []*test
 		} else if extendedTask.Name == "gaslessOnlyApproveTC" {
 			accs = accGrp.GetAccListByName(account.AccListForGaslessApproveTx)
 		}
+
+		// Set TargetTxTypeList from config
+		if extendedTask.Name == "auctionBidTC" {
+			auctionBidTC.TargetTxTypeList = cfg.GetAuctionTargetTxTypeList()
+		}
 		extendedTask.Init(accs, cfg.GetGEndpoint(), cfg.GetGasPrice())
 		println("=> " + extendedTask.Name + " extendedTask is initialized.")
 	}

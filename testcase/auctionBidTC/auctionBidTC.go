@@ -21,6 +21,8 @@ var (
 
 	AuctionEntryPointAccount     *account.Account
 	CounterForTestAuctionAccount *account.Account
+
+	TargetTxTypeList []string
 )
 
 func Init(accs []*account.Account, endpoint string, gp *big.Int) {
@@ -49,9 +51,12 @@ func Run() {
 	from := accGrp[rand.Int()%nAcc]
 	testRecordName := "AuctionBid" + " to " + endPoint
 
+	// Select a targetTxType randomly from the list.
+	targetTxTypeKey := TargetTxTypeList[rand.Int()%len(TargetTxTypeList)]
+
 	start := boomer.Now()
 
-	_, _, _, err := from.AuctionBid(cli, endPoint, AuctionEntryPointAccount, CounterForTestAuctionAccount)
+	_, _, _, err := from.AuctionBid(cli, endPoint, AuctionEntryPointAccount, CounterForTestAuctionAccount, targetTxTypeKey)
 
 	elapsed := boomer.Now() - start
 

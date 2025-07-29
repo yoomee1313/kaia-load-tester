@@ -33,6 +33,7 @@ const (
 	ContractUniswapV2Factory
 	ContractUniswapV2Router
 	ContractGaslessSwapRouter
+	ContractCounterForTestAuction
 	ContractAuctionFeeVault
 	ContractAuctionDepositVault
 	ContractAuctionEntryPoint

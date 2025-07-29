@@ -36,20 +36,21 @@ import (
 
 // Contract deployer accounts
 var (
-	ERC20Deployer               = GetAccountFromKey(0, "eb2c84d41c639178ff26a81f488c196584d678bb1390cc20a3aeb536f3969a98")
-	ERC721Deployer              = GetAccountFromKey(0, "45c40d95c9b7898a21e073b5bf952bcb05f2e70072e239a8bbd87bb74a53355e")
-	StorageTrieDeployer         = GetAccountFromKey(0, "3737c381633deaaa4c0bdbc64728f6ef7d381b17e1d30bbb74665839cec942b8")
-	GeneralPurposeDeployer      = GetAccountFromKey(0, "c0cd1721f60535cb7779e5db43a94390aff9ead01ee3d654abffcb0453bdc927")
-	GaslessTokenDeployer        = GetAccountFromKey(0, "e095e5fdfc55ce9002edc26fdf402b8ece64586e9673f09b0a91dde39ccc8abe")
-	WKaiaDeployer               = GetAccountFromKey(0, "56f48de8c67737661df6b66d968e2597754051e9967dc665d901bc2e7aa2ee39")
-	UniswapFactoryDeployer      = GetAccountFromKey(0, "c6f61a31be1ca48b7774568bd47eacd03aed8fa9265d9eeb64a97136ea8e411a")
-	UniswapRouterDeployer       = GetAccountFromKey(0, "780d71b4ee7121673cf28492a3185bf97fcd9fe280c72d6df77d99648ba74541")
-	GaslessSwapRouterDeployer   = GetAccountFromKey(0, "5a212da24b990b2164a2cbe070d15e8f2948b636cb224f9f72979faa564ef42f")
-	AuctionFeeVaultDeployer     = GetAccountFromKey(0, "34e4baf3acf5fe6eeda59ffbe7e7c525c835aa58c671889cab95c3210b27f2cf")
-	AuctionDepositVaultDeployer = GetAccountFromKey(0, "ae2a792e63ffe80c098d70f9d486e775790b6abb74db54dc5f0894965c3d9578")
-	AuctionEntryPointDeployer   = GetAccountFromKey(0, "2702a7f5f21a17ced7edd46f1d930e5b0d36d36278cfd343973b69a3673bce6c")
-	GSRSetupManager             = GetAccountFromKey(0, "76a5b8060388e1f83f7b3bdbcc5248d13b3c7e9771e8445afb2754ad5e192237")
-	Auctioneer                  = GetAccountFromKey(0, "b7dce0e6f88e4591bb8dc8c0f4d5082a10e38b4836e06a4a7f9d92cdb4a6f671")
+	ERC20Deployer                 = GetAccountFromKey(0, "eb2c84d41c639178ff26a81f488c196584d678bb1390cc20a3aeb536f3969a98")
+	ERC721Deployer                = GetAccountFromKey(0, "45c40d95c9b7898a21e073b5bf952bcb05f2e70072e239a8bbd87bb74a53355e")
+	StorageTrieDeployer           = GetAccountFromKey(0, "3737c381633deaaa4c0bdbc64728f6ef7d381b17e1d30bbb74665839cec942b8")
+	GeneralPurposeDeployer        = GetAccountFromKey(0, "c0cd1721f60535cb7779e5db43a94390aff9ead01ee3d654abffcb0453bdc927")
+	GaslessTokenDeployer          = GetAccountFromKey(0, "e095e5fdfc55ce9002edc26fdf402b8ece64586e9673f09b0a91dde39ccc8abe")
+	WKaiaDeployer                 = GetAccountFromKey(0, "56f48de8c67737661df6b66d968e2597754051e9967dc665d901bc2e7aa2ee39")
+	UniswapFactoryDeployer        = GetAccountFromKey(0, "c6f61a31be1ca48b7774568bd47eacd03aed8fa9265d9eeb64a97136ea8e411a")
+	UniswapRouterDeployer         = GetAccountFromKey(0, "780d71b4ee7121673cf28492a3185bf97fcd9fe280c72d6df77d99648ba74541")
+	GaslessSwapRouterDeployer     = GetAccountFromKey(0, "5a212da24b990b2164a2cbe070d15e8f2948b636cb224f9f72979faa564ef42f")
+	CounterForTestAuctionDeployer = GetAccountFromKey(0, "caa1c841d600a7a37f08ca38478480a3ee254cefc30324048efd16a4f473d26d")
+	AuctionFeeVaultDeployer       = GetAccountFromKey(0, "34e4baf3acf5fe6eeda59ffbe7e7c525c835aa58c671889cab95c3210b27f2cf")
+	AuctionDepositVaultDeployer   = GetAccountFromKey(0, "ae2a792e63ffe80c098d70f9d486e775790b6abb74db54dc5f0894965c3d9578")
+	AuctionEntryPointDeployer     = GetAccountFromKey(0, "2702a7f5f21a17ced7edd46f1d930e5b0d36d36278cfd343973b69a3673bce6c")
+	GSRSetupManager               = GetAccountFromKey(0, "76a5b8060388e1f83f7b3bdbcc5248d13b3c7e9771e8445afb2754ad5e192237")
+	Auctioneer                    = GetAccountFromKey(0, "b7dce0e6f88e4591bb8dc8c0f4d5082a10e38b4836e06a4a7f9d92cdb4a6f671")
 )
 
 // TestContractInfo represents a test contract configuration
@@ -87,6 +88,7 @@ var TestContractInfos = []TestContractInfo{
 	createUniswapFactoryContractInfo(),
 	createUniswapRouterContractInfo(),
 	createGaslessSwapRouterContractInfo(),
+	createCounterForTestAuctionContractInfo(),
 	createAuctionFeeVaultContractInfo(),
 	createAuctionDepositVaultContractInfo(),
 	createAuctionEntryPointContractInfo(),
@@ -306,6 +308,45 @@ func createGaslessSwapRouterContractInfo() TestContractInfo {
 		},
 		ShouldDeploy: shouldDeployRelatedGSR,
 		GetAddress:   getGSRAddress,
+	}
+}
+
+// Target contract example code
+// // SPDX-License-Identifier: LGPL-3.0-only
+// pragma solidity ^0.8.18;
+
+// contract Counter {
+//     uint256 counter;
+
+//     function inc() public {
+//         counter += 1;
+//     }
+
+//	    function get() public view returns (uint256) {
+//	        return counter;
+//	    }
+//	}
+func createCounterForTestAuctionContractInfo() TestContractInfo {
+	return TestContractInfo{
+		testNames:    []string{"auctionBidTC", "auctionRevertedBidTC"},
+		Bytecode:     common.FromHex("0x6080604052348015600e575f80fd5b5060c080601a5f395ff3fe6080604052348015600e575f80fd5b50600436106030575f3560e01c8063371303c01460345780636d4ce63c14603c575b5f80fd5b603a6050565b005b5f5460405190815260200160405180910390f35b60015f80828254605f91906066565b9091555050565b80820180821115608457634e487b7160e01b5f52601160045260245ffd5b9291505056fea26469706673582212202dc49111f76658c5a5ec38c43ec4bc90a370b44fe8de6ef1e1194f027bd0155064736f6c63430008190033"),
+		deployer:     CounterForTestAuctionDeployer,
+		contractName: "Counter for Test Auction",
+		GenData: func(_ common.Address, _ *big.Int) []byte {
+			abiStr := `[{"inputs":[],"name":"get","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"inc","outputs":[],"stateMutability":"nonpayable","type":"function"}]`
+			abii, err := abi.JSON(strings.NewReader(abiStr))
+			if err != nil {
+				log.Fatalf("failed to abi.JSON: %v", err)
+			}
+			data, err := abii.Pack("inc")
+			if err != nil {
+				log.Fatalf("failed to abi.Pack: %v", err)
+			}
+			return data
+		},
+		GetBytecodeWithConstructorParam: returnBinAsIs,
+		ShouldDeploy:                    shouldDeployRelatedAuction,
+		GetAddress:                      getNonce0ContractAddress,
 	}
 }
 

@@ -1952,7 +1952,6 @@ func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryP
 	if targetTx == nil {
 		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, errors.New("failed to generate target tx")
 	}
-	fmt.Println("targetTxHash:", targetTx.Hash().String())
 
 	/* ---------------- Send bid -------------------------- */
 	err = targetTxType.PreSendBid(c, self, tmpAccount, nonce, suggestedGasPrice)
@@ -1974,7 +1973,6 @@ func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryP
 
 	// Get entrypoint nonce
 	appNonce := getEntrypointNonce(c, self.GetAddress())
-	fmt.Printf("entrypoint nonce(%s): %d\n", self.GetAddress().String(), appNonce)
 
 	// Create contract call data (CounterForAuction.incForAuction())
 	contractCallData := TestContractInfos[ContractCounterForTestAuction].GenData(common.Address{}, common.Big0) // 0 means calling incForAuction()
@@ -2050,7 +2048,6 @@ func (self *Account) AuctionRevertedBid(c *client.Client, endpoint string, aucti
 	if targetTx == nil {
 		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, errors.New("failed to generate target tx")
 	}
-	fmt.Println("targetTxHash:", targetTx.Hash().String())
 
 	/* ---------------- Send bid -------------------------- */
 	err = targetTxType.PreSendBid(c, self, tmpAccount, nonce, suggestedGasPrice)

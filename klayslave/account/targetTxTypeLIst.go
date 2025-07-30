@@ -123,7 +123,7 @@ var TargetTxTypeList = map[string]*TargetTxType{
 				common.Big0,
 				100000,
 				suggestedGasPrice,
-				TestContractInfos[ContractGaslessToken].GenData(account.address, abi.MaxUint256)) // Approve maximum amount
+				TestContractInfos[ContractGaslessToken].GenData(TestContractInfos[ContractGaslessSwapRouter].GetAddress(c, GaslessSwapRouterDeployer), abi.MaxUint256)) // Approve maximum amount
 			signApproveTx, err := types.SignTx(approveTx, types.NewEIP155Signer(chainID), account.privateKey[0])
 			if err != nil {
 				return nil
@@ -158,9 +158,7 @@ var TargetTxTypeList = map[string]*TargetTxType{
 				return
 			}
 
-			// Since gasless approve is the target, the gasless bundle is ignored and the auction bundle is executed.
-			// Therefore, gasless approve is performed normally and the nonce is incremented by 1.
-			account.nonce += 1
+			account.nonce += 2
 			account.updateLastBlocknumSentTx(blockNumber.Uint64())
 		},
 	},
@@ -190,7 +188,7 @@ var TargetTxTypeList = map[string]*TargetTxType{
 				common.Big0,
 				100000,
 				suggestedGasPrice,
-				TestContractInfos[ContractGaslessToken].GenData(account.address, abi.MaxUint256)) // Approve maximum amount
+				TestContractInfos[ContractGaslessToken].GenData(TestContractInfos[ContractGaslessSwapRouter].GetAddress(c, GaslessSwapRouterDeployer), abi.MaxUint256)) // Approve maximum amount
 			signApproveTx, err := types.SignTx(approveTx, types.NewEIP155Signer(chainID), account.privateKey[0])
 			if err != nil {
 				return err
@@ -226,7 +224,7 @@ var TargetTxTypeList = map[string]*TargetTxType{
 				common.Big0,
 				100000,
 				suggestedGasPrice,
-				TestContractInfos[ContractGaslessToken].GenData(tmpAccount.address, abi.MaxUint256)) // Approve maximum amount
+				TestContractInfos[ContractGaslessToken].GenData(TestContractInfos[ContractGaslessSwapRouter].GetAddress(c, GaslessSwapRouterDeployer), abi.MaxUint256)) // Approve maximum amount
 			signApproveTx, err := types.SignTx(approveTx, types.NewEIP155Signer(chainID), tmpAccount.privateKey[0])
 			if err != nil {
 				return nil
@@ -281,21 +279,19 @@ var TargetTxTypeList = map[string]*TargetTxType{
 				common.Big0,
 				100000,
 				suggestedGasPrice,
-				TestContractInfos[ContractGaslessToken].GenData(tmpAccount.address, abi.MaxUint256)) // Approve maximum amount
+				TestContractInfos[ContractGaslessToken].GenData(TestContractInfos[ContractGaslessSwapRouter].GetAddress(c, GaslessSwapRouterDeployer), abi.MaxUint256)) // Approve maximum amount
 			signApproveTx, err := types.SignTx(approveTx, types.NewEIP155Signer(chainID), tmpAccount.privateKey[0])
 			if err != nil {
 				return err
 			}
 
 			_, err = c.SendRawTransaction(ctx, signApproveTx)
-			fmt.Println("SendRawTransaction rGAS", err.Error())
 			if err != nil {
 				return err
 			}
 			return nil
 		},
 		PostSendBid: func(c *client.Client, _, tmpAccount *Account, _ uint64, suggestedGasPrice *big.Int, blockNumber *big.Int) {
-			return
 		},
 	},
 }

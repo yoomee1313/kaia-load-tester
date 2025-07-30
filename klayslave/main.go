@@ -15,6 +15,8 @@ import (
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/klayslave/config"
 	"github.com/kaiachain/kaia-load-tester/testcase"
+	"github.com/kaiachain/kaia-load-tester/testcase/auctionBidTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/auctionRevertedBidTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/erc20TransferTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/erc721TransferTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
@@ -112,6 +114,11 @@ func setSmartContractAddressPerPackage(a *account.AccGroup) {
 	gaslessRevertTransactionTC.GsrAccount = a.GetTestContractByName(account.ContractGaslessSwapRouter)
 	gaslessOnlyApproveTC.TestTokenAccount = a.GetTestContractByName(account.ContractGaslessToken)
 	gaslessOnlyApproveTC.GsrAccount = a.GetTestContractByName(account.ContractGaslessSwapRouter)
+
+	auctionBidTC.AuctionEntryPointAccount = a.GetTestContractByName(account.ContractAuctionEntryPoint)
+	auctionBidTC.CounterForTestAuctionAccount = a.GetTestContractByName(account.ContractCounterForTestAuction)
+	auctionRevertedBidTC.AuctionEntryPointAccount = a.GetTestContractByName(account.ContractAuctionEntryPoint)
+	auctionRevertedBidTC.CounterForTestAuctionAccount = a.GetTestContractByName(account.ContractCounterForTestAuction)
 }
 
 // createTestAccGroupsAndPrepareContracts do every init steps before task.Init
@@ -156,10 +163,11 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	accGrp.SetAccGrpByActivePercent(cfg.GetActiveUserPercent())
 
 	// 4. Deploy the test contracts which will be used in various TCs. If needed, charge tokens to test accounts.
-	accGrp.DeployTestContracts(cfg.GetTcStrList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), cfg.GetChargeParallelNum())
+	accGrp.DeployTestContracts(cfg.GetTcStrList(), cfg.GetAuctionTargetTxTypeList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), cfg.GetChargeParallelNum())
 
 	// 5. Setup liquidity and register GSR if tc is gaslessTransactionTC, gaslessRevertTransactionTC, or gaslessOnlyApproveTC
-	if !account.IsGSRExistInRegistry(cfg.GetGCli()) && (cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC") || cfg.InTheTcList("gaslessOnlyApproveTC")) {
+	needGaslessSetup := cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC") || cfg.InTheTcList("gaslessOnlyApproveTC") || cfg.InTheTargetTxTypeList("GAA", "GAS", "rGAA", "rGAS")
+	if !account.IsGSRExistInRegistry(cfg.GetGCli()) && needGaslessSetup {
 		log.Printf("GSR does not exist in registry, setting up liquidity and registering GSR...")
 
 		// Charge KAIA and gasless tokens to GSRSetupManager
@@ -217,6 +225,13 @@ func initializeTasks(cfg *config.Config, accGrp *account.AccGroup, tasks []*test
 			accs = accGrp.GetAccListByName(account.AccListForGaslessRevertTx)
 		} else if extendedTask.Name == "gaslessOnlyApproveTC" {
 			accs = accGrp.GetAccListByName(account.AccListForGaslessApproveTx)
+		}
+
+		// Set TargetTxTypeList from config
+		if extendedTask.Name == "auctionBidTC" {
+			auctionBidTC.TargetTxTypeList = cfg.GetAuctionTargetTxTypeList()
+		} else if extendedTask.Name == "auctionRevertedBidTC" {
+			auctionRevertedBidTC.TargetTxTypeList = cfg.GetAuctionTargetTxTypeList()
 		}
 		extendedTask.Init(accs, cfg.GetGEndpoint(), cfg.GetGasPrice())
 		println("=> " + extendedTask.Name + " extendedTask is initialized.")

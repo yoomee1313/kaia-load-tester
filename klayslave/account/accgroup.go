@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"math/rand"
+	"sync"
 
 	"github.com/kaiachain/kaia/client"
 )
@@ -33,6 +35,7 @@ const (
 	ContractUniswapV2Factory
 	ContractUniswapV2Router
 	ContractGaslessSwapRouter
+	ContractCounterForTestAuction
 	ContractAuctionFeeVault
 	ContractAuctionDepositVault
 	ContractAuctionEntryPoint
@@ -123,7 +126,7 @@ func (a *AccGroup) GetValidAccGrp() []*Account {
 	return accGrp
 }
 
-func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account, gCli *client.Client, chargeValue *big.Int, maxConcurrency int) {
+func (a *AccGroup) DeployTestContracts(tcList []string, targetTxTypeList []string, localReservoir *Account, gCli *client.Client, chargeValue *big.Int, maxConcurrency int) {
 	inTheTcList := func(testNames []string) bool {
 		for _, tcName := range tcList {
 			for _, target := range testNames {
@@ -135,9 +138,20 @@ func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account,
 		return false
 	}
 
+	inTheTargetTxTypeList := func(targetTxTypes []string) bool {
+		for _, targetTxType := range targetTxTypeList {
+			for _, target := range targetTxTypes {
+				if targetTxType == target {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
 	for idx, info := range TestContractInfos {
 		testContractType := TestContract(idx)
-		if testContractType != ContractGeneral && !inTheTcList(info.testNames) {
+		if testContractType != ContractGeneral && !inTheTcList(info.testNames) && !inTheTargetTxTypeList(info.auctionTargetTxTypeList) {
 			continue
 		}
 
@@ -161,7 +175,7 @@ func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account,
 		} else if TestContract(idx) == ContractErc721 {
 			log.Printf("Start erc721 nft minting to the test account group(similar to erc20 token charging)")
 			localReservoir.MintERC721ToTestAccounts(gCli, a.GetValidAccGrp(), a.GetTestContractByName(ContractErc721).GetAddress(), 5)
-		} else if TestContract(idx) == ContractGaslessToken && inTheTcList([]string{"gaslessTransactionTC", "gaslessOnlyApproveTC"}) {
+		} else if TestContract(idx) == ContractGaslessToken && (inTheTcList([]string{"gaslessTransactionTC", "gaslessOnlyApproveTC"}) || inTheTargetTxTypeList([]string{"GAA", "GAS"})) {
 			log.Printf("Start gasless test token charging to the test account group")
 			lenValidAccGrp := big.NewInt(int64(len(a.GetValidAccGrp())))
 			lenGaslessApproveAccGrp := big.NewInt(int64(len(a.GetAccListByName(AccListForGaslessApproveTx))))
@@ -177,4 +191,45 @@ func (a *AccGroup) DeployTestContracts(tcList []string, localReservoir *Account,
 			})
 		}
 	}
+}
+
+type AccountSet struct {
+	accounts        []*Account
+	mu              sync.Mutex
+	roundRobinIndex int
+}
+
+func NewAccountSet(accounts []*Account) *AccountSet {
+	return &AccountSet{
+		accounts:        accounts,
+		mu:              sync.Mutex{},
+		roundRobinIndex: 0,
+	}
+}
+
+func (a *AccountSet) Len() int {
+	return len(a.accounts)
+}
+
+func (a *AccountSet) Add(acc *Account) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.accounts = append(a.accounts, acc)
+}
+
+func (a *AccountSet) GetAccountRandomly() *Account {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.accounts[rand.Int()%a.Len()]
+}
+
+func (a *AccountSet) GetAccountRoundRobin() *Account {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	acc := a.accounts[a.roundRobinIndex]
+	a.roundRobinIndex++
+	if a.roundRobinIndex >= a.Len() {
+		a.roundRobinIndex = 0
+	}
+	return acc
 }

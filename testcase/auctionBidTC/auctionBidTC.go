@@ -16,7 +16,7 @@ const Name = "auctionBidTC"
 var (
 	endPoint string
 	nAcc     int
-	accGrp   []*account.Account
+	accGrp   *account.AccountSet
 	cliPool  clipool.ClientPool
 
 	AuctionEntryPointAccount     *account.Account
@@ -38,17 +38,15 @@ func Init(accs []*account.Account, endpoint string, gp *big.Int) {
 
 	cliPool.Init(20, 300, cliCreate)
 
-	for _, acc := range accs {
-		accGrp = append(accGrp, acc)
-	}
+	accGrp = account.NewAccountSet(accs)
 
-	nAcc = len(accGrp)
+	nAcc = accGrp.Len()
 }
 
 func Run() {
 	cli := cliPool.Alloc().(*client.Client)
 
-	from := accGrp[rand.Int()%nAcc]
+	from := accGrp.GetAccountRoundRobin()
 
 	testRecordName := "AuctionBid" + " to " + endPoint
 

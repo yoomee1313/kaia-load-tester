@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"math/rand"
+	"sync"
 
 	"github.com/kaiachain/kaia/client"
 )
@@ -189,4 +191,45 @@ func (a *AccGroup) DeployTestContracts(tcList []string, targetTxTypeList []strin
 			})
 		}
 	}
+}
+
+type AccountSet struct {
+	accounts        []*Account
+	mu              sync.Mutex
+	roundRobinIndex int
+}
+
+func NewAccountSet(accounts []*Account) *AccountSet {
+	return &AccountSet{
+		accounts:        accounts,
+		mu:              sync.Mutex{},
+		roundRobinIndex: 0,
+	}
+}
+
+func (a *AccountSet) Len() int {
+	return len(a.accounts)
+}
+
+func (a *AccountSet) Add(acc *Account) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.accounts = append(a.accounts, acc)
+}
+
+func (a *AccountSet) GetAccountRandomly() *Account {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.accounts[rand.Int()%a.Len()]
+}
+
+func (a *AccountSet) GetAccountRoundRobin() *Account {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	acc := a.accounts[a.roundRobinIndex]
+	a.roundRobinIndex++
+	if a.roundRobinIndex >= a.Len() {
+		a.roundRobinIndex = 0
+	}
+	return acc
 }

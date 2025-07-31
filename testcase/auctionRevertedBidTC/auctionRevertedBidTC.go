@@ -47,7 +47,7 @@ func Run() {
 	cli := cliPool.Alloc().(*client.Client)
 
 	from := accGrp.GetAccountRoundRobin()
-	testRecordName := "AuctionBid" + " to " + endPoint
+	testRecordName := "AuctionRevertedBid" + " to " + endPoint
 
 	// Select a targetTxType randomly from the list.
 	targetTxTypeKey := TargetTxTypeList[rand.Int()%len(TargetTxTypeList)]

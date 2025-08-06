@@ -60,15 +60,29 @@ func Init(accs []*account.Account, endpoint string, gp *big.Int) {
 
 func Run() {
 	cli := cliPool.Alloc().(*client.Client)
+	defer cliPool.Free(cli)
 
-	fromAcc := accGrp[rand.Intn(nAcc)]
 	toAcc := accGrp[rand.Intn(nAcc)]
 
-	// Get token ID from the channel
-	// Here is an assumption that it won't be blocked by the channel
-	// Although this go routine can be blocked, other can send a NFT to this account
-	fromNFTs := account.ERC721Ledger[fromAcc.GetAddress()]
-	tokenId := <-fromNFTs
+	// Find an account with available tokens
+	var fromAcc *account.Account
+	var tokenId *big.Int
+
+	// Try multiple accounts to find one with tokens
+	for i := 0; i < 200; i++ {
+		candidateAcc := accGrp[rand.Intn(len(accGrp))]
+		tokenId = account.ERC721Ledger.RemoveToken(candidateAcc.GetAddress())
+		if tokenId != nil {
+			fromAcc = candidateAcc
+			break
+		}
+	}
+
+	if tokenId == nil {
+		// No tokens available in any account
+		boomer.Events.Publish("request_failure", "http", Name+" to "+endPoint, int64(0), "No tokens available")
+		return
+	}
 
 	start := boomer.Now()
 	_, _, err := fromAcc.TransferERC721(false, cli, SmartContractAccount.GetAddress(), toAcc, tokenId)
@@ -76,12 +90,11 @@ func Run() {
 
 	if err == nil {
 		boomer.Events.Publish("request_success", "http", Name+" to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
-		toNFTs := account.ERC721Ledger[toAcc.GetAddress()]
-		toNFTs <- tokenId // push the token to the new owner's queue, it it does not fail
-
+		// Transfer successful, add token to destination account
+		account.ERC721Ledger.PutToken(toAcc.GetAddress(), tokenId)
 	} else {
 		boomer.Events.Publish("request_failure", "http", Name+" to "+endPoint, elapsed, err.Error())
-		fromNFTs <- tokenId // push back to the original owner, if it fails
+		// Transfer failed, put token back to original owner
+		account.ERC721Ledger.PutToken(fromAcc.GetAddress(), tokenId)
 	}
 }

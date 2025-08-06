@@ -57,6 +57,7 @@ func Init(accs []*account.Account, endpoint string, gp *big.Int) {
 
 func Run() {
 	cli := cliPool.Alloc().(*client.Client)
+	defer cliPool.Free(cli)
 
 	from := accGrp[rand.Int()%nAcc]
 	to := accGrp[rand.Int()%nAcc]
@@ -69,7 +70,6 @@ func Run() {
 
 	if err == nil {
 		boomer.Events.Publish("request_success", "http", Name+" to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
 	} else {
 		boomer.Events.Publish("request_failure", "http", Name+" to "+endPoint, elapsed, err.Error())
 	}

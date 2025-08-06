@@ -1110,13 +1110,17 @@ func (self *Account) TransferNewFeeDelegatedAccountUpdateWithRatioTx(c *client.C
 	return hash, gasPrice, nil
 }
 
-func (self *Account) TransferNewSmartContractDeployTx(c *client.Client, to *Account, value *big.Int, data []byte) (common.Address, *types.Transaction, *big.Int, error) {
+func (self *Account) TransferNewSmartContractDeployTx(c *client.Client, to *Account, value *big.Int, data []byte, shouldFixNonceZero bool) (common.Address, *types.Transaction, *big.Int, error) {
 	ctx := context.Background() //context.WithTimeout(context.Background(), 100*time.Second)
 
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
 	nonce := self.GetNonce(c)
+	if shouldFixNonceZero {
+		nonce = 0
+	}
+
 	signer := types.NewEIP155Signer(chainID)
 	tx, err := types.NewTransactionWithMap(types.TxTypeSmartContractDeploy, map[types.TxValueKeyType]interface{}{
 		types.TxValueKeyNonce:         nonce,
@@ -1142,8 +1146,10 @@ func (self *Account) TransferNewSmartContractDeployTx(c *client.Client, to *Acco
 	if err != nil {
 		if err.Error() == blockchain.ErrNonceTooLow.Error() || err.Error() == blockchain.ErrReplaceUnderpriced.Error() {
 			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
-			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
-			self.nonce++
+			if !shouldFixNonceZero {
+				fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
+				self.nonce++
+			}
 		} else {
 			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
 		}
@@ -2242,7 +2248,7 @@ func (self *Account) TransferUnsignedTx(c *client.Client, to *Account, value *bi
 
 // SmartContractDeployWithGuaranteeRetry deploys only one smart contract among the slaves.
 // It the contract is already deployed by other slave, it just calculates the address of the contract.
-func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, byteCode []byte, contractName string) *Account {
+func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, byteCode []byte, contractName string, shouldFixNonceZero bool) *Account {
 	log.Println(contractName, "deployer", self.address.String())
 
 	var (
@@ -2252,10 +2258,14 @@ func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, 
 	)
 
 	nonce := self.GetNonce(gCli)
+	if shouldFixNonceZero {
+		nonce = 0
+	}
 
 	for {
-		addr, lastTx, _, err = self.TransferNewSmartContractDeployTx(gCli, nil, common.Big0, byteCode)
-		if err == nil || strings.HasPrefix(err.Error(), "known transaction") {
+		addr, lastTx, _, err = self.TransferNewSmartContractDeployTx(gCli, nil, common.Big0, byteCode, shouldFixNonceZero)
+		if err == nil || strings.HasPrefix(err.Error(), "known transaction") || (shouldFixNonceZero && err.Error() == blockchain.ErrNonceTooLow.Error()) {
+			addr = crypto.CreateAddress(self.GetAddress(), nonce)
 			break
 		}
 		log.Printf("Failed to deploy a %s: err %s", contractName, err.Error())
@@ -2274,7 +2284,7 @@ func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, 
 	}
 
 	log.Printf("%s has been deployed to : %s\n", contractName, addr.String())
-	return NewKaiaAccountWithAddr(1, crypto.CreateAddress(self.GetAddress(), nonce))
+	return NewKaiaAccountWithAddr(1, addr)
 }
 
 // TODO-kaia-load-tester: unify Retry functions into one function

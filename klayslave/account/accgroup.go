@@ -160,10 +160,10 @@ func (a *AccGroup) DeployTestContracts(tcList []string, targetTxTypeList []strin
 				info.deployer = localReservoir
 			}
 			localReservoir.TransferSignedTxWithGuaranteeRetry(gCli, info.deployer, chargeValue)
-			a.contracts[idx] = info.deployer.SmartContractDeployWithGuaranteeRetry(gCli, info.GetBytecodeWithConstructorParam(info.Bytecode, a.contracts, info.deployer), info.contractName)
-		} else {
-			a.contracts[idx] = NewKaiaAccountWithAddr(0, info.GetAddress(gCli, info.deployer))
+			a.contracts[idx] = info.deployer.SmartContractDeployWithGuaranteeRetry(gCli, info.GetBytecodeWithConstructorParam(info.Bytecode, a.contracts, info.deployer), info.contractName, true)
 		}
+
+		a.contracts[idx] = NewKaiaAccountWithAddr(0, info.GetAddress(gCli, info.deployer))
 
 		// additional work - erc20 token charging or erc721 minting
 		if TestContract(idx) == ContractErc20 {

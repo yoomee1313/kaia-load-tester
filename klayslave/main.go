@@ -33,6 +33,7 @@ import (
 	"github.com/kaiachain/kaia-load-tester/testcase/storageTrieWriteTC"
 	"github.com/kaiachain/kaia/accounts/abi/bind"
 	"github.com/kaiachain/kaia/api/debug"
+	"github.com/kaiachain/kaia/common"
 	"github.com/kaiachain/kaia/console"
 	"github.com/myzhan/boomer"
 	"github.com/urfave/cli"
@@ -137,7 +138,11 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	revertGroupChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForGaslessRevertTx)))))
 	approveGroupChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForGaslessApproveTx)))))
 	forAuctionDepositChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForSignedTx)))))
-	initialLiquidity := account.GetInitialLiquidity()
+	initialLiquidity := common.Big0
+	if !account.IsGSRExistInRegistry(cfg.GetGCli()) {
+		// If GSR does not exist, charge initial liquidity to the local reservoir
+		initialLiquidity = account.GetInitialLiquidity()
+	}
 	totalChargeValue := new(big.Int).Add(cfg.GetTotalChargeValue(), new(big.Int).Add(initialLiquidity, new(big.Int).Add(forAuctionDepositChargeValue, new(big.Int).Add(revertGroupChargeValue, approveGroupChargeValue))))
 	tx := globalReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), localReservoirAccount, totalChargeValue)
 	receipt, err := bind.WaitMined(context.Background(), cfg.GetGCli(), tx)

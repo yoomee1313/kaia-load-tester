@@ -1968,6 +1968,12 @@ func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryP
 
 	gas := uint64(5000000)
 
+	// Get entrypoint nonce
+	appNonce := getEntrypointNonce(c, self.GetAddress())
+
+	// Create contract call data (CounterForAuction.incForAuction())
+	contractCallData := TestContractInfos[ContractCounterForTestAuction].GenData(common.Address{}, common.Big0) // 0 means calling incForAuction()
+
 	// Get current block number
 	blockNumber, err := c.BlockNumber(ctx)
 	if err != nil {
@@ -1976,12 +1982,6 @@ func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryP
 	if self.isLastBlocknumSentTx(blockNumber.Uint64()) {
 		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, errors.New("this account has already sent a tx for the block")
 	}
-
-	// Get entrypoint nonce
-	appNonce := getEntrypointNonce(c, self.GetAddress())
-
-	// Create contract call data (CounterForAuction.incForAuction())
-	contractCallData := TestContractInfos[ContractCounterForTestAuction].GenData(common.Address{}, common.Big0) // 0 means calling incForAuction()
 
 	// Create the bid
 	bid := &auction.Bid{
@@ -2020,12 +2020,15 @@ func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryP
 	if rpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP] != nil {
 		submitErr = rpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP].(string)
 	}
-	if submitErr != auction.ErrInvalidTargetTxHash.Error() && isAuctionErr(submitErr) {
-		// If the error happens in auction, we need to add native nonce of searcher.
-		targetTxType.PostSendBid(c, self, tmpAccount, nonce, suggestedGasPrice, blockNumber)
-		fmt.Printf("Auction error: %v\n", submitErr)
-		return targetTx.Hash(), bid.Hash(), suggestedGasPrice, err
+	if submitErr != "" {
+		if submitErr == blockchain.ErrNonceTooLow.Error() || submitErr == blockchain.ErrReplaceUnderpriced.Error() {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, submitErr)
+			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
+			self.nonce++
+		}
+		return targetTx.Hash(), bid.Hash(), suggestedGasPrice, errors.New(submitErr)
 	}
+
 	targetTxType.PostSendBid(c, self, tmpAccount, nonce, suggestedGasPrice, blockNumber)
 
 	return targetTx.Hash(), bid.Hash(), suggestedGasPrice, nil
@@ -2064,6 +2067,9 @@ func (self *Account) AuctionRevertedBid(c *client.Client, endpoint string, aucti
 
 	gas := uint64(5000000)
 
+	// Create contract call data (CounterForAuction.incForAuction())
+	contractCallData := TestContractInfos[ContractCounterForTestAuction].GenData(common.Address{}, common.Big0) // 0 means calling incForAuction()
+
 	// Get current block number
 	blockNumber, err := c.BlockNumber(ctx)
 	if err != nil {
@@ -2072,9 +2078,6 @@ func (self *Account) AuctionRevertedBid(c *client.Client, endpoint string, aucti
 	if self.isLastBlocknumSentTx(blockNumber.Uint64()) {
 		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, errors.New("this account has already sent a tx for the block")
 	}
-
-	// Create contract call data (CounterForAuction.incForAuction())
-	contractCallData := TestContractInfos[ContractCounterForTestAuction].GenData(common.Address{}, common.Big0) // 0 means calling incForAuction()
 
 	// Create the bid
 	bid := &auction.Bid{
@@ -2113,12 +2116,15 @@ func (self *Account) AuctionRevertedBid(c *client.Client, endpoint string, aucti
 	if rpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP] != nil {
 		submitErr = rpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP].(string)
 	}
-	if submitErr != auction.ErrInvalidTargetTxHash.Error() && isAuctionErr(submitErr) {
-		// If the error happens in auction, we need to add native nonce of searcher.
-		targetTxType.PostSendBid(c, self, tmpAccount, nonce, suggestedGasPrice, blockNumber)
-		fmt.Printf("Auction error: %v\n", submitErr)
-		return targetTx.Hash(), bid.Hash(), suggestedGasPrice, err
+	if submitErr != "" {
+		if submitErr == blockchain.ErrNonceTooLow.Error() || submitErr == blockchain.ErrReplaceUnderpriced.Error() {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, submitErr)
+			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
+			self.nonce++
+		}
+		return targetTx.Hash(), bid.Hash(), suggestedGasPrice, errors.New(submitErr)
 	}
+
 	targetTxType.PostSendBid(c, self, tmpAccount, nonce, suggestedGasPrice, blockNumber)
 
 	return targetTx.Hash(), bid.Hash(), suggestedGasPrice, nil

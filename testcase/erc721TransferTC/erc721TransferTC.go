@@ -69,13 +69,17 @@ func Run() {
 	var tokenId *big.Int
 
 	// Try multiple accounts to find one with tokens
+	candidateIdx := rand.Intn(len(accGrp))
+
+	// limit the number of attempts to find a token
 	for i := 0; i < 200; i++ {
-		candidateAcc := accGrp[rand.Intn(len(accGrp))]
+		candidateAcc := accGrp[candidateIdx]
 		tokenId = account.ERC721Ledger.RemoveToken(candidateAcc.GetAddress())
 		if tokenId != nil {
 			fromAcc = candidateAcc
 			break
 		}
+		candidateIdx = (candidateIdx + 1) % len(accGrp)
 	}
 
 	if tokenId == nil {

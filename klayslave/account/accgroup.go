@@ -168,8 +168,9 @@ func (a *AccGroup) DeployTestContracts(tcList []string, targetTxTypeList []strin
 		// additional work - erc20 token charging or erc721 minting
 		if TestContract(idx) == ContractErc20 {
 			log.Printf("Start erc20 token charging to the test account group")
+			TestContractInfos[ContractErc20].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], nil, TestContractInfos[ContractErc20].GenData(localReservoir.address, big.NewInt(1e11)))
 			ConcurrentTransactionSend(a.GetValidAccGrp(), maxConcurrency, func(acc *Account) {
-				TestContractInfos[ContractErc20].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], nil, TestContractInfos[ContractErc20].GenData(acc.address, big.NewInt(1e4)))
+				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], nil, TestContractInfos[ContractErc20].GenData(acc.address, big.NewInt(1e4)))
 			})
 		} else if TestContract(idx) == ContractErc721 {
 			log.Printf("Start erc721 nft minting to the test account group(similar to erc20 token charging)")

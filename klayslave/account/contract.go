@@ -55,11 +55,12 @@ var (
 
 // TestContractInfo represents a test contract configuration
 type TestContractInfo struct {
-	testNames                       []string
-	auctionTargetTxTypeList         []string
-	Bytecode                        []byte
-	deployer                        *Account
-	contractName                    string
+	testNames               []string
+	auctionTargetTxTypeList []string
+	Bytecode                []byte
+	deployer                *Account
+	contractName            string
+	// TODO: make GenData array or use go wrapper file
 	GenData                         func(addr common.Address, value *big.Int) []byte
 	GetBytecodeWithConstructorParam func(bin []byte, contracts []*Account, deployer *Account) []byte
 	ShouldDeploy                    func(gCli *client.Client, deployer *Account) bool
@@ -108,7 +109,12 @@ func createERC20ContractInfo() TestContractInfo {
 			if err != nil {
 				log.Fatalf("failed to abi.JSON: %v", err)
 			}
-			data, err := abii.Pack("transfer", recipientAddr, value)
+			var data []byte
+			if value.Cmp(big.NewInt(1e11)) == 0 {
+				data, err = abii.Pack("mint", recipientAddr, value)
+			} else {
+				data, err = abii.Pack("transfer", recipientAddr, value)
+			}
 			if err != nil {
 				log.Fatalf("failed to abi.Pack: %v", err)
 			}

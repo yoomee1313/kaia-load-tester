@@ -108,7 +108,7 @@ func createERC20ContractInfo() TestContractInfo {
 			if err != nil {
 				log.Fatalf("failed to abi.JSON: %v", err)
 			}
-			data, err := abii.Pack("transfer", recipientAddr, value)
+			data, err := abii.Pack("mint", recipientAddr, value)
 			if err != nil {
 				log.Fatalf("failed to abi.Pack: %v", err)
 			}

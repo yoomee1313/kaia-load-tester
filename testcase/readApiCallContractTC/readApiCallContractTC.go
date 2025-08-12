@@ -119,23 +119,15 @@ func setAnswerVariables() {
 func sendBoomerEvent(tcName string, logString string, elapsed int64, cli *client.Client, err error) {
 	if err == nil {
 		boomer.Events.Publish("request_success", "http", tcName+" to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
 	} else {
-		log.Printf("[TC] %s: %s, err=%v\n", tcName, logString, err)
 		boomer.Events.Publish("request_failure", "http", tcName+" to "+endPoint, elapsed, err.Error())
-		cli.Close()
 	}
 }
 
 func GetStorageAt() {
 	ctx := context.Background()
 	cli := cliPool.Alloc().(*client.Client)
-
-	// Check if SmartContractAccount is available
-	if SmartContractAccount == nil {
-		sendBoomerEvent("readGetStorageAt", "SmartContractAccount is nil", 0, cli, errors.New("SmartContractAccount is nil"))
-		return
-	}
+	defer cliPool.Free(cli)
 
 	contractAddr := SmartContractAccount.GetAddress()
 	start := boomer.Now()
@@ -150,6 +142,7 @@ func GetStorageAt() {
 
 func Call() {
 	cli := cliPool.Alloc().(*client.Client)
+	defer cliPool.Free(cli)
 
 	// Check if SmartContractAccount is available
 	if SmartContractAccount == nil {
@@ -191,6 +184,7 @@ func Call() {
 func EstimateGas() {
 	ctx := context.Background()
 	cli := cliPool.Alloc().(*client.Client)
+	defer cliPool.Free(cli)
 
 	// Check if SmartContractAccount is available
 	if SmartContractAccount == nil {

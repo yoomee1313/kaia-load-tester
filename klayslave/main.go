@@ -17,6 +17,7 @@ import (
 	"github.com/kaiachain/kaia-load-tester/testcase"
 	"github.com/kaiachain/kaia-load-tester/testcase/auctionBidTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/auctionRevertedBidTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/cpuHeavyTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/erc20TransferTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/erc721TransferTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
@@ -25,12 +26,16 @@ import (
 	"github.com/kaiachain/kaia-load-tester/testcase/gaslessOnlyApproveTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/gaslessRevertTransactionTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/gaslessTransactionTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/internalTxTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/largeMemoTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumAccessListTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumDynamicFeeTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractExecutionTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractExecutionWithRatioTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/newSmartContractExecutionTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/readApiCallContractTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/storageTrieWriteTC"
+	"github.com/kaiachain/kaia-load-tester/testcase/userStorageTC"
 	"github.com/kaiachain/kaia/accounts/abi/bind"
 	"github.com/kaiachain/kaia/api/debug"
 	"github.com/kaiachain/kaia/common"
@@ -120,6 +125,14 @@ func setSmartContractAddressPerPackage(a *account.AccGroup) {
 	auctionBidTC.CounterForTestAuctionAccount = a.GetTestContractByName(account.ContractCounterForTestAuction)
 	auctionRevertedBidTC.AuctionEntryPointAccount = a.GetTestContractByName(account.ContractAuctionEntryPoint)
 	auctionRevertedBidTC.CounterForTestAuctionAccount = a.GetTestContractByName(account.ContractCounterForTestAuction)
+
+	cpuHeavyTC.SmartContractAccount = a.GetTestContractByName(account.ContractCPUHeavy)
+	largeMemoTC.SmartContractAccount = a.GetTestContractByName(account.ContractLargeMemo)
+	readApiCallContractTC.SmartContractAccount = a.GetTestContractByName(account.ContractReadApiCallContract)
+	userStorageTC.SmartContractAccount = a.GetTestContractByName(account.ContractUserStorage)
+
+	internalTxTC.KIP17ContractAccount = a.GetTestContractByName(account.ContractInternalTxKIP17)
+	internalTxTC.MainContractAccount = a.GetTestContractByName(account.ContractInternalTxMain)
 }
 
 // createTestAccGroupsAndPrepareContracts do every init steps before task.Init

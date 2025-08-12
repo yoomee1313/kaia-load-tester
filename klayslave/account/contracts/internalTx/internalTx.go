@@ -1,4 +1,4 @@
-package internalTxTC
+package internalTx
 
 import (
 	"math/big"

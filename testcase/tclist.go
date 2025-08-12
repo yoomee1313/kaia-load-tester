@@ -6,11 +6,6 @@ import (
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/testcase/auctionBidTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/auctionRevertedBidTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/analyticTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/doNothingTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/ioHeavyTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/smallBankTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/blockbench/ycsbTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/cpuHeavyTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/erc20TransferTC"
 	"github.com/kaiachain/kaia-load-tester/testcase/erc721TransferTC"
@@ -66,30 +61,6 @@ type ExtendedTaskSet []*ExtendedTask
 
 // TcList initializes TCs and returns a slice of TCs.
 var TcList = map[string]*ExtendedTask{
-	"analyticTx": {
-		Name:   "analyticTx",
-		Weight: 10,
-		Fn:     analyticTC.Run,
-		Init:   analyticTC.Init,
-	},
-	"analyticQueryLargestAccBalTx": {
-		Name:   "analyticQueryLargestAccBalTx",
-		Weight: 10,
-		Fn:     analyticTC.QueryLargestAccBal,
-		Init:   analyticTC.Init,
-	},
-	"analyticQueryLargestTxValTx": {
-		Name:   "analyticQueryLargestTxValTx",
-		Weight: 10,
-		Fn:     analyticTC.QueryLargestTxVal,
-		Init:   analyticTC.Init,
-	},
-	"analyticQueryTotalTxValTx": {
-		Name:   "analyticQueryTotalTxValTx",
-		Weight: 10,
-		Fn:     analyticTC.QueryTotalTxVal,
-		Init:   analyticTC.Init,
-	},
 	"cpuHeavyTx": {
 		Name:   "cpuHeavyTx",
 		Weight: 10,
@@ -97,12 +68,6 @@ var TcList = map[string]*ExtendedTask{
 		Init:   cpuHeavyTC.Init,
 		//AccGrp:  accGrpForSignedTx, //[nUserForSigned/2:],
 		//EndPint: gEndpoint,
-	},
-	"doNothingTx": {
-		Name:   "doNothingTx",
-		Weight: 10,
-		Fn:     doNothingTC.Run,
-		Init:   doNothingTC.Init,
 	},
 	internalTxTC.Name: {
 		Name:   internalTxTC.Name,
@@ -116,24 +81,6 @@ var TcList = map[string]*ExtendedTask{
 		Fn:     internalTxTC.RunMintNFT,
 		Init:   internalTxTC.Init,
 	},
-	"ioHeavyTx": {
-		Name:   "ioHeavyTx",
-		Weight: 10,
-		Fn:     ioHeavyTC.Run,
-		Init:   ioHeavyTC.Init,
-	},
-	"ioHeavyScanTx": {
-		Name:   "ioHeavyScanTx",
-		Weight: 10,
-		Fn:     ioHeavyTC.Scan,
-		Init:   ioHeavyTC.Init,
-	},
-	"ioHeavyWriteTx": {
-		Name:   "ioHeavyWriteTx",
-		Weight: 10,
-		Fn:     ioHeavyTC.Write,
-		Init:   ioHeavyTC.Init,
-	},
 	"largeMemoTC": {
 		Name:   "largeMemoTC",
 		Weight: 10,
@@ -145,48 +92,6 @@ var TcList = map[string]*ExtendedTask{
 		Weight: 10,
 		Fn:     receiptCheckTc.Run,
 		Init:   receiptCheckTc.Init,
-	},
-	"smallBankTx": {
-		Name:   "smallBankTx",
-		Weight: 10,
-		Fn:     smallBankTC.Run,
-		Init:   smallBankTC.Init,
-	},
-	"smallBankAlmagateTx": {
-		Name:   "smallBankAlmagateTx",
-		Weight: 10,
-		Fn:     smallBankTC.Almagate,
-		Init:   smallBankTC.Init,
-	},
-	"smallBankGetBalanceTx": {
-		Name:   "smallBankGetBalanceTx",
-		Weight: 10,
-		Fn:     smallBankTC.GetBalance,
-		Init:   smallBankTC.Init,
-	},
-	"smallBankSendPaymentTx": {
-		Name:   "smallBankSendPaymentTx",
-		Weight: 10,
-		Fn:     smallBankTC.SendPayment,
-		Init:   smallBankTC.Init,
-	},
-	"smallBankUpdateBalanceTx": {
-		Name:   "smallBankUpdateBalanceTx",
-		Weight: 10,
-		Fn:     smallBankTC.UpdateBalance,
-		Init:   smallBankTC.Init,
-	},
-	"smallBankUpdateSavingTx": {
-		Name:   "smallBankUpdateSavingTx",
-		Weight: 10,
-		Fn:     smallBankTC.UpdateSaving,
-		Init:   smallBankTC.Init,
-	},
-	"smallBankWriteCheckTx": {
-		Name:   "smallBankWriteCheckTx",
-		Weight: 10,
-		Fn:     smallBankTC.WriteCheck,
-		Init:   smallBankTC.Init,
 	},
 	"transferSignedTx": {
 		Name:   "transferSignedTx",
@@ -357,24 +262,6 @@ var TcList = map[string]*ExtendedTask{
 		Weight: 10,
 		Fn:     userStorageTC.RunSetGet,
 		Init:   userStorageTC.Init,
-	},
-	"ycsbTx": {
-		Name:   "ycsbTx",
-		Weight: 10,
-		Fn:     ycsbTC.Run,
-		Init:   ycsbTC.Init,
-	},
-	"ycsbGetTx": {
-		Name:   "ycsbGetTx",
-		Weight: 10,
-		Fn:     ycsbTC.Get,
-		Init:   ycsbTC.Init,
-	},
-	"ycsbSetTx": {
-		Name:   "ycsbSetTx",
-		Weight: 10,
-		Fn:     ycsbTC.Set,
-		Init:   ycsbTC.Init,
 	},
 	erc20TransferTC.Name: {
 		Name:   erc20TransferTC.Name,

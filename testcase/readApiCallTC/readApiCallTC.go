@@ -66,11 +66,8 @@ func Init(accs []*account.Account, ep string, gp *big.Int) {
 func sendBoomerEvent(tcName string, logString string, elapsed int64, cli *rpc.Client, err error) {
 	if err == nil {
 		boomer.Events.Publish("request_success", "http", tcName+" to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
 	} else {
-		log.Printf("[TC] %s: %s, err=%v\n", tcName, logString, err)
 		boomer.Events.Publish("request_failure", "http", tcName+" to "+endPoint, elapsed, err.Error())
-		cli.Close()
 	}
 }
 
@@ -96,6 +93,8 @@ func getRandomBlockNumber(cli *client.Client, ctx context.Context) *big.Int {
 func GasPrice() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
+	defer cliPool.Free(rpcCli)
+
 	cli := client.NewClient(rpcCli)
 
 	start := boomer.Now()
@@ -110,6 +109,8 @@ func GasPrice() {
 func BlockNumber() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
+	defer cliPool.Free(rpcCli)
+
 	cli := client.NewClient(rpcCli)
 
 	start := boomer.Now()
@@ -126,6 +127,8 @@ func BlockNumber() {
 func GetBlockByNumber() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
+	defer cliPool.Free(rpcCli)
+
 	cli := client.NewClient(rpcCli)
 
 	ansBN := getRandomBlockNumber(cli, ctx)
@@ -143,6 +146,7 @@ func GetBlockByNumber() {
 func GetAccount() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
+	defer cliPool.Free(rpcCli)
 
 	var j json.RawMessage
 	fromAccount := accGrp[rand.Int()%nAcc]
@@ -163,6 +167,7 @@ func GetAccount() {
 func GetBlockWithConsensusInfoByNumber() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
+	defer cliPool.Free(rpcCli)
 
 	ansBN := getRandomBlockNumber(client.NewClient(rpcCli), ctx)
 	start := boomer.Now()

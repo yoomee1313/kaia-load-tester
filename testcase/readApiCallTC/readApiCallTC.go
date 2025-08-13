@@ -34,7 +34,7 @@ var (
 	count             uint64
 )
 
-func Init(accs []*account.Account, ep string, gp *big.Int) {
+func Init(accs []*account.Account, contractsParam []*account.Account, ep string, gp *big.Int) {
 	mutex.Lock()
 	defer mutex.Unlock()
 

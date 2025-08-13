@@ -34,7 +34,6 @@ var (
 
 	gasPrice *big.Int
 
-	// multinode tester
 	SmartContractAccount *account.Account
 
 	retValOfCall        *big.Int
@@ -42,7 +41,7 @@ var (
 	retValOfEstimateGas uint64
 )
 
-func Init(accs []*account.Account, ep string, gp *big.Int) {
+func Init(accs []*account.Account, contractsParam []*account.Account, ep string, gp *big.Int) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
@@ -53,6 +52,7 @@ func Init(accs []*account.Account, ep string, gp *big.Int) {
 
 	gasPrice = gp
 	endPoint = ep
+	SmartContractAccount = contractsParam[account.ContractReadApiCallContract]
 	cliCreate := func() interface{} {
 		c, err := client.Dial(endPoint)
 		if err != nil {

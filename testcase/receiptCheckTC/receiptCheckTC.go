@@ -35,13 +35,9 @@ var (
 	rwMutex  sync.RWMutex
 
 	ratioReadPerSend = 9 // read:send = ratioReadPerSend:1
-
-	gasPrice *big.Int
 )
 
-func Init(accs []*account.Account, endpoint string, gp *big.Int) {
-	gasPrice = gp
-
+func Init(accs []*account.Account, contractsParam []*account.Account, endpoint string, gp *big.Int) {
 	endPoint = endpoint
 
 	cliCreate := func() interface{} {
@@ -86,6 +82,7 @@ func getHash() common.Hash {
 
 func RunSendTx() {
 	cli := cliPool.Alloc().(*client.Client)
+	defer cliPool.Free(cli)
 
 	from := accGrp[rand.Int()%nAcc]
 	to := accGrp[rand.Int()%nAcc]
@@ -98,39 +95,14 @@ func RunSendTx() {
 
 	if err == nil {
 		boomer.Events.Publish("request_success", Name, "send tx"+" to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
 	} else {
 		boomer.Events.Publish("request_failure", Name, "send tx"+" to "+endPoint, elapsed, err.Error())
 	}
 }
-
-func RunSendTxSingle() {
-	cli := cliPool.Alloc().(*client.Client)
-
-	from := accGrp[rand.Int()%nAcc]
-	from.GetNonceFromBlock(cli)
-	to := accGrp[rand.Int()%nAcc]
-	value := big.NewInt(int64(rand.Int() % 3))
-
-	start := boomer.Now()
-	hash, _, err := from.TransferSignedTx(cli, to, value)
-	addHash(hash)
-	elapsed := boomer.Now() - start
-
-	if err == nil {
-		boomer.Events.Publish("request_success", Name, "send tx"+" to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
-	} else {
-		boomer.Events.Publish("request_failure", Name, "send tx"+" to "+endPoint, elapsed, err.Error())
-	}
-}
-
-var (
-	receiptDisplayCnt uint64
-)
 
 func RunReadTx() {
 	cli := cliPool.Alloc().(*client.Client)
+	defer cliPool.Free(cli)
 
 	ctx := context.Background()
 	hash := getHash()
@@ -151,7 +123,6 @@ func RunReadTx() {
 
 	if err == nil {
 		boomer.Events.Publish("request_success", Name, "read tx"+" to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
 	} else {
 		boomer.Events.Publish("request_failure", Name, "read tx"+" to "+endPoint, elapsed, err.Error())
 	}
@@ -175,25 +146,6 @@ func Run() {
 
 		if nc == uint32(ratioReadPerSend) {
 			RunSendTx()
-		} else {
-			RunReadTx()
-		}
-	}
-}
-
-func RunSingle() {
-	nc := atomic.AddUint32(&cnt, 1)
-
-	if !initFlag && nc < uint32(defaultInitSendTx) {
-		RunSendTx()
-	} else {
-		initFlag = true
-
-		// following logic can control the ratio between send/read task
-		nc = nc % uint32(ratioReadPerSend+1)
-
-		if nc == uint32(ratioReadPerSend) {
-			RunSendTxSingle()
 		} else {
 			RunReadTx()
 		}

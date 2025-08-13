@@ -9,7 +9,6 @@ import (
 	"log"
 	"math/big"
 	"math/rand"
-	"sync"
 	"time"
 
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
@@ -23,48 +22,33 @@ const Letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 var (
 	endPoint string
+	nAcc     int
+	accGrp   []*account.Account
+	cliPool  clipool.ClientPool
 
-	nAcc   int
-	accGrp []*account.Account
-
-	gasPrice *big.Int
-
-	cliPool clipool.ClientPool
-
-	mutex       sync.Mutex
-	initialized = false
-
-	// multinode tester
 	SmartContractAccount *account.Account
 )
 
 // Init initializes cliPool and accGrp; and also deploys the smart contract.
-func Init(accs []*account.Account, endpoint string, gp *big.Int) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func Init(accs []*account.Account, contractsParam []*account.Account, endpoint string, gp *big.Int) {
+	endPoint = endpoint
+	SmartContractAccount = contractsParam[account.ContractLargeMemo]
 
-	if !initialized {
-		initialized = true
-
-		endPoint = endpoint
-		gasPrice = gp
-
-		cliCreate := func() interface{} {
-			c, err := client.Dial(endPoint)
-			if err != nil {
-				log.Fatalf("[LargeMemo] Failed to connect to %s, err=%v", endPoint, err)
-			}
-			return c
+	cliCreate := func() interface{} {
+		c, err := client.Dial(endPoint)
+		if err != nil {
+			log.Fatalf("Failed to connect RPC: %v", err)
 		}
-
-		cliPool.Init(20, 300, cliCreate)
-
-		for _, acc := range accs {
-			accGrp = append(accGrp, acc)
-		}
-
-		nAcc = len(accGrp)
+		return c
 	}
+
+	cliPool.Init(20, 300, cliCreate)
+
+	for _, acc := range accs {
+		accGrp = append(accGrp, acc)
+	}
+
+	nAcc = len(accGrp)
 }
 
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))

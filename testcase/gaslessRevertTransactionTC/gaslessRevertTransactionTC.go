@@ -18,16 +18,15 @@ var (
 	nAcc     int
 	accGrp   []*account.Account
 	cliPool  clipool.ClientPool
-	gasPrice *big.Int
 
 	TestTokenAccount *account.Account
 	GsrAccount       *account.Account
 )
 
-func Init(accs []*account.Account, endpoint string, gp *big.Int) {
-	gasPrice = gp
-
+func Init(accs []*account.Account, contractsParam []*account.Account, endpoint string, gp *big.Int) {
 	endPoint = endpoint
+	TestTokenAccount = contractsParam[account.ContractGaslessToken]
+	GsrAccount = contractsParam[account.ContractGaslessSwapRouter]
 
 	cliCreate := func() interface{} {
 		c, err := client.Dial(endPoint)

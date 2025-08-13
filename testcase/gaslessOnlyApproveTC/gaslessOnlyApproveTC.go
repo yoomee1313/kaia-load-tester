@@ -18,16 +18,15 @@ var (
 	nAcc     int
 	accGrp   []*account.Account
 	cliPool  clipool.ClientPool
-	gasPrice *big.Int
 
 	TestTokenAccount *account.Account
 	GsrAccount       *account.Account
 )
 
-func Init(accs []*account.Account, endpoint string, gp *big.Int) {
-	gasPrice = gp
-
+func Init(accs []*account.Account, contractsParam []*account.Account, endpoint string, gp *big.Int) {
 	endPoint = endpoint
+	TestTokenAccount = contractsParam[account.ContractGaslessToken]
+	GsrAccount = contractsParam[account.ContractGaslessSwapRouter]
 
 	cliCreate := func() interface{} {
 		c, err := client.Dial(endPoint)
@@ -48,6 +47,7 @@ func Init(accs []*account.Account, endpoint string, gp *big.Int) {
 
 func Run() {
 	cli := cliPool.Alloc().(*client.Client)
+	defer cliPool.Free(cli)
 
 	from := accGrp[rand.Int()%nAcc]
 	testRecordName := "TransferNewGaslessApproveTx" + " to " + endPoint
@@ -57,8 +57,6 @@ func Run() {
 	_, _, err := from.TransferNewGaslessApproveTx(cli, endPoint, TestTokenAccount, GsrAccount)
 
 	elapsed := boomer.Now() - start
-
-	cliPool.Free(cli)
 
 	if err != nil {
 		boomer.RecordFailure("http", testRecordName, elapsed, err.Error())

@@ -47,10 +47,11 @@ var (
 	code                 string
 )
 
-func Init(accs []*account.Account, endpoint string, gp *big.Int) {
+func Init(accs []*account.Account, contractsParam []*account.Account, endpoint string, gp *big.Int) {
 	gasPrice = gp
 
 	endPoint = endpoint
+	SmartContractAccount = contractsParam[account.ContractGeneral]
 
 	cliCreate := func() interface{} {
 		c, err := client.Dial(endPoint)

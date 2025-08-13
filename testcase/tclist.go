@@ -55,7 +55,7 @@ type ExtendedTask struct {
 	Name   string
 	Weight int
 	Fn     func()
-	Init   func(accs []*account.Account, endpoint string, gp *big.Int)
+	Init   func(accs []*account.Account, contracts []*account.Account, endpoint string, gp *big.Int)
 }
 type ExtendedTaskSet []*ExtendedTask
 

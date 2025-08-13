@@ -30,34 +30,34 @@ var (
 	gasPrice *big.Int
 )
 
-func Init(accs []*account.Account, endpoint string, gp *big.Int) {
+func Init(accs []*account.Account, contractsParam []*account.Account, endpoint string, gp *big.Int) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	if !initialized {
-		initialized = true
 
-		gasPrice = gp
-
-		endPoint = endpoint
-
-		cliCreate := func() interface{} {
-			c, err := client.Dial(endPoint)
-			if err != nil {
-				log.Fatalf("Failed to connect RPC: %v", err)
-			}
-			return c
-		}
-
-		cliPool.Init(20, 300, cliCreate)
-
-		for _, acc := range accs {
-			accGrp = append(accGrp, acc)
-		}
-
-		nAcc = len(accGrp)
-
-		log.Printf("DEBUG: userStorageTC initialized with %d accounts", nAcc)
+	if initialized {
+		return
 	}
+	initialized = true
+
+	gasPrice = gp
+
+	endPoint = endpoint
+	SmartContractAccount = contractsParam[account.ContractUserStorage]
+
+	cliCreate := func() interface{} {
+		c, err := client.Dial(endPoint)
+		if err != nil {
+			log.Fatalf("Failed to connect RPC: %v", err)
+		}
+		return c
+	}
+
+	cliPool.Init(20, 300, cliCreate)
+
+	for _, acc := range accs {
+		accGrp = append(accGrp, acc)
+	}
+	nAcc = len(accGrp)
 }
 
 func RunSet() {

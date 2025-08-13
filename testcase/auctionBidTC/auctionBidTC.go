@@ -15,7 +15,6 @@ const Name = "auctionBidTC"
 
 var (
 	endPoint string
-	nAcc     int
 	accGrp   *account.AccountSet
 	cliPool  clipool.ClientPool
 
@@ -25,8 +24,10 @@ var (
 	TargetTxTypeList []string
 )
 
-func Init(accs []*account.Account, endpoint string, gp *big.Int) {
+func Init(accs []*account.Account, contractsParam []*account.Account, endpoint string, gp *big.Int) {
 	endPoint = endpoint
+	AuctionEntryPointAccount = contractsParam[account.ContractAuctionEntryPoint]
+	CounterForTestAuctionAccount = contractsParam[account.ContractCounterForTestAuction]
 
 	cliCreate := func() interface{} {
 		c, err := client.Dial(endPoint)
@@ -39,12 +40,11 @@ func Init(accs []*account.Account, endpoint string, gp *big.Int) {
 	cliPool.Init(20, 300, cliCreate)
 
 	accGrp = account.NewAccountSet(accs)
-
-	nAcc = accGrp.Len()
 }
 
 func Run() {
 	cli := cliPool.Alloc().(*client.Client)
+	defer cliPool.Free(cli)
 
 	from := accGrp.GetAccountRoundRobin()
 
@@ -58,8 +58,6 @@ func Run() {
 	_, _, _, err := from.AuctionBid(cli, endPoint, AuctionEntryPointAccount, CounterForTestAuctionAccount, targetTxTypeKey)
 
 	elapsed := boomer.Now() - start
-
-	cliPool.Free(cli)
 
 	if err != nil {
 		boomer.RecordFailure("http", testRecordName, elapsed, err.Error())

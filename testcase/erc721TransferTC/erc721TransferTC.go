@@ -4,7 +4,6 @@ import (
 	"log"
 	"math/big"
 	"math/rand"
-	"time"
 
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/klayslave/clipool"
@@ -19,25 +18,13 @@ var (
 	nAcc     int
 	accGrp   []*account.Account
 	cliPool  clipool.ClientPool
-	gasPrice *big.Int
-
-	// multinode tester
-	transferedValue *big.Int
-	expectedFee     *big.Int
-
-	fromAccount     *account.Account
-	prevBalanceFrom *big.Int
-
-	toAccount     *account.Account
-	prevBalanceTo *big.Int
 
 	SmartContractAccount *account.Account
 )
 
-func Init(accs []*account.Account, endpoint string, gp *big.Int) {
-	gasPrice = gp
-
+func Init(accs []*account.Account, contractsParam []*account.Account, endpoint string, gp *big.Int) {
 	endPoint = endpoint
+	SmartContractAccount = contractsParam[account.ContractErc721]
 
 	cliCreate := func() interface{} {
 		c, err := client.Dial(endPoint)
@@ -54,8 +41,6 @@ func Init(accs []*account.Account, endpoint string, gp *big.Int) {
 	}
 
 	nAcc = len(accGrp)
-
-	rand.Seed(time.Now().UnixNano())
 }
 
 func Run() {

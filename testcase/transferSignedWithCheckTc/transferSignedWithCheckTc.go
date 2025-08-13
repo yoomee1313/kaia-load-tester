@@ -22,12 +22,9 @@ var (
 	nAcc     int
 	accGrp   []*account.Account
 	cliPool  clipool.ClientPool
-	gasPrice *big.Int
 )
 
-func Init(accs []*account.Account, endpoint string, gp *big.Int) {
-	gasPrice = gp
-
+func Init(accs []*account.Account, contractsParam []*account.Account, endpoint string, gp *big.Int) {
 	endPoint = endpoint
 
 	cliCreate := func() interface{} {
@@ -144,6 +141,7 @@ func TransferAndCheck(cli *client.Client, to *account.Account, from *account.Acc
 
 func Run() {
 	cli := cliPool.Alloc().(*client.Client)
+	defer cliPool.Free(cli)
 
 	from := accGrp[rand.Int()%nAcc]
 	to := accGrp[rand.Int()%nAcc]
@@ -157,7 +155,6 @@ func Run() {
 
 	if err == nil {
 		boomer.Events.Publish("request_success", "http", "signedtransfer_with_check"+" to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
 	} else {
 		boomer.Events.Publish("request_failure", "http", "signedtransfer_with_check"+" to "+endPoint, elapsed, err.Error())
 	}

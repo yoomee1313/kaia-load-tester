@@ -21,16 +21,16 @@ var (
 	nAcc     int
 	accGrp   []*account.Account
 	cliPool  clipool.ClientPool
-	gasPrice *big.Int
 
 	// Contract accounts
 	KIP17ContractAccount *account.Account
 	MainContractAccount  *account.Account
 )
 
-func Init(accs []*account.Account, endpoint string, gp *big.Int) {
-	gasPrice = gp
+func Init(accs []*account.Account, contractsParam []*account.Account, endpoint string, gp *big.Int) {
 	endPoint = endpoint
+	KIP17ContractAccount = contractsParam[account.ContractInternalTxKIP17]
+	MainContractAccount = contractsParam[account.ContractInternalTxMain]
 
 	cliCreate := func() interface{} {
 		c, err := client.Dial(endPoint)

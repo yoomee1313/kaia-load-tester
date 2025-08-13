@@ -11,26 +11,20 @@ import (
 	"github.com/myzhan/boomer"
 )
 
-const Name = "cpuHeavyTx"
+const Name = "cpuHeavyTC"
 
 var (
 	endPoint string
+	nAcc     int
+	accGrp   []*account.Account
+	cliPool  clipool.ClientPool
 
-	nAcc   int
-	accGrp []*account.Account
-
-	cliPool clipool.ClientPool
-
-	gasPrice *big.Int
-
-	// multinode tester
 	SmartContractAccount *account.Account
 )
 
-func Init(accs []*account.Account, endpoint string, gp *big.Int) {
-	gasPrice = gp
-
+func Init(accs []*account.Account, contractsParam []*account.Account, endpoint string, gp *big.Int) {
 	endPoint = endpoint
+	SmartContractAccount = contractsParam[account.ContractCPUHeavy]
 
 	cliCreate := func() interface{} {
 		c, err := client.Dial(endPoint)

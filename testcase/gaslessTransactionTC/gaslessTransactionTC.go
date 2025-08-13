@@ -23,8 +23,10 @@ var (
 	GsrAccount       *account.Account
 )
 
-func Init(accs []*account.Account, endpoint string, gp *big.Int) {
+func Init(accs []*account.Account, contractsParam []*account.Account, endpoint string, gp *big.Int) {
 	endPoint = endpoint
+	TestTokenAccount = contractsParam[account.ContractGaslessToken]
+	GsrAccount = contractsParam[account.ContractGaslessSwapRouter]
 
 	cliCreate := func() interface{} {
 		c, err := client.Dial(endPoint)

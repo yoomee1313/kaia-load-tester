@@ -70,6 +70,7 @@ func NewAccGroup(chainId *big.Int, gasPrice *big.Int, baseFee *big.Int, contains
 }
 func (a *AccGroup) Load(loader AccLoader) { loader(a) }
 
+func (a *AccGroup) GetTestContractList() []*Account               { return a.contracts }
 func (a *AccGroup) GetTestContractByName(t TestContract) *Account { return a.contracts[t] }
 func (a *AccGroup) GetAccListByName(t AccList) []*Account         { return a.accLists[t] }
 

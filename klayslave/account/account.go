@@ -628,32 +628,32 @@ func (self *Account) TransferNewFeeDelegatedValueTransferWithRatioTx(c *client.C
 	return hash, gasPrice, nil
 }
 
-func (self *Account) TransferNewValueTransferMemoTx(c *client.Client, to *Account, value *big.Int) (common.Hash, *big.Int, error) {
-	ctx := context.Background() //context.WithTimeout(context.Background(), 100*time.Second)
+// createMemoTransferTx is a helper function that creates and sends a memo transfer transaction
+func (self *Account) createMemoTransferTx(c *client.Client, to *Account, value *big.Int, data []byte, gasLimit uint64) (common.Hash, *big.Int, error) {
+	ctx := context.Background()
 
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
 	nonce := self.GetNonce(c)
-	data := []byte("hello")
 
 	signer := types.NewEIP155Signer(chainID)
 	tx, err := types.NewTransactionWithMap(types.TxTypeValueTransferMemo, map[types.TxValueKeyType]interface{}{
 		types.TxValueKeyNonce:    nonce,
 		types.TxValueKeyTo:       to.GetAddress(),
 		types.TxValueKeyAmount:   value,
-		types.TxValueKeyGasLimit: uint64(100000),
+		types.TxValueKeyGasLimit: gasLimit,
 		types.TxValueKeyGasPrice: gasPrice,
 		types.TxValueKeyData:     data,
 		types.TxValueKeyFrom:     self.address,
 	})
 	if err != nil {
-		log.Fatalf("Failed to encode tx: %v", err)
+		return common.Hash{}, gasPrice, fmt.Errorf("Failed to encode tx: %v", err)
 	}
 
 	err = tx.SignWithKeys(signer, self.privateKey)
 	if err != nil {
-		log.Fatalf("Failed to sign tx: %v", err)
+		return common.Hash{}, gasPrice, fmt.Errorf("Failed to sign tx: %v", err)
 	}
 
 	hash, err := c.SendRawTransaction(ctx, tx)
@@ -671,6 +671,11 @@ func (self *Account) TransferNewValueTransferMemoTx(c *client.Client, to *Accoun
 	self.nonce++
 
 	return hash, gasPrice, nil
+}
+
+func (self *Account) TransferNewValueTransferMemoTx(c *client.Client, to *Account, value *big.Int) (common.Hash, *big.Int, error) {
+	data := []byte("hello")
+	return self.createMemoTransferTx(c, to, value, data, 150000)
 }
 
 func randInt(min int, max int) int {
@@ -680,147 +685,24 @@ func randInt(min int, max int) int {
 // increase memo size from 5 bytes to between 50 bytes and 2,000 bytes
 
 func (self *Account) TransferNewValueTransferBigRandomStringMemoTx(c *client.Client, to *Account, value *big.Int) (common.Hash, *big.Int, error) {
-	ctx := context.Background() //context.WithTimeout(context.Background(), 100*time.Second)
 	minBytes := 50
 	maxBytes := 2000
-
-	self.mutex.Lock()
-	defer self.mutex.Unlock()
-
-	nonce := self.GetNonce(c)
-	data := randomString(randInt(minBytes, maxBytes))
-	// data := []byte("hello")
-
-	signer := types.NewEIP155Signer(chainID)
-	tx, err := types.NewTransactionWithMap(types.TxTypeValueTransferMemo, map[types.TxValueKeyType]interface{}{
-		types.TxValueKeyNonce:    nonce,
-		types.TxValueKeyTo:       to.GetAddress(),
-		types.TxValueKeyAmount:   value,
-		types.TxValueKeyGasLimit: uint64(100000),
-		types.TxValueKeyGasPrice: gasPrice,
-		types.TxValueKeyData:     data,
-		types.TxValueKeyFrom:     self.address,
-	})
-	if err != nil {
-		log.Fatalf("Failed to encode tx: %v", err)
-	}
-
-	err = tx.SignWithKeys(signer, self.privateKey)
-	if err != nil {
-		log.Fatalf("Failed to sign tx: %v", err)
-	}
-
-	hash, err := c.SendRawTransaction(ctx, tx)
-	if err != nil {
-		if err.Error() == blockchain.ErrNonceTooLow.Error() || err.Error() == blockchain.ErrReplaceUnderpriced.Error() {
-			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
-			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
-			self.nonce++
-		} else {
-			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
-		}
-		return hash, gasPrice, err
-	}
-
-	self.nonce++
-
-	return hash, gasPrice, nil
+	data := []byte(randomString(randInt(minBytes, maxBytes)))
+	return self.createMemoTransferTx(c, to, value, data, 200000)
 }
 
 // create 200 strings of memo
 func (self *Account) TransferNewValueTransferSmallMemoTx(c *client.Client, to *Account, value *big.Int) (common.Hash, *big.Int, error) {
-	ctx := context.Background() //context.WithTimeout(context.Background(), 100*time.Second)
 	length := 200
-
-	self.mutex.Lock()
-	defer self.mutex.Unlock()
-
-	nonce := self.GetNonce(c)
-	data := randomString(length)
-	// data := []byte("hello")
-
-	signer := types.NewEIP155Signer(chainID)
-	tx, err := types.NewTransactionWithMap(types.TxTypeValueTransferMemo, map[types.TxValueKeyType]interface{}{
-		types.TxValueKeyNonce:    nonce,
-		types.TxValueKeyTo:       to.GetAddress(),
-		types.TxValueKeyAmount:   value,
-		types.TxValueKeyGasLimit: uint64(100000),
-		types.TxValueKeyGasPrice: gasPrice,
-		types.TxValueKeyData:     data,
-		types.TxValueKeyFrom:     self.address,
-	})
-	if err != nil {
-		log.Fatalf("Failed to encode tx: %v", err)
-	}
-
-	err = tx.SignWithKeys(signer, self.privateKey)
-	if err != nil {
-		log.Fatalf("Failed to sign tx: %v", err)
-	}
-
-	hash, err := c.SendRawTransaction(ctx, tx)
-	if err != nil {
-		if err.Error() == blockchain.ErrNonceTooLow.Error() || err.Error() == blockchain.ErrReplaceUnderpriced.Error() {
-			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
-			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
-			self.nonce++
-		} else {
-			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
-		}
-		return hash, gasPrice, err
-	}
-
-	self.nonce++
-
-	return hash, gasPrice, nil
+	data := []byte(randomString(length))
+	return self.createMemoTransferTx(c, to, value, data, 150000)
 }
 
 // create 2000 strings of memo
 func (self *Account) TransferNewValueTransferLargeMemoTx(c *client.Client, to *Account, value *big.Int) (common.Hash, *big.Int, error) {
-	ctx := context.Background() //context.WithTimeout(context.Background(), 100*time.Second)
 	length := 2000
-
-	self.mutex.Lock()
-	defer self.mutex.Unlock()
-
-	nonce := self.GetNonce(c)
-	data := randomString(length)
-	// data := []byte("hello")
-
-	signer := types.NewEIP155Signer(chainID)
-	tx, err := types.NewTransactionWithMap(types.TxTypeValueTransferMemo, map[types.TxValueKeyType]interface{}{
-		types.TxValueKeyNonce:    nonce,
-		types.TxValueKeyTo:       to.GetAddress(),
-		types.TxValueKeyAmount:   value,
-		types.TxValueKeyGasLimit: uint64(100000),
-		types.TxValueKeyGasPrice: gasPrice,
-		types.TxValueKeyData:     data,
-		types.TxValueKeyFrom:     self.address,
-	})
-	if err != nil {
-		log.Fatalf("Failed to encode tx: %v", err)
-	}
-
-	err = tx.SignWithKeys(signer, self.privateKey)
-	if err != nil {
-		log.Fatalf("Failed to sign tx: %v", err)
-	}
-
-	hash, err := c.SendRawTransaction(ctx, tx)
-	if err != nil {
-		if err.Error() == blockchain.ErrNonceTooLow.Error() || err.Error() == blockchain.ErrReplaceUnderpriced.Error() {
-			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
-			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
-			self.nonce++
-		} else {
-			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
-		}
-		return hash, gasPrice, err
-	}
-
-	self.nonce++
-
-	return hash, gasPrice, nil
+	data := []byte(randomString(length))
+	return self.createMemoTransferTx(c, to, value, data, 200000)
 }
 
 func (self *Account) TransferNewFeeDelegatedValueTransferMemoTx(c *client.Client, to *Account, value *big.Int) (common.Hash, *big.Int, error) {
@@ -1177,7 +1059,7 @@ func (self *Account) TransferNewFeeDelegatedSmartContractDeployTx(c *client.Clie
 	tx, err := types.NewTransactionWithMap(types.TxTypeFeeDelegatedSmartContractDeploy, map[types.TxValueKeyType]interface{}{
 		types.TxValueKeyNonce:         nonce,
 		types.TxValueKeyFrom:          self.address,
-		types.TxValueKeyTo:            &to.address,
+		types.TxValueKeyTo:            (*common.Address)(nil),
 		types.TxValueKeyAmount:        common.Big0,
 		types.TxValueKeyGasLimit:      uint64(10000000),
 		types.TxValueKeyGasPrice:      gasPrice,
@@ -1231,7 +1113,7 @@ func (self *Account) TransferNewFeeDelegatedSmartContractDeployWithRatioTx(c *cl
 	tx, err := types.NewTransactionWithMap(types.TxTypeFeeDelegatedSmartContractDeployWithRatio, map[types.TxValueKeyType]interface{}{
 		types.TxValueKeyNonce:              nonce,
 		types.TxValueKeyFrom:               self.address,
-		types.TxValueKeyTo:                 &to.address,
+		types.TxValueKeyTo:                 (*common.Address)(nil),
 		types.TxValueKeyAmount:             common.Big0,
 		types.TxValueKeyGasLimit:           uint64(10000000),
 		types.TxValueKeyGasPrice:           gasPrice,
@@ -1824,7 +1706,7 @@ func (self *Account) TransferNewLegacyTxWithEth(c *client.Client, endpoint strin
 }
 
 // This function is responsible for sending both Gasless Approve Transactions and Gasless Swap Transactions.
-func (self *Account) TransferNewGaslessTx(c *client.Client, endpoint string, testToken, gsr *Account) (common.Hash, common.Hash, *big.Int, error) {
+func (self *Account) TransferNewGaslessTx(c *client.Client, testToken, gsr *Account) (common.Hash, common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
@@ -1895,7 +1777,7 @@ func (self *Account) TransferNewGaslessTx(c *client.Client, endpoint string, tes
 
 // This function is responsible for sending only Gasless Approve Transactions.
 // This function won't increase nonce.
-func (self *Account) TransferNewGaslessApproveTx(c *client.Client, endpoint string, testToken, gsr *Account) (common.Hash, *big.Int, error) {
+func (self *Account) TransferNewGaslessApproveTx(c *client.Client, testToken, gsr *Account) (common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
@@ -1937,7 +1819,7 @@ func (self *Account) TransferNewGaslessApproveTx(c *client.Client, endpoint stri
 	return approveTx.Hash(), suggestedGasPrice, nil
 }
 
-func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryPoint, targetContract *Account, targetTxTypeKey string) (common.Hash, common.Hash, *big.Int, error) {
+func (self *Account) AuctionBid(c *client.Client, auctionEntryPoint, targetContract *Account, targetTxTypeKey string) (common.Hash, common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
@@ -2036,7 +1918,7 @@ func (self *Account) AuctionBid(c *client.Client, endpoint string, auctionEntryP
 
 // AuctionRevertedBid is responsible for sending reverted bid.
 // Using an invalid nonce in a bid will cause the bid tx to be reverted.
-func (self *Account) AuctionRevertedBid(c *client.Client, endpoint string, auctionEntryPoint, targetContract *Account, targetTxTypeKey string) (common.Hash, common.Hash, *big.Int, error) {
+func (self *Account) AuctionRevertedBid(c *client.Client, auctionEntryPoint, targetContract *Account, targetTxTypeKey string) (common.Hash, common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
@@ -2236,6 +2118,10 @@ func (self *Account) TransferUnsignedTx(c *client.Client, to *Account, value *bi
 	toAddr := to.GetAddress()
 	gasLimit := hexutil.Uint64(21000)
 
+	// Initialize empty data and payload for value transfer transaction
+	emptyData := hexutil.Bytes{}
+	emptyPayload := hexutil.Bytes{}
+
 	var err error
 	hash, err := c.SendUnsignedTransaction(ctx, api.SendTxArgs{
 		From:      fromAddr,
@@ -2243,6 +2129,8 @@ func (self *Account) TransferUnsignedTx(c *client.Client, to *Account, value *bi
 		GasLimit:  &gasLimit,
 		Price:     (*hexutil.Big)(gasPrice),
 		Amount:    (*hexutil.Big)(value),
+		Data:      &emptyData,
+		Payload:   &emptyPayload,
 	})
 	if err != nil {
 		log.Printf("Account(%v) : Failed to sendTransaction: %v\n", self.address[:5], err)
@@ -2308,7 +2196,7 @@ func (a *Account) SmartContractExecutionWithGuaranteeRetry(gCli *client.Client, 
 		log.Printf("Failed to execute: err=%s", err.Error())
 		time.Sleep(1 * time.Second) // Mostly, the err is `txpool is full`, retry after a while.
 	}
-	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancelFn := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancelFn()
 
 	receipt, err := bind.WaitMined(ctx, gCli, lastTx)
@@ -2341,7 +2229,7 @@ func (a *Account) TryRunTxSendFunctionWithGuaranteeRetry(gCli *client.Client, al
 		log.Printf("Failed to send tx: err=%s", err.Error())
 		time.Sleep(1 * time.Second)
 	}
-	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancelFn := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancelFn()
 
 	receipt, err := bind.WaitMined(ctx, gCli, lastTx)

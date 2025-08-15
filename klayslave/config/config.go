@@ -209,7 +209,7 @@ func (cfg *Config) GetExtendedTasks() []*testcase.ExtendedTask {
 			if len(cfg.tcWeights) > i {
 				weight = cfg.tcWeights[i]
 			}
-			tasks = append(tasks, &testcase.ExtendedTask{Name: task.Name, Weight: weight, Fn: task.Fn, Init: task.Init})
+			tasks = append(tasks, &testcase.ExtendedTask{Name: task.Name, Weight: weight, Init: task.Init, Run: task.Run, TestContracts: task.TestContracts})
 		}
 	}
 	return tasks

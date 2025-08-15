@@ -15,8 +15,6 @@ import (
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/klayslave/config"
 	"github.com/kaiachain/kaia-load-tester/testcase"
-	"github.com/kaiachain/kaia-load-tester/testcase/auctionBidTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/auctionRevertedBidTC"
 	"github.com/kaiachain/kaia/accounts/abi/bind"
 	"github.com/kaiachain/kaia/api/debug"
 	"github.com/kaiachain/kaia/common"
@@ -75,9 +73,10 @@ func RunAction(ctx *cli.Context) {
 	accGrp.CreateAccountsPerAccGrp(cfg.GetNUserForSigned(), cfg.GetNUserForUnsigned(), cfg.GetNUserForNewAccounts(), nUserForGaslessRevertTx, nUserForGaslessApproveTx, cfg.GetTcStrList(), cfg.GetGEndpoint())
 
 	createTestAccGroupsAndPrepareContracts(cfg, accGrp)
-	tasks := cfg.GetExtendedTasks()
-	initializeTasks(cfg, accGrp, tasks)
-	boomer.Run(toBoomerTasks(tasks)...)
+
+	// Initialize refactored test cases (after contracts are deployed)
+	boomerTasks := initializeTasks(cfg, accGrp, cfg.GetExtendedTasks())
+	boomer.Run(boomerTasks...)
 }
 
 // createTestAccGroupsAndPrepareContracts do every init steps before task.Init
@@ -174,35 +173,20 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	return localReservoirAccount
 }
 
-func initializeTasks(cfg *config.Config, accGrp *account.AccGroup, tasks []*testcase.ExtendedTask) {
+func initializeTasks(cfg *config.Config, accGrp *account.AccGroup, tasks []*testcase.ExtendedTask) []*boomer.Task {
 	println("Initializing tasks")
+	var boomerTasks []*boomer.Task
 
 	// Tc package initializes the task
 	for _, extendedTask := range tasks {
-		accs := accGrp.GetAccListByName(account.AccListForSignedTx)
-		if extendedTask.Name == "transferUnsignedTx" {
-			accs = accGrp.GetAccListByName(account.AccListForUnsignedTx)
-		} else if extendedTask.Name == "gaslessRevertTransactionTC" {
-			accs = accGrp.GetAccListByName(account.AccListForGaslessRevertTx)
-		} else if extendedTask.Name == "gaslessOnlyApproveTC" {
-			accs = accGrp.GetAccListByName(account.AccListForGaslessApproveTx)
+		config := extendedTask.Init(accGrp, cfg.GetGEndpoint(), extendedTask.TestContracts, extendedTask.Name, cfg.GetAuctionTargetTxTypeList())
+		boomerTask := &boomer.Task{
+			Name:   extendedTask.Name,
+			Weight: extendedTask.Weight,
+			Fn:     extendedTask.Run(config),
 		}
-
-		// Set TargetTxTypeList from config
-		if extendedTask.Name == "auctionBidTC" {
-			auctionBidTC.TargetTxTypeList = cfg.GetAuctionTargetTxTypeList()
-		} else if extendedTask.Name == "auctionRevertedBidTC" {
-			auctionRevertedBidTC.TargetTxTypeList = cfg.GetAuctionTargetTxTypeList()
-		}
-		extendedTask.Init(accs, accGrp.GetTestContractList(), cfg.GetGEndpoint(), cfg.GetGasPrice())
+		boomerTasks = append(boomerTasks, boomerTask)
 		println("=> " + extendedTask.Name + " extendedTask is initialized.")
-	}
-}
-
-func toBoomerTasks(tasks []*testcase.ExtendedTask) []*boomer.Task {
-	var boomerTasks []*boomer.Task
-	for _, task := range tasks {
-		boomerTasks = append(boomerTasks, &boomer.Task{Weight: task.Weight, Fn: task.Fn, Name: task.Name})
 	}
 	return boomerTasks
 }

@@ -4,18 +4,18 @@ package readApiCallContractTC
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"math/big"
 	"math/rand"
 	"strconv"
+	"strings"
 	"sync"
-	"time"
 
 	kaia "github.com/kaiachain/kaia"
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/klayslave/clipool"
-	"github.com/kaiachain/kaia/accounts/abi/bind"
-	"github.com/kaiachain/kaia/blockchain/types"
+	"github.com/kaiachain/kaia/accounts/abi"
 	"github.com/kaiachain/kaia/client"
 	"github.com/kaiachain/kaia/common"
 	"github.com/myzhan/boomer"
@@ -32,9 +32,10 @@ var (
 	nAcc   int
 	accGrp []*account.Account
 
-	readApiCallContract *ReadApiCallContractTC
-	contractAddr        common.Address
-	gasPrice            *big.Int
+	gasPrice *big.Int
+
+	// multinode tester
+	SmartContractAccount *account.Account
 
 	retValOfCall        *big.Int
 	retValOfStorageAt   *big.Int
@@ -65,49 +66,8 @@ func Init(accs []*account.Account, ep string, gp *big.Int) {
 		accGrp = append(accGrp, acc)
 	}
 	nAcc = len(accGrp)
-
-	deployContract(accs[0], endPoint)
+	fmt.Println("setAnswerVariables")
 	setAnswerVariables()
-}
-
-func deployContract(coinbase *account.Account, endPoint string) {
-	conn := cliPool.Alloc().(*client.Client)
-	defer cliPool.Free(conn)
-
-	auth := bind.NewKeyedTransactor(coinbase.GetKey())
-	auth.GasLimit = 999999
-	auth.GasPrice = gasPrice
-	auth.Nonce = big.NewInt(int64(coinbase.GetNonce(conn)))
-
-	var tx *types.Transaction
-	log.Println("[TC] readApiCallContract: Deploying new smart contract")
-
-	for {
-		var err error
-		contractAddr, tx, readApiCallContract, err = DeployReadApiCallContractTC(auth, conn)
-		if err == nil {
-			coinbase.UpdateNonce()
-			break
-		}
-		log.Printf("[TC] readApiCallContract: Failed to deploy new contract: %v\n", err)
-		auth.Nonce = big.NewInt(int64(coinbase.GetNonceFromBlock(conn)))
-		time.Sleep(1 * time.Second) // Avoiding Nonce corruption
-	}
-	log.Printf("[TC] readApiCallContract: Contract address: 0x%x\n", contractAddr)
-	log.Printf("[TC] readApiCallContract: Transaction waiting to be mined: 0x%x\n", tx.Hash())
-
-	ctx := context.Background()
-	defer ctx.Done()
-	for {
-		time.Sleep(500 * time.Millisecond) // Allow it to be processed by the local node :P
-		receipt, err := conn.TransactionReceipt(ctx, tx.Hash())
-		if err != nil {
-			//fmt.Printf("Failed to check receipt: %v\n", err)
-			continue
-		}
-		log.Printf("=> Contract Receipt Status: %v\n", receipt.Status)
-		break
-	}
 }
 
 func getMethodId(str string) []byte {
@@ -122,27 +82,36 @@ func getMethodId(str string) []byte {
 func setAnswerVariables() {
 	retValOfCall = big.NewInt(4)
 	retValOfStorageAt = big.NewInt(4)
+
+	// Check if SmartContractAccount is available
+	if SmartContractAccount == nil {
+		log.Printf("[TC] readApiCallContract: SmartContractAccount is nil, skipping setAnswerVariables")
+		return
+	}
+
+	fmt.Printf("[TC] readApiCallContract: SmartContractAccount address: %s\n", SmartContractAccount.GetAddress().String())
+
 	for {
 		ctx := context.Background()
 		cli := cliPool.Alloc().(*client.Client)
 
 		fromAccount := accGrp[rand.Int()%nAcc]
+		contractAddr := SmartContractAccount.GetAddress()
+		data := account.TestContractInfos[account.ContractReadApiCallContract].GenData(fromAccount.GetAddress(), big.NewInt(1))
+
 		callMsg := kaia.CallMsg{
 			From:     fromAccount.GetAddress(),
 			To:       &contractAddr,
 			Gas:      1100000,
 			GasPrice: gasPrice,
 			Value:    big.NewInt(0),
-			Data:     getMethodId("set()"),
+			Data:     data,
 		}
 		ret, err := cli.EstimateGas(ctx, callMsg)
-
+		cliPool.Free(cli)
 		if err == nil {
 			retValOfEstimateGas = ret
-			cliPool.Free(cli)
 			break
-		} else {
-			cli.Close()
 		}
 	}
 }
@@ -150,18 +119,17 @@ func setAnswerVariables() {
 func sendBoomerEvent(tcName string, logString string, elapsed int64, cli *client.Client, err error) {
 	if err == nil {
 		boomer.Events.Publish("request_success", "http", tcName+" to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
 	} else {
-		log.Printf("[TC] %s: %s, err=%v\n", tcName, logString, err)
 		boomer.Events.Publish("request_failure", "http", tcName+" to "+endPoint, elapsed, err.Error())
-		cli.Close()
 	}
 }
 
 func GetStorageAt() {
 	ctx := context.Background()
 	cli := cliPool.Alloc().(*client.Client)
+	defer cliPool.Free(cli)
 
+	contractAddr := SmartContractAccount.GetAddress()
 	start := boomer.Now()
 	ret, err := cli.StorageAt(ctx, contractAddr, common.Hash{}, nil)
 	elapsed := boomer.Now() - start
@@ -174,18 +142,41 @@ func GetStorageAt() {
 
 func Call() {
 	cli := cliPool.Alloc().(*client.Client)
+	defer cliPool.Free(cli)
+
+	// Check if SmartContractAccount is available
+	if SmartContractAccount == nil {
+		sendBoomerEvent("readCall", "SmartContractAccount is nil", 0, cli, errors.New("SmartContractAccount is nil"))
+		return
+	}
 
 	fromAccount := accGrp[rand.Int()%nAcc]
-	var callopts bind.CallOpts
-	callopts.Pending = false
-	callopts.From = fromAccount.GetAddress()
+	contractAddr := SmartContractAccount.GetAddress()
+
+	// Use GenData to get get() function data (value = 0 for get function)
+	data := account.TestContractInfos[account.ContractReadApiCallContract].GenData(fromAccount.GetAddress(), big.NewInt(0))
+
+	callMsg := kaia.CallMsg{
+		From: fromAccount.GetAddress(),
+		To:   &contractAddr,
+		Data: data,
+	}
 
 	start := boomer.Now()
-	ret, err := readApiCallContract.Get(&callopts)
+	result, err := cli.CallContract(context.Background(), callMsg, nil)
 	elapsed := boomer.Now() - start
 
-	if err == nil && ret.Cmp(retValOfCall) != 0 {
-		err = errors.New("wrong call: " + ret.String() + ", answer: " + retValOfCall.String())
+	if err == nil {
+		// Parse the result using the same ABI
+		abiStr := `[{"inputs":[],"name":"get","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]`
+		parsedABI, err := abi.JSON(strings.NewReader(abiStr))
+		if err == nil {
+			var ret *big.Int
+			err = parsedABI.UnpackIntoInterface(&ret, "get", result)
+			if err == nil && ret.Cmp(retValOfCall) != 0 {
+				err = errors.New("wrong call: " + ret.String() + ", answer: " + retValOfCall.String())
+			}
+		}
 	}
 	sendBoomerEvent("readCall", "Failed to call klay_call", elapsed, cli, err)
 }
@@ -193,15 +184,25 @@ func Call() {
 func EstimateGas() {
 	ctx := context.Background()
 	cli := cliPool.Alloc().(*client.Client)
+	defer cliPool.Free(cli)
+
+	// Check if SmartContractAccount is available
+	if SmartContractAccount == nil {
+		sendBoomerEvent("readEstimateGas", "SmartContractAccount is nil", 0, cli, errors.New("SmartContractAccount is nil"))
+		return
+	}
 
 	fromAccount := accGrp[rand.Int()%nAcc]
+	contractAddr := SmartContractAccount.GetAddress()
+	data := account.TestContractInfos[account.ContractReadApiCallContract].GenData(fromAccount.GetAddress(), big.NewInt(1))
+
 	callMsg := kaia.CallMsg{
 		From:     fromAccount.GetAddress(),
 		To:       &contractAddr,
 		Gas:      1100000,
 		GasPrice: gasPrice,
 		Value:    big.NewInt(0),
-		Data:     getMethodId("set()"),
+		Data:     data,
 	}
 	start := boomer.Now()
 	ret, err := cli.EstimateGas(ctx, callMsg)

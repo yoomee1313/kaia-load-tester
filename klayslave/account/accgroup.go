@@ -39,6 +39,12 @@ const (
 	ContractAuctionFeeVault
 	ContractAuctionDepositVault
 	ContractAuctionEntryPoint
+	ContractCPUHeavy
+	ContractLargeMemo
+	ContractReadApiCallContract
+	ContractUserStorage
+	ContractInternalTxKIP17
+	ContractInternalTxMain
 	ContractEnd
 )
 

@@ -36,7 +36,7 @@ var (
 )
 
 // initEthereum initializes ethereum related variables
-func initEthereum(config *TCConfig) {
+func initEthereum() {
 	// Path to executable file that generates ethereum tx.
 	ex, err := os.Executable()
 	if err != nil {
@@ -45,7 +45,14 @@ func initEthereum(config *TCConfig) {
 	exPath := filepath.Dir(ex)
 	fmt.Println("exPath: ", exPath)
 
-	executablePath = exPath + "/ethTxGenerator"
+	// Look for ethTxGenerator in build/bin directory
+	buildBinPath := filepath.Join(filepath.Dir(exPath), "build", "bin", "ethTxGenerator")
+	if _, err := os.Stat(buildBinPath); err == nil {
+		executablePath = buildBinPath
+	} else {
+		// Fallback to current directory
+		executablePath = exPath + "/ethTxGenerator"
+	}
 	log.Println("executablePath: ", executablePath)
 }
 

@@ -77,5 +77,11 @@ func Init(accGrp *account.AccGroup, endpoint string, testContracts []account.Tes
 		config.AuctionTargetTxTypeList = auctionTargetTxTypeList
 	}
 
+	// Initialize ethereum specific variables for ethereum test cases
+	if tcName == "ethereumTxLegacyTC" || tcName == "ethereumTxAccessListTC" || tcName == "ethereumTxDynamicFeeTC" ||
+		tcName == "newEthereumAccessListTC" || tcName == "newEthereumDynamicFeeTC" {
+		initEthereum()
+	}
+
 	return config
 }

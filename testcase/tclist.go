@@ -1,386 +1,438 @@
 package testcase
 
 import (
-	"math/big"
-
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
-	"github.com/kaiachain/kaia-load-tester/testcase/auctionBidTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/auctionRevertedBidTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/cpuHeavyTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/erc20TransferTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/erc721TransferTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxDynamicFeeTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxLegacyTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/gaslessOnlyApproveTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/gaslessRevertTransactionTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/gaslessTransactionTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/internalTxTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/largeMemoTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newAccountCreationTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newAccountUpdateTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newCancelTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumAccessListTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumDynamicFeeTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedAccountUpdateTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedAccountUpdateWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedCancelTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedCancelWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractDeployTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractDeployWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractExecutionTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractExecutionWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedValueTransferMemoTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedValueTransferMemoWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedValueTransferTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedValueTransferWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newSmartContractDeployTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newSmartContractExecutionTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newValueTransferLargeMemoTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newValueTransferMemoTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newValueTransferSmallMemoTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newValueTransferTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newValueTransferWithCancelTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/readApiCallContractTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/readApiCallTC"
-	receiptCheckTc "github.com/kaiachain/kaia-load-tester/testcase/receiptCheckTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/storageTrieWriteTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/transferSignedTc"
-	"github.com/kaiachain/kaia-load-tester/testcase/transferSignedWithCheckTc"
-	"github.com/kaiachain/kaia-load-tester/testcase/transferUnsignedTc"
-	"github.com/kaiachain/kaia-load-tester/testcase/userStorageTC"
 )
 
-type ExtendedTask struct {
-	Name   string
-	Weight int
-	Fn     func()
-	Init   func(accs []*account.Account, endpoint string, gp *big.Int)
-}
-type ExtendedTaskSet []*ExtendedTask
+// Test case name constants
+const (
+	NewValueTransferTCName                               = "newValueTransferTC"
+	NewValueTransferMemoTCName                           = "newValueTransferMemoTC"
+	NewSmartContractExecutionTCName                      = "newSmartContractExecutionTC"
+	Erc20TransferTCName                                  = "erc20TransferTC"
+	CpuHeavyTCName                                       = "cpuHeavyTC"
+	NewFeeDelegatedValueTransferTCName                   = "newFeeDelegatedValueTransferTC"
+	NewFeeDelegatedValueTransferWithRatioTCName          = "newFeeDelegatedValueTransferWithRatioTC"
+	NewFeeDelegatedValueTransferMemoTCName               = "newFeeDelegatedValueTransferMemoTC"
+	NewFeeDelegatedValueTransferMemoWithRatioTCName      = "newFeeDelegatedValueTransferMemoWithRatioTC"
+	NewFeeDelegatedSmartContractDeployTCName             = "newFeeDelegatedSmartContractDeployTC"
+	NewFeeDelegatedSmartContractDeployWithRatioTCName    = "newFeeDelegatedSmartContractDeployWithRatioTC"
+	NewFeeDelegatedSmartContractExecutionTCName          = "newFeeDelegatedSmartContractExecutionTC"
+	NewFeeDelegatedSmartContractExecutionWithRatioTCName = "newFeeDelegatedSmartContractExecutionWithRatioTC"
+	NewValueTransferWithCancelTCName                     = "newValueTransferWithCancelTC"
+	NewValueTransferLargeMemoTCName                      = "newValueTransferLargeMemoTC"
+	NewValueTransferSmallMemoTCName                      = "newValueTransferSmallMemoTC"
+	NewCancelTCName                                      = "newCancelTC"
+	NewFeeDelegatedCancelTCName                          = "newFeeDelegatedCancelTC"
+	NewFeeDelegatedCancelWithRatioTCName                 = "newFeeDelegatedCancelWithRatioTC"
+	NewSmartContractDeployTCName                         = "newSmartContractDeployTC"
+	LargeMemoTCName                                      = "largeMemoTC"
+	Erc721TransferTCName                                 = "erc721TransferTC"
+	AuctionBidTCName                                     = "auctionBidTC"
+	AuctionRevertedBidTCName                             = "auctionRevertedBidTC"
+	GaslessTransactionTCName                             = "gaslessTransactionTC"
+	GaslessRevertTransactionTCName                       = "gaslessRevertTransactionTC"
+	GaslessOnlyApproveTCName                             = "gaslessOnlyApproveTC"
+	ReadGasPriceTCName                                   = "readGasPrice"
+	ReadBlockNumberTCName                                = "readBlockNumber"
+	ReadGetBlockByNumberTCName                           = "readGetBlockByNumber"
+	ReadGetAccountTCName                                 = "readGetAccount"
+	ReadGetBlockWithConsensusInfoByNumberTCName          = "readGetBlockWithConsensusInfoByNumber"
+	ReadGetStorageAtTCName                               = "readGetStorageAt"
+	ReadCallTCName                                       = "readCall"
+	ReadEstimateGasTCName                                = "readEstimateGas"
+	InternalTxTCName                                     = "internalTxTC"
+	MintNFTTCName                                        = "mintNFTTC"
+	StorageTrieWriteTCName                               = "storageTrieWriteTC"
+	UserStorageSetTCName                                 = "userStorageSetTC"
+	UserStorageSetGetTCName                              = "userStorageSetGetTC"
+	NewAccountUpdateTCName                               = "newAccountUpdateTC"
+	NewFeeDelegatedAccountUpdateTCName                   = "newFeeDelegatedAccountUpdateTC"
+	NewFeeDelegatedAccountUpdateWithRatioTCName          = "newFeeDelegatedAccountUpdateWithRatioTC"
+	TransferSignedTCName                                 = "transferSignedTx"
+	TransferUnsignedTCName                               = "transferUnsignedTx"
+	ReceiptCheckTCName                                   = "receiptCheckTx"
+	TransferSignedWithCheckTCName                        = "transferSignedWithCheckTx"
+	EthereumTxLegacyTCName                               = "ethereumTxLegacyTC"
+	EthereumTxAccessListTCName                           = "ethereumTxAccessListTC"
+	EthereumTxDynamicFeeTCName                           = "ethereumTxDynamicFeeTC"
+	NewEthereumAccessListTCName                          = "newEthereumAccessListTC"
+	NewEthereumDynamicFeeTCName                          = "newEthereumDynamicFeeTC"
+)
 
-// TcList initializes TCs and returns a slice of TCs.
+// ExtendedTask represents a test case
+type ExtendedTask struct {
+	Name          string
+	Weight        int
+	Init          func(accGrp *account.AccGroup, endpoint string, testContracts []account.TestContract, tcName string, targetTxTypeList []string) *TCConfig
+	Run           func(config *TCConfig) func()
+	TestContracts []account.TestContract // Required test contracts for this task
+}
+
+// TcList contains test cases
 var TcList = map[string]*ExtendedTask{
-	"cpuHeavyTx": {
-		Name:   "cpuHeavyTx",
-		Weight: 10,
-		Fn:     cpuHeavyTC.Run,
-		Init:   cpuHeavyTC.Init,
-		//AccGrp:  accGrpForSignedTx, //[nUserForSigned/2:],
-		//EndPint: gEndpoint,
+	NewValueTransferTCName: {
+		Name:          NewValueTransferTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewValueTransferTC,
+		TestContracts: []account.TestContract{}, // No specific contract needed
 	},
-	internalTxTC.Name: {
-		Name:   internalTxTC.Name,
-		Weight: 10,
-		Fn:     internalTxTC.Run,
-		Init:   internalTxTC.Init,
+	NewValueTransferMemoTCName: {
+		Name:          NewValueTransferMemoTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewValueTransferMemoTC,
+		TestContracts: []account.TestContract{}, // No specific contract needed
 	},
-	internalTxTC.NameMintNFT: &ExtendedTask{
-		Name:   internalTxTC.NameMintNFT,
-		Weight: 10,
-		Fn:     internalTxTC.RunMintNFT,
-		Init:   internalTxTC.Init,
+	NewSmartContractExecutionTCName: {
+		Name:          NewSmartContractExecutionTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewSmartContractExecutionTC,
+		TestContracts: []account.TestContract{account.ContractGeneral},
 	},
-	"largeMemoTC": {
-		Name:   "largeMemoTC",
-		Weight: 10,
-		Fn:     largeMemoTC.Run,
-		Init:   largeMemoTC.Init,
+	Erc20TransferTCName: {
+		Name:          Erc20TransferTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunErc20TransferTC,
+		TestContracts: []account.TestContract{account.ContractErc20},
 	},
-	receiptCheckTc.Name: {
-		Name:   receiptCheckTc.Name,
-		Weight: 10,
-		Fn:     receiptCheckTc.Run,
-		Init:   receiptCheckTc.Init,
+	CpuHeavyTCName: {
+		Name:          CpuHeavyTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunCpuHeavyTC,
+		TestContracts: []account.TestContract{account.ContractCPUHeavy},
 	},
-	"transferSignedTx": {
-		Name:   "transferSignedTx",
-		Weight: 10,
-		Fn:     transferSignedTc.Run,
-		Init:   transferSignedTc.Init,
-		//AccGrp:  accGrpForSignedTx, //[:nUserForSigned/2-1],
-		//EndPint: gEndpoint,
+	NewFeeDelegatedValueTransferTCName: {
+		Name:          NewFeeDelegatedValueTransferTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewFeeDelegatedValueTransferTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newValueTransferTC": {
-		Name:   "newValueTransferTC",
-		Weight: 10,
-		Fn:     newValueTransferTC.Run,
-		Init:   newValueTransferTC.Init,
+	NewFeeDelegatedValueTransferWithRatioTCName: {
+		Name:          NewFeeDelegatedValueTransferWithRatioTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewFeeDelegatedValueTransferWithRatioTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newValueTransferWithCancelTC": {
-		Name:   "newValueTransferWithCancelTC",
-		Weight: 10,
-		Fn:     newValueTransferWithCancelTC.Run,
-		Init:   newValueTransferWithCancelTC.Init,
+	NewFeeDelegatedValueTransferMemoTCName: {
+		Name:          NewFeeDelegatedValueTransferMemoTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewFeeDelegatedValueTransferMemoTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newFeeDelegatedValueTransferTC": {
-		Name:   "newFeeDelegatedValueTransferTC",
-		Weight: 10,
-		Fn:     newFeeDelegatedValueTransferTC.Run,
-		Init:   newFeeDelegatedValueTransferTC.Init,
+	NewFeeDelegatedValueTransferMemoWithRatioTCName: {
+		Name:          NewFeeDelegatedValueTransferMemoWithRatioTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewFeeDelegatedValueTransferMemoWithRatioTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newFeeDelegatedValueTransferWithRatioTC": {
-		Name:   "newFeeDelegatedValueTransferWithRatioTC",
-		Weight: 10,
-		Fn:     newFeeDelegatedValueTransferWithRatioTC.Run,
-		Init:   newFeeDelegatedValueTransferWithRatioTC.Init,
+	NewFeeDelegatedSmartContractDeployTCName: {
+		Name:          NewFeeDelegatedSmartContractDeployTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewFeeDelegatedSmartContractDeployTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newValueTransferMemoTC": {
-		Name:   "newValueTransferMemoTC",
-		Weight: 10,
-		Fn:     newValueTransferMemoTC.Run,
-		Init:   newValueTransferMemoTC.Init,
+	NewFeeDelegatedSmartContractDeployWithRatioTCName: {
+		Name:          NewFeeDelegatedSmartContractDeployWithRatioTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewFeeDelegatedSmartContractDeployWithRatioTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newValueTransferLargeMemoTC": {
-		Name:   "newValueTransferLargeMemoTC",
-		Weight: 10,
-		Fn:     newValueTransferLargeMemoTC.Run,
-		Init:   newValueTransferLargeMemoTC.Init,
+	NewFeeDelegatedSmartContractExecutionTCName: {
+		Name:          NewFeeDelegatedSmartContractExecutionTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewFeeDelegatedSmartContractExecutionTC,
+		TestContracts: []account.TestContract{account.ContractGeneral},
 	},
-	"newValueTransferSmallMemoTC": {
-		Name:   "newValueTransferSmallMemoTC",
-		Weight: 10,
-		Fn:     newValueTransferSmallMemoTC.Run,
-		Init:   newValueTransferSmallMemoTC.Init,
+	NewFeeDelegatedSmartContractExecutionWithRatioTCName: {
+		Name:          NewFeeDelegatedSmartContractExecutionWithRatioTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewFeeDelegatedSmartContractExecutionWithRatioTC,
+		TestContracts: []account.TestContract{account.ContractGeneral},
 	},
-	"newFeeDelegatedValueTransferMemoTC": {
-		Name:   "newFeeDelegatedValueTransferMemoTC",
-		Weight: 10,
-		Fn:     newFeeDelegatedValueTransferMemoTC.Run,
-		Init:   newFeeDelegatedValueTransferMemoTC.Init,
+	NewValueTransferWithCancelTCName: {
+		Name:          NewValueTransferWithCancelTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewValueTransferWithCancelTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newFeeDelegatedValueTransferMemoWithRatioTC": {
-		Name:   "newFeeDelegatedValueTransferMemoWithRatioTC",
-		Weight: 10,
-		Fn:     newFeeDelegatedValueTransferMemoWithRatioTC.Run,
-		Init:   newFeeDelegatedValueTransferMemoWithRatioTC.Init,
+	NewValueTransferLargeMemoTCName: {
+		Name:          NewValueTransferLargeMemoTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewValueTransferLargeMemoTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newAccountCreationTC": {
-		Name:   "newAccountCreationTC",
-		Weight: 10,
-		Fn:     newAccountCreationTC.Run,
-		Init:   newAccountCreationTC.Init,
+	NewValueTransferSmallMemoTCName: {
+		Name:          NewValueTransferSmallMemoTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewValueTransferSmallMemoTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newAccountUpdateTC": {
-		Name:   "newAccountUpdateTC",
-		Weight: 10,
-		Fn:     newAccountUpdateTC.Run,
-		Init:   newAccountUpdateTC.Init,
+	NewCancelTCName: {
+		Name:          NewCancelTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewCancelTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newFeeDelegatedAccountUpdateTC": {
-		Name:   "newFeeDelegatedAccountUpdateTC",
-		Weight: 10,
-		Fn:     newFeeDelegatedAccountUpdateTC.Run,
-		Init:   newFeeDelegatedAccountUpdateTC.Init,
+	NewFeeDelegatedCancelTCName: {
+		Name:          NewFeeDelegatedCancelTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewFeeDelegatedCancelTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newFeeDelegatedAccountUpdateWithRatioTC": {
-		Name:   "newFeeDelegatedAccountUpdateWithRatioTC",
-		Weight: 10,
-		Fn:     newFeeDelegatedAccountUpdateWithRatioTC.Run,
-		Init:   newFeeDelegatedAccountUpdateWithRatioTC.Init,
+	NewFeeDelegatedCancelWithRatioTCName: {
+		Name:          NewFeeDelegatedCancelWithRatioTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewFeeDelegatedCancelWithRatioTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newSmartContractDeployTC": {
-		Name:   "newSmartContractDeployTC",
-		Weight: 10,
-		Fn:     newSmartContractDeployTC.Run,
-		Init:   newSmartContractDeployTC.Init,
+	NewSmartContractDeployTCName: {
+		Name:          NewSmartContractDeployTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewSmartContractDeployTC,
+		TestContracts: []account.TestContract{},
 	},
-	"newFeeDelegatedSmartContractDeployTC": {
-		Name:   "newFeeDelegatedSmartContractDeployTC",
-		Weight: 10,
-		Fn:     newFeeDelegatedSmartContractDeployTC.Run,
-		Init:   newFeeDelegatedSmartContractDeployTC.Init,
+	LargeMemoTCName: {
+		Name:          LargeMemoTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunLargeMemoTC,
+		TestContracts: []account.TestContract{account.ContractLargeMemo},
 	},
-	"newFeeDelegatedSmartContractDeployWithRatioTC": {
-		Name:   "newFeeDelegatedSmartContractDeployWithRatioTC",
-		Weight: 10,
-		Fn:     newFeeDelegatedSmartContractDeployWithRatioTC.Run,
-		Init:   newFeeDelegatedSmartContractDeployWithRatioTC.Init,
+	Erc721TransferTCName: {
+		Name:          Erc721TransferTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunErc721TransferTC,
+		TestContracts: []account.TestContract{account.ContractErc721},
 	},
-	"newSmartContractExecutionTC": {
-		Name:   "newSmartContractExecutionTC",
-		Weight: 10,
-		Fn:     newSmartContractExecutionTC.Run,
-		Init:   newSmartContractExecutionTC.Init,
+	AuctionBidTCName: {
+		Name:          AuctionBidTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunAuctionBidTC,
+		TestContracts: []account.TestContract{account.ContractAuctionEntryPoint, account.ContractCounterForTestAuction},
 	},
-	storageTrieWriteTC.Name: {
-		Name:   storageTrieWriteTC.Name,
-		Weight: 10,
-		Fn:     storageTrieWriteTC.Run,
-		Init:   storageTrieWriteTC.Init,
+	AuctionRevertedBidTCName: {
+		Name:          AuctionRevertedBidTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunAuctionRevertedBidTC,
+		TestContracts: []account.TestContract{account.ContractAuctionEntryPoint, account.ContractCounterForTestAuction},
 	},
-	"newFeeDelegatedSmartContractExecutionTC": {
-		Name:   "newFeeDelegatedSmartContractExecutionTC",
-		Weight: 10,
-		Fn:     newFeeDelegatedSmartContractExecutionTC.Run,
-		Init:   newFeeDelegatedSmartContractExecutionTC.Init,
+	GaslessTransactionTCName: {
+		Name:          GaslessTransactionTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunGaslessTransactionTC,
+		TestContracts: []account.TestContract{account.ContractGaslessToken, account.ContractGaslessSwapRouter},
 	},
-	"newFeeDelegatedSmartContractExecutionWithRatioTC": {
-		Name:   "newFeeDelegatedSmartContractExecutionWithRatioTC",
-		Weight: 10,
-		Fn:     newFeeDelegatedSmartContractExecutionWithRatioTC.Run,
-		Init:   newFeeDelegatedSmartContractExecutionWithRatioTC.Init,
+	GaslessRevertTransactionTCName: {
+		Name:          GaslessRevertTransactionTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunGaslessRevertTransactionTC,
+		TestContracts: []account.TestContract{account.ContractGaslessToken, account.ContractGaslessSwapRouter},
 	},
-	"newCancelTC": {
-		Name:   "newCancelTC",
-		Weight: 10,
-		Fn:     newCancelTC.Run,
-		Init:   newCancelTC.Init,
+	GaslessOnlyApproveTCName: {
+		Name:          GaslessOnlyApproveTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunGaslessOnlyApproveTC,
+		TestContracts: []account.TestContract{account.ContractGaslessToken, account.ContractGaslessSwapRouter},
 	},
-	"newFeeDelegatedCancelTC": {
-		Name:   "newFeeDelegatedCancelTC",
-		Weight: 10,
-		Fn:     newFeeDelegatedCancelTC.Run,
-		Init:   newFeeDelegatedCancelTC.Init,
+	ReadGasPriceTCName: {
+		Name:          ReadGasPriceTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunGasPrice,
+		TestContracts: []account.TestContract{},
 	},
-	"newFeeDelegatedCancelWithRatioTC": {
-		Name:   "newFeeDelegatedCancelWithRatioTC",
-		Weight: 10,
-		Fn:     newFeeDelegatedCancelWithRatioTC.Run,
-		Init:   newFeeDelegatedCancelWithRatioTC.Init,
+	ReadBlockNumberTCName: {
+		Name:          ReadBlockNumberTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunBlockNumber,
+		TestContracts: []account.TestContract{},
 	},
-	"transferSignedWithCheckTx": {
-		Name:   "transferSignedWithCheckTx",
-		Weight: 10,
-		Fn:     transferSignedWithCheckTc.Run,
-		Init:   transferSignedWithCheckTc.Init,
+	ReadGetBlockByNumberTCName: {
+		Name:          ReadGetBlockByNumberTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunGetBlockByNumber,
+		TestContracts: []account.TestContract{},
 	},
-	"transferUnsignedTx": {
-		Name:   "transferUnsignedTx",
-		Weight: 10,
-		Fn:     transferUnsignedTc.Run,
-		Init:   transferUnsignedTc.Init,
+	ReadGetAccountTCName: {
+		Name:          ReadGetAccountTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunGetAccount,
+		TestContracts: []account.TestContract{},
 	},
-	"userStorageSetTx": {
-		Name:   "userStorageSetTx",
-		Weight: 10,
-		Fn:     userStorageTC.RunSet,
-		Init:   userStorageTC.Init,
+	ReadGetBlockWithConsensusInfoByNumberTCName: {
+		Name:          ReadGetBlockWithConsensusInfoByNumberTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunGetBlockWithConsensusInfoByNumber,
+		TestContracts: []account.TestContract{},
 	},
-	"userStorageSetGetTx": {
-		Name:   "userStorageSetGetTx",
-		Weight: 10,
-		Fn:     userStorageTC.RunSetGet,
-		Init:   userStorageTC.Init,
+	ReadGetStorageAtTCName: {
+		Name:          ReadGetStorageAtTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunGetStorageAt,
+		TestContracts: []account.TestContract{account.ContractReadApiCallContract},
 	},
-	erc20TransferTC.Name: {
-		Name:   erc20TransferTC.Name,
-		Weight: 10,
-		Fn:     erc20TransferTC.Run,
-		Init:   erc20TransferTC.Init,
+	ReadCallTCName: {
+		Name:          ReadCallTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunCall,
+		TestContracts: []account.TestContract{account.ContractReadApiCallContract},
 	},
-	erc721TransferTC.Name: {
-		Name:   erc721TransferTC.Name,
-		Weight: 10,
-		Fn:     erc721TransferTC.Run,
-		Init:   erc721TransferTC.Init,
+	ReadEstimateGasTCName: {
+		Name:          ReadEstimateGasTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunEstimateGas,
+		TestContracts: []account.TestContract{account.ContractReadApiCallContract},
 	},
-	"readGasPrice": {
-		Name:   "readGasPrice",
-		Weight: 10,
-		Fn:     readApiCallTC.GasPrice,
-		Init:   readApiCallTC.Init,
+	InternalTxTCName: {
+		Name:          InternalTxTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunInternalTxTC,
+		TestContracts: []account.TestContract{account.ContractInternalTxMain},
 	},
-	"readBlockNumber": {
-		Name:   "readBlockNumber",
-		Weight: 10,
-		Fn:     readApiCallTC.BlockNumber,
-		Init:   readApiCallTC.Init,
+	MintNFTTCName: {
+		Name:          MintNFTTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunMintNFTTC,
+		TestContracts: []account.TestContract{account.ContractInternalTxKIP17},
 	},
-	"readGetBlockByNumber": {
-		Name:   "readGetBlockByNumber",
-		Weight: 10,
-		Fn:     readApiCallTC.GetBlockByNumber,
-		Init:   readApiCallTC.Init,
+	StorageTrieWriteTCName: {
+		Name:          StorageTrieWriteTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunStorageTrieWriteTC,
+		TestContracts: []account.TestContract{account.ContractStorageTrie},
 	},
-	"readGetAccount": {
-		Name:   "readGetAccount",
-		Weight: 10,
-		Fn:     readApiCallTC.GetAccount,
-		Init:   readApiCallTC.Init,
+	UserStorageSetTCName: {
+		Name:          UserStorageSetTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunUserStorageSetTC,
+		TestContracts: []account.TestContract{account.ContractUserStorage},
 	},
-	"readGetBlockWithConsensusInfoByNumber": {
-		Name:   "readGetBlockWithConsensusInfoByNumber",
-		Weight: 10,
-		Fn:     readApiCallTC.GetBlockWithConsensusInfoByNumber,
-		Init:   readApiCallTC.Init,
+	UserStorageSetGetTCName: {
+		Name:          UserStorageSetGetTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunUserStorageSetGetTC,
+		TestContracts: []account.TestContract{account.ContractUserStorage},
 	},
-	"readGetStorageAt": {
-		Name:   "readGetStorageAt",
-		Weight: 10,
-		Fn:     readApiCallContractTC.GetStorageAt,
-		Init:   readApiCallContractTC.Init,
+	NewAccountUpdateTCName: {
+		Name:          NewAccountUpdateTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewAccountUpdateTC,
+		TestContracts: []account.TestContract{},
 	},
-	"readCall": {
-		Name:   "readCall",
-		Weight: 10,
-		Fn:     readApiCallContractTC.Call,
-		Init:   readApiCallContractTC.Init,
+	NewFeeDelegatedAccountUpdateTCName: {
+		Name:          NewFeeDelegatedAccountUpdateTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewFeeDelegatedAccountUpdateTC,
+		TestContracts: []account.TestContract{},
 	},
-	"readEstimateGas": {
-		Name:   "readEstimateGas",
-		Weight: 10,
-		Fn:     readApiCallContractTC.EstimateGas,
-		Init:   readApiCallContractTC.Init,
+	NewFeeDelegatedAccountUpdateWithRatioTCName: {
+		Name:          NewFeeDelegatedAccountUpdateWithRatioTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewFeeDelegatedAccountUpdateWithRatioTC,
+		TestContracts: []account.TestContract{},
 	},
-	"gaslessTransactionTC": {
-		Name:   gaslessTransactionTC.Name,
-		Weight: 10,
-		Fn:     gaslessTransactionTC.Run,
-		Init:   gaslessTransactionTC.Init,
+	TransferSignedTCName: {
+		Name:          TransferSignedTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunTransferSignedTC,
+		TestContracts: []account.TestContract{},
 	},
-	"gaslessRevertTransactionTC": {
-		Name:   gaslessRevertTransactionTC.Name,
-		Weight: 10,
-		Fn:     gaslessRevertTransactionTC.Run,
-		Init:   gaslessRevertTransactionTC.Init,
+	TransferUnsignedTCName: {
+		Name:          TransferUnsignedTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunTransferUnsignedTC,
+		TestContracts: []account.TestContract{},
 	},
-	"gaslessOnlyApproveTC": {
-		Name:   gaslessOnlyApproveTC.Name,
-		Weight: 10,
-		Fn:     gaslessOnlyApproveTC.Run,
-		Init:   gaslessOnlyApproveTC.Init,
+	ReceiptCheckTCName: {
+		Name:          ReceiptCheckTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunReceiptCheckTC,
+		TestContracts: []account.TestContract{},
 	},
-	"auctionBidTC": {
-		Name:   auctionBidTC.Name,
-		Weight: 10,
-		Fn:     auctionBidTC.Run,
-		Init:   auctionBidTC.Init,
+	TransferSignedWithCheckTCName: {
+		Name:          TransferSignedWithCheckTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunTransferSignedWithCheckTC,
+		TestContracts: []account.TestContract{},
 	},
-	"auctionRevertedBidTC": {
-		Name:   auctionRevertedBidTC.Name,
-		Weight: 10,
-		Fn:     auctionRevertedBidTC.Run,
-		Init:   auctionRevertedBidTC.Init,
+	EthereumTxLegacyTCName: {
+		Name:          EthereumTxLegacyTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunEthereumTxLegacyTC,
+		TestContracts: []account.TestContract{account.ContractGeneral},
 	},
-	"ethereumTxLegacyTC": {
-		Name:   "ethereumTxLegacyTC",
-		Weight: 10,
-		Fn:     ethereumTxLegacyTC.Run,
-		Init:   ethereumTxLegacyTC.Init,
+	EthereumTxAccessListTCName: {
+		Name:          EthereumTxAccessListTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunEthereumTxAccessListTC,
+		TestContracts: []account.TestContract{account.ContractGeneral},
 	},
-	"ethereumTxAccessListTC": {
-		Name:   "ethereumTxAccessListTC",
-		Weight: 10,
-		Fn:     ethereumTxAccessListTC.Run,
-		Init:   ethereumTxAccessListTC.Init,
+	EthereumTxDynamicFeeTCName: {
+		Name:          EthereumTxDynamicFeeTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunEthereumTxDynamicFeeTC,
+		TestContracts: []account.TestContract{account.ContractGeneral},
 	},
-	"ethereumTxDynamicFeeTC": {
-		Name:   "ethereumTxDynamicFeeTC",
-		Weight: 10,
-		Fn:     ethereumTxDynamicFeeTC.Run,
-		Init:   ethereumTxDynamicFeeTC.Init,
+	NewEthereumAccessListTCName: {
+		Name:          NewEthereumAccessListTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewEthereumAccessListTC,
+		TestContracts: []account.TestContract{account.ContractGeneral},
 	},
-	"newEthereumAccessListTC": {
-		Name:   "newEthereumAccessListTC",
-		Weight: 10,
-		Fn:     newEthereumAccessListTC.Run,
-		Init:   newEthereumAccessListTC.Init,
-	},
-	"newEthereumDynamicFeeTC": {
-		Name:   "newEthereumDynamicFeeTC",
-		Weight: 10,
-		Fn:     newEthereumDynamicFeeTC.Run,
-		Init:   newEthereumDynamicFeeTC.Init,
+	NewEthereumDynamicFeeTCName: {
+		Name:          NewEthereumDynamicFeeTCName,
+		Weight:        10,
+		Init:          Init,
+		Run:           RunNewEthereumDynamicFeeTC,
+		TestContracts: []account.TestContract{account.ContractGeneral},
 	},
 }

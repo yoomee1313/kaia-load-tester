@@ -15,27 +15,6 @@ import (
 	"github.com/kaiachain/kaia-load-tester/klayslave/account"
 	"github.com/kaiachain/kaia-load-tester/klayslave/config"
 	"github.com/kaiachain/kaia-load-tester/testcase"
-	"github.com/kaiachain/kaia-load-tester/testcase/auctionBidTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/auctionRevertedBidTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/cpuHeavyTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/erc20TransferTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/erc721TransferTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxAccessListTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxDynamicFeeTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/ethereumTxLegacyTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/gaslessOnlyApproveTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/gaslessRevertTransactionTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/gaslessTransactionTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/internalTxTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/largeMemoTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumAccessListTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newEthereumDynamicFeeTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractExecutionTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newFeeDelegatedSmartContractExecutionWithRatioTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/newSmartContractExecutionTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/readApiCallContractTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/storageTrieWriteTC"
-	"github.com/kaiachain/kaia-load-tester/testcase/userStorageTC"
 	"github.com/kaiachain/kaia/accounts/abi/bind"
 	"github.com/kaiachain/kaia/api/debug"
 	"github.com/kaiachain/kaia/common"
@@ -94,45 +73,10 @@ func RunAction(ctx *cli.Context) {
 	accGrp.CreateAccountsPerAccGrp(cfg.GetNUserForSigned(), cfg.GetNUserForUnsigned(), cfg.GetNUserForNewAccounts(), nUserForGaslessRevertTx, nUserForGaslessApproveTx, cfg.GetTcStrList(), cfg.GetGEndpoint())
 
 	createTestAccGroupsAndPrepareContracts(cfg, accGrp)
-	tasks := cfg.GetExtendedTasks()
-	initializeTasks(cfg, accGrp, tasks)
-	boomer.Run(toBoomerTasks(tasks)...)
-}
 
-// TODO-kaia-load-tester: remove global variables in the tc packages
-func setSmartContractAddressPerPackage(a *account.AccGroup) {
-	erc20TransferTC.SmartContractAccount = a.GetTestContractByName(account.ContractErc20)
-	erc721TransferTC.SmartContractAccount = a.GetTestContractByName(account.ContractErc721)
-	storageTrieWriteTC.SmartContractAccount = a.GetTestContractByName(account.ContractStorageTrie)
-
-	newSmartContractExecutionTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
-	newFeeDelegatedSmartContractExecutionTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
-	newFeeDelegatedSmartContractExecutionWithRatioTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
-	ethereumTxLegacyTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
-	ethereumTxAccessListTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
-	ethereumTxDynamicFeeTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
-	newEthereumAccessListTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
-	newEthereumDynamicFeeTC.SmartContractAccount = a.GetTestContractByName(account.ContractGeneral)
-
-	gaslessTransactionTC.TestTokenAccount = a.GetTestContractByName(account.ContractGaslessToken)
-	gaslessTransactionTC.GsrAccount = a.GetTestContractByName(account.ContractGaslessSwapRouter)
-	gaslessRevertTransactionTC.TestTokenAccount = a.GetTestContractByName(account.ContractGaslessToken)
-	gaslessRevertTransactionTC.GsrAccount = a.GetTestContractByName(account.ContractGaslessSwapRouter)
-	gaslessOnlyApproveTC.TestTokenAccount = a.GetTestContractByName(account.ContractGaslessToken)
-	gaslessOnlyApproveTC.GsrAccount = a.GetTestContractByName(account.ContractGaslessSwapRouter)
-
-	auctionBidTC.AuctionEntryPointAccount = a.GetTestContractByName(account.ContractAuctionEntryPoint)
-	auctionBidTC.CounterForTestAuctionAccount = a.GetTestContractByName(account.ContractCounterForTestAuction)
-	auctionRevertedBidTC.AuctionEntryPointAccount = a.GetTestContractByName(account.ContractAuctionEntryPoint)
-	auctionRevertedBidTC.CounterForTestAuctionAccount = a.GetTestContractByName(account.ContractCounterForTestAuction)
-
-	cpuHeavyTC.SmartContractAccount = a.GetTestContractByName(account.ContractCPUHeavy)
-	largeMemoTC.SmartContractAccount = a.GetTestContractByName(account.ContractLargeMemo)
-	readApiCallContractTC.SmartContractAccount = a.GetTestContractByName(account.ContractReadApiCallContract)
-	userStorageTC.SmartContractAccount = a.GetTestContractByName(account.ContractUserStorage)
-
-	internalTxTC.KIP17ContractAccount = a.GetTestContractByName(account.ContractInternalTxKIP17)
-	internalTxTC.MainContractAccount = a.GetTestContractByName(account.ContractInternalTxMain)
+	// Initialize refactored test cases (after contracts are deployed)
+	boomerTasks := initializeTasks(cfg, accGrp, cfg.GetExtendedTasks())
+	boomer.Run(boomerTasks...)
 }
 
 // createTestAccGroupsAndPrepareContracts do every init steps before task.Init
@@ -226,40 +170,23 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 		})
 	}
 
-	// Set SmartContractAddress value in each packages if needed
-	setSmartContractAddressPerPackage(accGrp)
 	return localReservoirAccount
 }
 
-func initializeTasks(cfg *config.Config, accGrp *account.AccGroup, tasks []*testcase.ExtendedTask) {
+func initializeTasks(cfg *config.Config, accGrp *account.AccGroup, tasks []*testcase.ExtendedTask) []*boomer.Task {
 	println("Initializing tasks")
+	var boomerTasks []*boomer.Task
 
 	// Tc package initializes the task
 	for _, extendedTask := range tasks {
-		accs := accGrp.GetAccListByName(account.AccListForSignedTx)
-		if extendedTask.Name == "transferUnsignedTx" {
-			accs = accGrp.GetAccListByName(account.AccListForUnsignedTx)
-		} else if extendedTask.Name == "gaslessRevertTransactionTC" {
-			accs = accGrp.GetAccListByName(account.AccListForGaslessRevertTx)
-		} else if extendedTask.Name == "gaslessOnlyApproveTC" {
-			accs = accGrp.GetAccListByName(account.AccListForGaslessApproveTx)
+		config := extendedTask.Init(accGrp, cfg.GetGEndpoint(), extendedTask.TestContracts, extendedTask.Name, cfg.GetAuctionTargetTxTypeList())
+		boomerTask := &boomer.Task{
+			Name:   extendedTask.Name,
+			Weight: extendedTask.Weight,
+			Fn:     extendedTask.Run(config),
 		}
-
-		// Set TargetTxTypeList from config
-		if extendedTask.Name == "auctionBidTC" {
-			auctionBidTC.TargetTxTypeList = cfg.GetAuctionTargetTxTypeList()
-		} else if extendedTask.Name == "auctionRevertedBidTC" {
-			auctionRevertedBidTC.TargetTxTypeList = cfg.GetAuctionTargetTxTypeList()
-		}
-		extendedTask.Init(accs, cfg.GetGEndpoint(), cfg.GetGasPrice())
+		boomerTasks = append(boomerTasks, boomerTask)
 		println("=> " + extendedTask.Name + " extendedTask is initialized.")
-	}
-}
-
-func toBoomerTasks(tasks []*testcase.ExtendedTask) []*boomer.Task {
-	var boomerTasks []*boomer.Task
-	for _, task := range tasks {
-		boomerTasks = append(boomerTasks, &boomer.Task{Weight: task.Weight, Fn: task.Fn, Name: task.Name})
 	}
 	return boomerTasks
 }

@@ -1819,6 +1819,13 @@ func (self *Account) TransferNewGaslessApproveTx(c *client.Client, testToken, gs
 	return approveTx.Hash(), suggestedGasPrice, nil
 }
 
+// BidResult represents the result of a bid operation
+type BidResult struct {
+	BidHash   common.Hash
+	Error     error
+	RpcOutput map[string]interface{}
+}
+
 func (self *Account) AuctionBid(c *client.Client, auctionEntryPoint, targetContract *Account, targetTxTypeKey string) (common.Hash, common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
@@ -1865,55 +1872,91 @@ func (self *Account) AuctionBid(c *client.Client, auctionEntryPoint, targetContr
 		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, errors.New("this account has already sent a tx for the block")
 	}
 
-	// Create the bid
-	bid := &auction.Bid{
-		BidData: auction.BidData{
-			TargetTxHash: targetTx.Hash(),
-			BlockNumber:  new(big.Int).Add(blockNumber, common.Big1).Uint64(),
-			Sender:       self.address,
-			To:           targetContract.address,
-			Nonce:        appNonce.Uint64(),
-			Bid:          big.NewInt(2),
-			CallGasLimit: gas,
-			Data:         contractCallData,
-		},
+	// Create bids for blockNumber +1, +2
+	numOfMergines := 2
+	var bidInputs []*auctionImpl.BidInput
+	var bidHashes []common.Hash
+
+	for i := 1; i <= numOfMergines; i++ {
+		blockNum := new(big.Int).Add(blockNumber, big.NewInt(int64(i)))
+
+		// Create the bid for this specific block
+		bid := &auction.Bid{
+			BidData: auction.BidData{
+				TargetTxHash: targetTx.Hash(),
+				BlockNumber:  blockNum.Uint64(),
+				Sender:       self.address,
+				To:           targetContract.address,
+				Nonce:        appNonce.Uint64(),
+				Bid:          big.NewInt(2),
+				CallGasLimit: gas,
+				Data:         contractCallData,
+			},
+		}
+		bidHashes = append(bidHashes, bid.Hash())
+
+		// searcher sign bid
+		searcherSignedBid, err := self.signAuctionBidAsSearcher(bid, auctionEntryPoint)
+		if err != nil {
+			return common.Hash{0}, common.Hash{0}, suggestedGasPrice, err
+		}
+
+		// auctioneer sign bid
+		bidInput, err := Auctioneer.signAuctionBidAsAuctioneer(searcherSignedBid, toRlp(targetTx))
+		if err != nil {
+			return common.Hash{0}, common.Hash{0}, suggestedGasPrice, err
+		}
+		bidInputs = append(bidInputs, bidInput)
 	}
 
-	// searcher sign bid
-	searcherSignedBid, err := self.signAuctionBidAsSearcher(bid, auctionEntryPoint)
-	if err != nil {
-		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, err
+	// Create channel for results
+	resultChan := make(chan BidResult, numOfMergines)
+
+	// Launch goroutines for SendAuctionTx only
+	for i := 0; i < numOfMergines; i++ {
+		go func(index int) {
+			ctx := context.Background()
+			rpcOutput, err := c.SendAuctionTx(ctx, *bidInputs[index])
+			resultChan <- BidResult{
+				BidHash:   bidHashes[index],
+				Error:     err,
+				RpcOutput: rpcOutput,
+			}
+		}(i)
 	}
 
-	// auctioneer sign bid
-	bidInput, err := Auctioneer.signAuctionBidAsAuctioneer(searcherSignedBid, toRlp(targetTx))
-	if err != nil {
-		return common.Hash{0}, common.Hash{0}, suggestedGasPrice, err
-	}
-
-	// send bid
-	var submitErr string
-	rpcOutput, err := c.SendAuctionTx(ctx, *bidInput)
-	if err != nil {
-		return targetTx.Hash(), bid.Hash(), suggestedGasPrice, err
+	// Collect results from all goroutines
+	var results []BidResult
+	for i := 0; i < numOfMergines; i++ {
+		result := <-resultChan
+		results = append(results, result)
 	}
 
 	/* ---------------- Handle rpc output -------------------------- */
-	if rpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP] != nil {
-		submitErr = rpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP].(string)
-	}
-	if submitErr != "" {
-		if submitErr == blockchain.ErrNonceTooLow.Error() || submitErr == blockchain.ErrReplaceUnderpriced.Error() {
-			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, submitErr)
-			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
-			self.nonce++
+	for _, result := range results {
+		if result.Error != nil {
+			return targetTx.Hash(), result.BidHash, suggestedGasPrice, result.Error
+		} else {
+			/* ---------------- Handle rpc output -------------------------- */
+			var submitErr string
+			if result.RpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP] != nil {
+				submitErr = result.RpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP].(string)
+			}
+			if submitErr != "" {
+				if submitErr == blockchain.ErrNonceTooLow.Error() || submitErr == blockchain.ErrReplaceUnderpriced.Error() {
+					fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, submitErr)
+					fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
+					self.nonce++
+				}
+				return targetTx.Hash(), result.BidHash, suggestedGasPrice, errors.New(submitErr)
+			}
 		}
-		return targetTx.Hash(), bid.Hash(), suggestedGasPrice, errors.New(submitErr)
 	}
 
 	targetTxType.PostSendBid(c, self, tmpAccount, nonce, suggestedGasPrice, blockNumber)
+	lastResult := results[len(results)-1]
 
-	return targetTx.Hash(), bid.Hash(), suggestedGasPrice, nil
+	return targetTx.Hash(), lastResult.BidHash, suggestedGasPrice, lastResult.Error
 }
 
 // AuctionRevertedBid is responsible for sending reverted bid.
@@ -2297,26 +2340,6 @@ func (a *Account) signAuctionBidAsAuctioneer(auctionBid *auction.Bid, targetTxRa
 func toRlp(tx *types.Transaction) []byte {
 	rlp, _ := rlp.EncodeToBytes(tx)
 	return rlp
-}
-
-func isAuctionErr(err string) bool {
-	return err == auction.ErrInitUnexpectedNil.Error() ||
-		err == auction.ErrBlockNotFound.Error() ||
-		err == auction.ErrInvalidBlockNumber.Error() ||
-		err == auction.ErrInvalidSearcherSig.Error() ||
-		err == auction.ErrInvalidAuctioneerSig.Error() ||
-		err == auction.ErrNilChainId.Error() ||
-		err == auction.ErrNilVerifyingContract.Error() ||
-		err == auction.ErrInvalidTargetTxHash.Error() ||
-		err == auction.ErrAuctionDisabled.Error() ||
-		err == auction.ErrBidAlreadyExists.Error() ||
-		err == auction.ErrBidSenderExists.Error() ||
-		err == auction.ErrBidInvalidSearcherSig.Error() ||
-		err == auction.ErrBidInvalidAuctioneerSig.Error() ||
-		err == auction.ErrLowBid.Error() ||
-		err == auction.ErrZeroBid.Error() ||
-		err == auction.ErrBidPoolFull.Error() ||
-		err == auction.ErrAuctionPaused.Error()
 }
 
 func ConcurrentTransactionSend(accs []*Account, maxConcurrency int, transactionSend func(*Account)) {

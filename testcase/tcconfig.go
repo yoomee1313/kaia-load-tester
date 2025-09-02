@@ -59,9 +59,8 @@ func Init(accGrp *account.AccGroup, endpoint string, testContracts []account.Tes
 	} else if tcName == "gaslessOnlyApproveTC" {
 		accs = accGrp.GetAccListByName(account.AccListForGaslessApproveTx)
 	}
-	for _, acc := range accs {
-		config.AccGrp.Add(acc)
-	}
+
+	config.AccGrp = account.NewAccountSet(accs)
 
 	// Set SmartContractAccounts if a specific contract is required
 	contractsParam := accGrp.GetTestContractList()

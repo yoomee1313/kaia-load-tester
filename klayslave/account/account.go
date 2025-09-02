@@ -1933,30 +1933,40 @@ func (self *Account) AuctionBid(c *client.Client, auctionEntryPoint, targetContr
 	}
 
 	/* ---------------- Handle rpc output -------------------------- */
+	var successResult *BidResult
+	var numNonceTooLowErr int
+	var submitErr string
 	for _, result := range results {
-		if result.Error != nil {
-			return targetTx.Hash(), result.BidHash, suggestedGasPrice, result.Error
-		} else {
-			/* ---------------- Handle rpc output -------------------------- */
-			var submitErr string
-			if result.RpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP] != nil {
-				submitErr = result.RpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP].(string)
-			}
-			if submitErr != "" {
-				if submitErr == blockchain.ErrNonceTooLow.Error() || submitErr == blockchain.ErrReplaceUnderpriced.Error() {
-					fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, submitErr)
-					fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
-					self.nonce++
-				}
-				return targetTx.Hash(), result.BidHash, suggestedGasPrice, errors.New(submitErr)
+		if result.Error == nil && result.RpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP] == nil {
+			// If the bid is successful, set the success result and break the loop.
+			successResult = &result
+			break
+		}
+
+		if result.RpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP] != nil {
+			submitErr = result.RpcOutput[auctionImpl.RPC_AUCTION_ERROR_PROP].(string)
+		}
+		if submitErr != "" {
+			// If the bid is failed due to nonce too low, increment the number of nonce too low errors.
+			if submitErr == blockchain.ErrNonceTooLow.Error() || submitErr == blockchain.ErrReplaceUnderpriced.Error() {
+				numNonceTooLowErr++
 			}
 		}
 	}
 
-	targetTxType.PostSendBid(c, self, tmpAccount, nonce, suggestedGasPrice, blockNumber)
-	lastResult := results[len(results)-1]
+	if successResult == nil {
+		// If all the bids are failed due to nonce too low, add nonce and return error.
+		if numNonceTooLowErr == len(results) {
+			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, submitErr)
+			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
+			self.nonce++
+		}
+		return targetTx.Hash(), common.Hash{0}, suggestedGasPrice, errors.New("failed to send auction bid")
+	}
 
-	return targetTx.Hash(), lastResult.BidHash, suggestedGasPrice, lastResult.Error
+	targetTxType.PostSendBid(c, self, tmpAccount, nonce, suggestedGasPrice, blockNumber)
+
+	return targetTx.Hash(), successResult.BidHash, suggestedGasPrice, nil
 }
 
 // AuctionRevertedBid is responsible for sending reverted bid.

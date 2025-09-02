@@ -118,7 +118,7 @@ func RunGetAccount(config *TCConfig) func() {
 		rpcCli := config.RpcCliPool.Alloc().(*rpc.Client)
 		defer config.RpcCliPool.Free(rpcCli)
 
-		fromAccount := config.AccGrp[rand.Int()%config.NAcc]
+		fromAccount := config.AccGrp.GetAccountRandomly()
 		start := boomer.Now()
 
 		var j json.RawMessage
@@ -188,7 +188,7 @@ func RunCall(config *TCConfig) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		fromAccount := config.AccGrp[rand.Int()%config.NAcc].GetAddress()
+		fromAccount := config.AccGrp.GetAccountRandomly().GetAddress()
 		contractAddr := config.SmartContractAccounts[account.ContractReadApiCallContract].GetAddress()
 		data := account.TestContractInfos[account.ContractReadApiCallContract].GenData(fromAccount, big.NewInt(0))
 
@@ -225,7 +225,7 @@ func RunEstimateGas(config *TCConfig) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		fromAccount := config.AccGrp[rand.Int()%config.NAcc].GetAddress()
+		fromAccount := config.AccGrp.GetAccountRandomly().GetAddress()
 		contractAddr := config.SmartContractAccounts[account.ContractReadApiCallContract].GetAddress()
 		data := account.TestContractInfos[account.ContractReadApiCallContract].GenData(fromAccount, big.NewInt(1))
 

@@ -18,7 +18,7 @@ func RunBaseWithContract(config *TCConfig, txFunc SmartContractTxFunc) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		from := config.AccGrp[rand.Int()%config.NAcc]
+		from := config.AccGrp.GetAccountRandomly()
 		to := config.SmartContractAccounts[config.TestContracts[0]]
 
 		start := boomer.Now()
@@ -88,24 +88,24 @@ func RunErc721TransferTC(config *TCConfig) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		toAcc := config.AccGrp[rand.Intn(config.NAcc)]
+		toAcc := config.AccGrp.GetAccountRandomly()
 
 		// Find an account with available tokens
 		var fromAcc *account.Account
 		var tokenId *big.Int
 
 		// Try multiple accounts to find one with tokens
-		candidateIdx := rand.Intn(len(config.AccGrp))
+		candidateIdx := rand.Intn(config.AccGrp.Len())
 
 		// limit the number of attempts to find a token
-		for i := 0; i < len(config.AccGrp); i++ {
-			candidateAcc := config.AccGrp[candidateIdx]
+		for i := 0; i < config.AccGrp.Len(); i++ {
+			candidateAcc := config.AccGrp.GetAccountIndex(candidateIdx)
 			tokenId = account.ERC721Ledger.RemoveToken(candidateAcc.GetAddress())
 			if tokenId != nil {
 				fromAcc = candidateAcc
 				break
 			}
-			candidateIdx = (candidateIdx + 1) % len(config.AccGrp)
+			candidateIdx = (candidateIdx + 1) % config.AccGrp.Len()
 		}
 
 		if tokenId == nil {
@@ -221,7 +221,7 @@ func RunUserStorageSetGetTC(config *TCConfig) func() {
 	return func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
-		from := config.AccGrp[rand.Int()%config.NAcc]
+		from := config.AccGrp.GetAccountRandomly()
 
 		start := boomer.Now()
 

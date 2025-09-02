@@ -19,7 +19,8 @@ func RunBaseWithAuction(config *TCConfig, auctionTxFunc AuctionTxFunc) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		from := config.AccGrp[rand.Int()%config.NAcc]
+		// Use round robin to avoid the same account being used too often
+		from := config.AccGrp.GetAccountRoundRobin()
 
 		auctionEntryPoint := config.SmartContractAccounts[account.ContractAuctionEntryPoint]
 		targetContract := config.SmartContractAccounts[account.ContractCounterForTestAuction]

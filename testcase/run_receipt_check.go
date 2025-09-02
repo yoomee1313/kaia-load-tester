@@ -89,8 +89,8 @@ func runReceiptCheckSendTx(config *TCConfig) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		from := config.AccGrp[rand.Int()%config.NAcc]
-		to := config.AccGrp[rand.Int()%config.NAcc]
+		from := config.AccGrp.GetAccountRandomly()
+		to := config.AccGrp.GetAccountRandomly()
 		value := big.NewInt(int64(rand.Int() % 3))
 
 		start := boomer.Now()
@@ -237,8 +237,8 @@ func RunTransferSignedWithCheckTC(config *TCConfig) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		from := config.AccGrp[rand.Int()%config.NAcc]
-		to := config.AccGrp[rand.Int()%config.NAcc]
+		from := config.AccGrp.GetAccountRandomly()
+		to := config.AccGrp.GetAccountRandomly()
 
 		value := big.NewInt(int64(rand.Int() % 3))
 		start := boomer.Now()

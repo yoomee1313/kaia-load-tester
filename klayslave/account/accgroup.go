@@ -230,6 +230,12 @@ func (a *AccountSet) GetAccountRandomly() *Account {
 	return a.accounts[rand.Int()%a.Len()]
 }
 
+func (a *AccountSet) GetAccountIndex(index int) *Account {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.accounts[index]
+}
+
 func (a *AccountSet) GetAccountRoundRobin() *Account {
 	a.mu.Lock()
 	defer a.mu.Unlock()

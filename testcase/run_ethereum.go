@@ -70,7 +70,7 @@ func createRandomArguments(config *TCConfig, addr common.Address) (*account.Acco
 
 	var err error
 	if randomLegacyReqType == 0 {
-		to = config.AccGrp[rand.Int()%config.NAcc]
+		to = config.AccGrp.GetAccountRandomly()
 		value = big.NewInt(int64(rand.Int() % 3))
 	} else if randomLegacyReqType == 1 {
 		value = big.NewInt(0)
@@ -185,7 +185,7 @@ func RunEthereumTxLegacyTC(config *TCConfig) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		from := config.AccGrp[rand.Int()%config.NAcc]
+		from := config.AccGrp.GetAccountRandomly()
 		to, value, input, reqType, err := createRandomArguments(config, from.GetAddress())
 		if err != nil {
 			fmt.Printf("Failed to create arguments to send Legacy Tx: %v\n", err.Error())
@@ -222,7 +222,7 @@ func RunEthereumTxAccessListTC(config *TCConfig) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		from := config.AccGrp[rand.Int()%config.NAcc]
+		from := config.AccGrp.GetAccountRandomly()
 		to, value, input, reqType, err := createRandomArguments(config, from.GetAddress())
 		if err != nil {
 			fmt.Printf("Failed to create arguments to send Access List Tx: %v\n", err.Error())
@@ -259,7 +259,7 @@ func RunEthereumTxDynamicFeeTC(config *TCConfig) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		from := config.AccGrp[rand.Int()%config.NAcc]
+		from := config.AccGrp.GetAccountRandomly()
 		to, value, input, reqType, err := createRandomArguments(config, from.GetAddress())
 		if err != nil {
 			fmt.Printf("Failed to create arguments to send Dynamic Fee Tx: %v\n", err.Error())
@@ -296,7 +296,7 @@ func RunNewEthereumAccessListTC(config *TCConfig) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		from := config.AccGrp[rand.Int()%config.NAcc]
+		from := config.AccGrp.GetAccountRandomly()
 		to, value, input, reqType, err := createRandomArguments(config, from.GetAddress())
 		if err != nil {
 			fmt.Printf("Failed to create arguments to send Access List Tx: %v\n", err.Error())
@@ -331,7 +331,7 @@ func RunNewEthereumDynamicFeeTC(config *TCConfig) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		from := config.AccGrp[rand.Int()%config.NAcc]
+		from := config.AccGrp.GetAccountRandomly()
 		to, value, input, reqType, err := createRandomArguments(config, from.GetAddress())
 		if err != nil {
 			fmt.Printf("Failed to create arguments to send Dynamic Fee Tx: %v\n", err.Error())

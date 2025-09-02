@@ -13,8 +13,7 @@ import (
 type TCConfig struct {
 	Name                    string
 	EndPoint                string
-	NAcc                    int
-	AccGrp                  []*account.Account
+	AccGrp                  *account.AccountSet
 	CliPool                 clipool.ClientPool
 	RpcCliPool              clipool.ClientPool                        // For RPC client (used by specific Read API test cases)
 	SmartContractAccounts   map[account.TestContract]*account.Account // For multiple contracts
@@ -60,11 +59,8 @@ func Init(accGrp *account.AccGroup, endpoint string, testContracts []account.Tes
 	} else if tcName == "gaslessOnlyApproveTC" {
 		accs = accGrp.GetAccListByName(account.AccListForGaslessApproveTx)
 	}
-	for _, acc := range accs {
-		config.AccGrp = append(config.AccGrp, acc)
-	}
 
-	config.NAcc = len(config.AccGrp)
+	config.AccGrp = account.NewAccountSet(accs)
 
 	// Set SmartContractAccounts if a specific contract is required
 	contractsParam := accGrp.GetTestContractList()

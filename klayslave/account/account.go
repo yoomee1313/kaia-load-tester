@@ -1961,7 +1961,7 @@ func (self *Account) AuctionBid(c *client.Client, auctionEntryPoint, targetContr
 			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
 			self.nonce++
 		}
-		return targetTx.Hash(), common.Hash{0}, suggestedGasPrice, errors.New("failed to send auction bid")
+		return targetTx.Hash(), common.Hash{0}, suggestedGasPrice, fmt.Errorf("failed to send auction bid: %v", submitErr)
 	}
 
 	targetTxType.PostSendBid(c, self, tmpAccount, nonce, suggestedGasPrice, blockNumber)

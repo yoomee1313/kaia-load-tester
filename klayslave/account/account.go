@@ -11,9 +11,7 @@ import (
 	"math/big"
 	"math/rand"
 	"os"
-	"os/exec"
 	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -52,6 +50,14 @@ type Account struct {
 	balance            *big.Int
 	mutex              sync.Mutex
 	lastBlocknumSentTx uint64
+}
+
+type Client interface {
+	NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error)
+	BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error)
+	SendRawTransaction(ctx context.Context, tx *types.Transaction) (common.Hash, error)
+	CreateAccessList(ctx context.Context, callMsg kaia.CallMsg) (*types.AccessList, uint64, string, error)
+	TransactionReceiptRpcOutput(ctx context.Context, txHash common.Hash) (r map[string]interface{}, err error)
 }
 
 func init() {
@@ -289,7 +295,7 @@ func (acc *Account) GetPrivateKey() string {
 	return acc.key[0]
 }
 
-func (acc *Account) GetNonce(c *client.Client) uint64 {
+func (acc *Account) GetNonce(c Client) uint64 {
 	if acc.nonce != 0 {
 		return acc.nonce
 	}
@@ -305,7 +311,7 @@ func (acc *Account) GetNonce(c *client.Client) uint64 {
 	return acc.nonce
 }
 
-func (acc *Account) GetNonceFromBlock(c *client.Client) uint64 {
+func (acc *Account) GetNonceFromBlock(c Client) uint64 {
 	ctx := context.Background()
 	nonce, err := c.NonceAt(ctx, acc.GetAddress(), nil)
 	if err != nil {
@@ -1531,16 +1537,14 @@ func (self *Account) TransferNewFeeDelegatedCancelWithRatioTx(c *client.Client, 
 	return hash, gasPrice, nil
 }
 
-func (self *Account) TransferNewEthereumAccessListTx(c *client.Client, to *Account, value *big.Int, input []byte) (common.Hash, *big.Int, error) {
+func (self *Account) TransferNewEthereumAccessListTx(c Client, to *Account, value *big.Int, input []byte) (common.Hash, *big.Int, error) {
 	ctx := context.Background() //context.WithTimeout(context.Background(), 100*time.Second)
 
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
 	nonce := self.GetNonce(c)
-
 	gas := uint64(5000000)
-
 	var toAddress *common.Address
 	if to != nil {
 		toAddress = &to.address
@@ -1593,7 +1597,7 @@ func (self *Account) TransferNewEthereumAccessListTx(c *client.Client, to *Accou
 	return hash, gasPrice, nil
 }
 
-func (self *Account) TransferNewEthereumDynamicFeeTx(c *client.Client, to *Account, value *big.Int, input []byte) (common.Hash, *big.Int, error) {
+func (self *Account) TransferNewEthereumDynamicFeeTx(c Client, to *Account, value *big.Int, input []byte) (common.Hash, *big.Int, error) {
 	ctx := context.Background() //context.WithTimeout(context.Background(), 100*time.Second)
 
 	self.mutex.Lock()
@@ -1656,40 +1660,29 @@ func (self *Account) TransferNewEthereumDynamicFeeTx(c *client.Client, to *Accou
 	return hash, gasPrice, nil
 }
 
-func (self *Account) TransferNewLegacyTxWithEth(c *client.Client, endpoint string, to *Account, value *big.Int, input string, exePath string) (common.Hash, *big.Int, error) {
+func (self *Account) TransferNewLegacyTxWithEth(c Client, to *Account, value *big.Int, input []byte) (common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
 	nonce := self.GetNonce(c)
 
 	// Ethereum LegacyTx
-	txType := "0"
-	gas := "100000"
-
-	var toAddress string
-	if to != nil {
-		toAddress = to.GetAddress().String()
+	gas := uint64(100000)
+	var tx *types.Transaction
+	if to == nil {
+		gas *= 2
+		tx = types.NewContractCreation(nonce, value, gas, gasPrice, input)
 	} else {
-		// When to is nil, smart contract deployment with legacyTx case.
-		// To send as a command argument which has to be string type,
-		// explicitly send "nil" string for deploying.
-		toAddress = "nil"
-		gas = "200000"
+		tx = types.NewTransaction(nonce, to.address, value, gas, gasPrice, input)
 	}
-
-	// To test this, you need to update submodule and build executable file.
-	// ./ethTxGenerator endPoint txType chainID gasPrice gas baseFee value fromPrivateKey nonce to [data]
-	cmd := exec.Command(exePath, endpoint, txType, chainID.String(), gasPrice.String(), gas, baseFee.String(), value.String(), self.GetPrivateKey(), strconv.FormatUint(nonce, 10), toAddress, input)
-	result, err := cmd.CombinedOutput()
+	signer := types.LatestSignerForChainID(chainID)
+	err := tx.SignWithKeys(signer, self.privateKey)
 	if err != nil {
-		log.Fatalf("Failed to create and send tx : %v", err)
+		return tx.Hash(), gasPrice, err
 	}
 
-	strResult := string(result[:])
-	// Executable file will return transaction hash or error string.
-	// So if result does not include "0x" prefix, means something went wrong.
-	if !strings.Contains(strResult, "0x") {
-		err = errors.New(strResult)
+	hash, err := c.SendRawTransaction(context.Background(), tx)
+	if err != nil {
 		if err.Error() == blockchain.ErrNonceTooLow.Error() || err.Error() == blockchain.ErrReplaceUnderpriced.Error() {
 			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
 			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
@@ -1697,12 +1690,12 @@ func (self *Account) TransferNewLegacyTxWithEth(c *client.Client, endpoint strin
 		} else {
 			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
 		}
-		return common.Hash{0}, gasPrice, err
+		return hash, gasPrice, err
 	}
 
 	self.nonce++
 
-	return common.HexToHash(strResult), gasPrice, nil
+	return hash, gasPrice, nil
 }
 
 // This function is responsible for sending both Gasless Approve Transactions and Gasless Swap Transactions.
@@ -2065,40 +2058,39 @@ func (self *Account) AuctionRevertedBid(c *client.Client, auctionEntryPoint, tar
 	return targetTx.Hash(), bid.Hash(), suggestedGasPrice, nil
 }
 
-func (self *Account) TransferNewEthAccessListTxWithEth(c *client.Client, endpoint string, to *Account, value *big.Int, input string, exePath string) (common.Hash, *big.Int, error) {
+func (self *Account) TransferNewEthAccessListTxWithEth(c *client.EthClient, to *Account, value *big.Int, input []byte) (common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
 	nonce := self.GetNonce(c)
 
 	// Ethereum AccessListTx
-	txType := "1"
-	gas := "100000"
-
-	var toAddress string
-	if to != nil {
-		toAddress = to.GetAddress().String()
+	gas := uint64(100000)
+	var tx *types.Transaction
+	if to == nil {
+		gas *= 2
+		tx = types.NewContractCreation(nonce, value, gas, gasPrice, input)
 	} else {
-		// When to is nil, smart contract deployment with legacyTx case.
-		// To send as a command argument which has to be string type,
-		// explicitly send "nil" string for deploying.
-		toAddress = "nil"
-		gas = "200000"
+		tx = types.NewTx(&types.TxInternalDataEthereumAccessList{
+			ChainID:      chainID,
+			AccountNonce: nonce,
+			Recipient:    &to.address,
+			GasLimit:     gas,
+			Price:        gasPrice,
+			Amount:       value,
+			AccessList:   types.AccessList{},
+			Payload:      input,
+		})
 	}
 
-	// To test this, you need to update submodule and build executable file.
-	// ./ethTxGenerator endPoint txType chainID gasPrice gas baseFee value fromPrivateKey nonce to [data]
-	cmd := exec.Command(exePath, endpoint, txType, chainID.String(), gasPrice.String(), gas, baseFee.String(), value.String(), self.GetPrivateKey(), strconv.FormatUint(nonce, 10), toAddress, input)
-	result, err := cmd.CombinedOutput()
+	signer := types.LatestSignerForChainID(chainID)
+	err := tx.SignWithKeys(signer, self.privateKey)
 	if err != nil {
-		log.Fatalf("Failed to create and send tx : %v", err)
+		return tx.Hash(), gasPrice, err
 	}
 
-	strResult := string(result[:])
-	// Executable file will return transaction hash or error string.
-	// So if result does not include "0x" prefix, means something went wrong.
-	if !strings.Contains(strResult, "0x") {
-		err = errors.New(strResult)
+	hash, err := c.SendRawTransaction(context.Background(), tx)
+	if err != nil {
 		if err.Error() == blockchain.ErrNonceTooLow.Error() || err.Error() == blockchain.ErrReplaceUnderpriced.Error() {
 			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
 			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
@@ -2106,49 +2098,47 @@ func (self *Account) TransferNewEthAccessListTxWithEth(c *client.Client, endpoin
 		} else {
 			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
 		}
-		return common.Hash{0}, gasPrice, err
+		return hash, gasPrice, err
 	}
 
 	self.nonce++
 
-	return common.HexToHash(strResult), gasPrice, nil
+	return hash, gasPrice, nil
 }
 
-func (self *Account) TransferNewEthDynamicFeeTxWithEth(c *client.Client, endpoint string, to *Account, value *big.Int, input string, exePath string) (common.Hash, *big.Int, error) {
+func (self *Account) TransferNewEthDynamicFeeTxWithEth(c Client, to *Account, value *big.Int, input []byte) (common.Hash, *big.Int, error) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
 	nonce := self.GetNonce(c)
 
 	// Ethereum DynamicFeeTx
-	txType := "2"
-	gas := "100000"
-
-	var toAddress string
-	if to != nil {
-		toAddress = to.GetAddress().String()
+	gas := uint64(100000)
+	var tx *types.Transaction
+	if to == nil {
+		gas *= 2
+		tx = types.NewContractCreation(nonce, value, gas, gasPrice, input)
 	} else {
-		// When to is nil, smart contract deployment with legacyTx case.
-		// To send as a command argument which has to be string type,
-		// explicitly send "nil" string for deploying.
-		toAddress = "nil"
-		gas = "200000"
+		tx = types.NewTx(&types.TxInternalDataEthereumDynamicFee{
+			ChainID:      chainID,
+			AccountNonce: nonce,
+			Recipient:    &to.address,
+			GasLimit:     gas,
+			GasFeeCap:    gasPrice,
+			GasTipCap:    gasPrice,
+			Amount:       value,
+			AccessList:   types.AccessList{},
+			Payload:      input,
+		})
 	}
 
-	// To test this, you need to update submodule and build executable file.
-	// ./ethTxGenerator endPoint txType chainID gasPrice gas baseFee value fromPrivateKey nonce to [data]
-	cmd := exec.Command(exePath, endpoint, txType, chainID.String(), gasPrice.String(), gas, baseFee.String(), value.String(), self.GetPrivateKey(), strconv.FormatUint(nonce, 10), toAddress, input)
-	result, err := cmd.CombinedOutput()
+	signer := types.LatestSignerForChainID(chainID)
+	err := tx.SignWithKeys(signer, self.privateKey)
 	if err != nil {
-		fmt.Printf("fromAddress: %v, strconv.FormatUint(nonce, 10): %v, to: %v input: %v gas: %v \n", self.GetAddress().String(), strconv.FormatUint(nonce, 10), toAddress, input, gas)
-		log.Fatalf("Failed to create and send tx : %v", err)
+		return tx.Hash(), gasPrice, err
 	}
-
-	strResult := string(result[:])
-	// Executable file will return transaction hash or error string.
-	// So if result does not include "0x" prefix, means something went wrong.
-	if !strings.Contains(strResult, "0x") {
-		err = errors.New(strResult)
+	hash, err := c.SendRawTransaction(context.Background(), tx)
+	if err != nil {
 		if err.Error() == blockchain.ErrNonceTooLow.Error() || err.Error() == blockchain.ErrReplaceUnderpriced.Error() {
 			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
 			fmt.Printf("Account(%v) nonce is added to %v\n", self.GetAddress().String(), nonce+1)
@@ -2156,12 +2146,12 @@ func (self *Account) TransferNewEthDynamicFeeTxWithEth(c *client.Client, endpoin
 		} else {
 			fmt.Printf("Account(%v) nonce(%v) : Failed to sendTransaction: %v\n", self.GetAddress().String(), nonce, err)
 		}
-		return common.Hash{0}, gasPrice, err
+		return hash, gasPrice, err
 	}
 
 	self.nonce++
 
-	return common.HexToHash(strResult), gasPrice, nil
+	return hash, gasPrice, nil
 }
 
 func (self *Account) TransferUnsignedTx(c *client.Client, to *Account, value *big.Int) (common.Hash, error) {

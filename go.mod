@@ -3,11 +3,11 @@ module github.com/kaiachain/kaia-load-tester
 go 1.23.7
 
 require (
-	github.com/kaiachain/kaia v1.0.4-0.20250728082804-ed99eb738307 // v2.0.0 commit hash
+	github.com/kaiachain/kaia v1.0.4-0.20251002025735-0bc8cf5337d0 // v2.0.0 commit hash
 	github.com/myzhan/boomer v1.6.0
 	github.com/tidwall/gjson v1.12.1
 	github.com/urfave/cli v1.20.0
-	golang.org/x/crypto v0.36.0
+	golang.org/x/crypto v0.36.0 // indirect
 )
 
 require (

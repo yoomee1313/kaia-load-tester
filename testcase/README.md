@@ -11,16 +11,6 @@ cd local-deploy
 ```
 Folow the README.md to setup the local network.
 
-## Ethereum TCs
-
-It needs submodule.
-```
-cd klayslave && git clone https://github.com/jimni1222/ethTxGenerator.git
-cd ethTxGenerator
-go build
-cp ethTxGenerator ../../build/bin/
-```
-
 ## Auction, Gasless TCs
 
 To enable the auction & gasless module, we need:

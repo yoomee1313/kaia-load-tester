@@ -15,7 +15,8 @@ type TCConfig struct {
 	EndPoint                string
 	AccGrp                  *account.AccountSet
 	CliPool                 clipool.ClientPool
-	RpcCliPool              clipool.ClientPool                        // For RPC client (used by specific Read API test cases)
+	RpcCliPool              clipool.ClientPool // For RPC client (used by specific Read API test cases)
+	EthCliPool              clipool.ClientPool
 	SmartContractAccounts   map[account.TestContract]*account.Account // For multiple contracts
 	TestContracts           []account.TestContract
 	AuctionTargetTxTypeList []string // For auction test cases
@@ -76,7 +77,15 @@ func Init(accGrp *account.AccGroup, endpoint string, testContracts []account.Tes
 	// Initialize ethereum specific variables for ethereum test cases
 	if tcName == "ethereumTxLegacyTC" || tcName == "ethereumTxAccessListTC" || tcName == "ethereumTxDynamicFeeTC" ||
 		tcName == "newEthereumAccessListTC" || tcName == "newEthereumDynamicFeeTC" {
-		initEthereum()
+		ethcliCreate := func() interface{} {
+			c, err := client.DialEth(config.EndPoint)
+			if err != nil {
+				log.Fatalf("Failed to connect RPC: %v", err)
+			}
+			return c
+		}
+
+		config.EthCliPool.Init(20, 300, ethcliCreate)
 	}
 
 	return config

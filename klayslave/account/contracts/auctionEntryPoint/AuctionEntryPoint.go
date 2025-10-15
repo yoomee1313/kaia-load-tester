@@ -45,29 +45,31 @@ type IAuctionEntryPointAuctionTx struct {
 
 // AuctionEntryPointMetaData contains all meta data concerning the AuctionEntryPoint contract.
 var AuctionEntryPointMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"initialOwner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_depositVault\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_auctioneer\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"EmptyDepositVault\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"currentNonce\",\"type\":\"uint256\"}],\"name\":\"InvalidAccountNonce\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInput\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidShortString\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"MinDepositNotOver\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyAuctionDepositVault\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyEntryPoint\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyProposer\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyStakingAdmin\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"str\",\"type\":\"string\"}],\"name\":\"StringTooLong\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WithdrawReservationExists\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WithdrawalFailed\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WithdrawalNotAllowedYet\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroDepositAmount\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"name\":\"Call\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"name\":\"CallFailed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"oldAuctioneer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newAuctioneer\",\"type\":\"address\"}],\"name\":\"ChangeAuctioneer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"oldDepositVault\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newDepositVault\",\"type\":\"address\"}],\"name\":\"ChangeDepositVault\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"EIP712DomainChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"searcher\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"name\":\"UseNonce\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"AUCTION_NAME\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"AUCTION_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GAS_BUFFER_ESTIMATE\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GAS_BUFFER_UNMEASURED\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GAS_CONTRACT_EXECUTION\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GAS_PER_BYTE_EIP_7623\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GAS_PER_BYTE_INTRINSIC\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"auctioneer\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"targetTxHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"bid\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"callGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"searcherSig\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"auctioneerSig\",\"type\":\"bytes\"}],\"internalType\":\"structIAuctionEntryPoint.AuctionTx\",\"name\":\"auctionTx\",\"type\":\"tuple\"}],\"name\":\"call\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_auctioneer\",\"type\":\"address\"}],\"name\":\"changeAuctioneer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_depositVault\",\"type\":\"address\"}],\"name\":\"changeDepositVault\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"depositVault\",\"outputs\":[{\"internalType\":\"contractIAuctionDepositVault\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"eip712Domain\",\"outputs\":[{\"internalType\":\"bytes1\",\"name\":\"fields\",\"type\":\"bytes1\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"version\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"verifyingContract\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"salt\",\"type\":\"bytes32\"},{\"internalType\":\"uint256[]\",\"name\":\"extensions\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"targetTxHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"bid\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"callGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"searcherSig\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"auctioneerSig\",\"type\":\"bytes\"}],\"internalType\":\"structIAuctionEntryPoint.AuctionTx\",\"name\":\"auctionTx\",\"type\":\"tuple\"}],\"name\":\"getAuctionTxHash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"searchers\",\"type\":\"address[]\"}],\"name\":\"getNonceAndBids\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"nonces_\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256[]\",\"name\":\"bids_\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"nonces\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"initialOwner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_depositVault\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_auctioneer\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"EmptyDepositVault\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"currentNonce\",\"type\":\"uint256\"}],\"name\":\"InvalidAccountNonce\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInput\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidRange\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidShortString\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"MinDepositNotOver\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyAuctionDepositVault\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyEntryPoint\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyProposer\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyStakingAdmin\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"str\",\"type\":\"string\"}],\"name\":\"StringTooLong\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WithdrawReservationExists\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WithdrawalFailed\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WithdrawalNotAllowedYet\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroDepositAmount\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"name\":\"Call\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"name\":\"CallFailed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"oldAuctioneer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newAuctioneer\",\"type\":\"address\"}],\"name\":\"ChangeAuctioneer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"oldDepositVault\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newDepositVault\",\"type\":\"address\"}],\"name\":\"ChangeDepositVault\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasPerByteIntrinsic\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasPerByteEip7623\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasContractExecution\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasBufferEstimate\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasBufferUnmeasured\",\"type\":\"uint256\"}],\"name\":\"ChangeGasParameters\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"EIP712DomainChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"searcher\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"name\":\"UseNonce\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"AUCTION_NAME\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"AUCTION_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MAX_DATA_SIZE\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"auctioneer\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"targetTxHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"bid\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"callGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"searcherSig\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"auctioneerSig\",\"type\":\"bytes\"}],\"internalType\":\"structIAuctionEntryPoint.AuctionTx\",\"name\":\"auctionTx\",\"type\":\"tuple\"}],\"name\":\"call\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_auctioneer\",\"type\":\"address\"}],\"name\":\"changeAuctioneer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_depositVault\",\"type\":\"address\"}],\"name\":\"changeDepositVault\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gasPerByteIntrinsic\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_gasPerByteEip7623\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_gasContractExecution\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_gasBufferEstimate\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_gasBufferUnmeasured\",\"type\":\"uint256\"}],\"name\":\"changeGasParameters\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"depositVault\",\"outputs\":[{\"internalType\":\"contractIAuctionDepositVault\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"eip712Domain\",\"outputs\":[{\"internalType\":\"bytes1\",\"name\":\"fields\",\"type\":\"bytes1\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"version\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"verifyingContract\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"salt\",\"type\":\"bytes32\"},{\"internalType\":\"uint256[]\",\"name\":\"extensions\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gasBufferEstimate\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gasBufferUnmeasured\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gasContractExecution\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gasPerByteEip7623\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gasPerByteIntrinsic\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"targetTxHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"bid\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"callGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"searcherSig\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"auctioneerSig\",\"type\":\"bytes\"}],\"internalType\":\"structIAuctionEntryPoint.AuctionTx\",\"name\":\"auctionTx\",\"type\":\"tuple\"}],\"name\":\"getAuctionTxHash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"searchers\",\"type\":\"address[]\"}],\"name\":\"getNoncesAndDeposits\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"nonces_\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256[]\",\"name\":\"deposits_\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"nonces\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 	Sigs: map[string]string{
 		"d2da236e": "AUCTION_NAME()",
 		"9fc99426": "AUCTION_VERSION()",
-		"e4a973dd": "GAS_BUFFER_ESTIMATE()",
-		"eb322e74": "GAS_BUFFER_UNMEASURED()",
-		"0a409e29": "GAS_CONTRACT_EXECUTION()",
-		"b2f5f4ca": "GAS_PER_BYTE_EIP_7623()",
-		"aa65b344": "GAS_PER_BYTE_INTRINSIC()",
+		"22fce66f": "MAX_DATA_SIZE()",
 		"5ec2c7bf": "auctioneer()",
 		"ca157554": "call((bytes32,uint256,address,address,uint256,uint256,uint256,bytes,bytes,bytes))",
 		"774f45ec": "changeAuctioneer(address)",
 		"9d59928b": "changeDepositVault(address)",
+		"2a215610": "changeGasParameters(uint256,uint256,uint256,uint256,uint256)",
 		"d7cd3949": "depositVault()",
 		"84b0196e": "eip712Domain()",
+		"a5b2ab40": "gasBufferEstimate()",
+		"145aa6c7": "gasBufferUnmeasured()",
+		"c62a1105": "gasContractExecution()",
+		"5e155d7a": "gasPerByteEip7623()",
+		"ea147667": "gasPerByteIntrinsic()",
 		"a8aa9450": "getAuctionTxHash((bytes32,uint256,address,address,uint256,uint256,uint256,bytes,bytes,bytes))",
-		"287ca78e": "getNonceAndBids(address[])",
+		"0339ed37": "getNoncesAndDeposits(address[])",
 		"7ecebe00": "nonces(address)",
 		"8da5cb5b": "owner()",
 		"715018a6": "renounceOwnership()",
 		"f2fde38b": "transferOwnership(address)",
 	},
-	Bin: "0x610160604052348015610010575f80fd5b50604051611b98380380611b9883398101604081905261002f91610264565b604080518082018252600c81526b25a0a4a0afa0aaa1aa24a7a760a11b60208083019190915282518084019093526005835264302e302e3160d81b90830152849161007b826001610189565b6101205261008a816002610189565b61014052815160208084019190912060e052815190820120610100524660a05261011660e05161010051604080517f8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f60208201529081019290925260608201524660808201523060a08201525f9060c00160405160208183030381529060405280519060200120905090565b60805250503060c0526001600160a01b03811661014d57604051631e4fbdf760e01b81525f60048201526024015b60405180910390fd5b610156816101bb565b50600480546001600160a01b039384166001600160a01b0319918216179091556005805492909316911617905550610453565b5f6020835110156101a45761019d8361020c565b90506101b5565b816101af848261033c565b5060ff90505b92915050565b600380546001600160a01b038381166001600160a01b0319831681179093556040519116919082907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0905f90a35050565b5f80829050601f81511115610236578260405163305a27a960e01b815260040161014491906103fb565b805161024182610430565b179392505050565b80516001600160a01b038116811461025f575f80fd5b919050565b5f805f60608486031215610276575f80fd5b61027f84610249565b925061028d60208501610249565b915061029b60408501610249565b90509250925092565b634e487b7160e01b5f52604160045260245ffd5b600181811c908216806102cc57607f821691505b6020821081036102ea57634e487b7160e01b5f52602260045260245ffd5b50919050565b601f82111561033757805f5260205f20601f840160051c810160208510156103155750805b601f840160051c820191505b81811015610334575f8155600101610321565b50505b505050565b81516001600160401b03811115610355576103556102a4565b6103698161036384546102b8565b846102f0565b602080601f83116001811461039c575f84156103855750858301515b5f19600386901b1c1916600185901b1785556103f3565b5f85815260208120601f198616915b828110156103ca578886015182559484019460019091019084016103ab565b50858210156103e757878501515f19600388901b60f8161c191681555b505060018460011b0185555b505050505050565b602081525f82518060208401528060208501604085015e5f604082850101526040601f19601f83011684010191505092915050565b805160208083015191908110156102ea575f1960209190910360031b1b16919050565b60805160a05160c05160e0516101005161012051610140516116f46104a45f395f6108b101525f61087f01525f61118501525f61115d01525f6110b801525f6110e201525f61110c01526116f45ff3fe608060405234801561000f575f80fd5b506004361061011c575f3560e01c80639fc99426116100a9578063d2da236e1161006e578063d2da236e14610273578063d7cd39491461029e578063e4a973dd146102b1578063eb322e74146102bb578063f2fde38b146102c4575f80fd5b80639fc994261461020c578063a8aa94501461023d578063aa65b34414610250578063b2f5f4ca14610258578063ca15755414610260575f80fd5b8063774f45ec116100ef578063774f45ec146101925780637ecebe00146101a557806384b0196e146101cd5780638da5cb5b146101e85780639d59928b146101f9575f80fd5b80630a409e2914610120578063287ca78e1461013c5780635ec2c7bf1461015d578063715018a614610188575b5f80fd5b61012961520881565b6040519081526020015b60405180910390f35b61014f61014a36600461131a565b6102d7565b604051610133929190611414565b600554610170906001600160a01b031681565b6040516001600160a01b039091168152602001610133565b610190610463565b005b6101906101a0366004611441565b610476565b6101296101b3366004611441565b6001600160a01b03165f9081526020819052604090205490565b6101d5610510565b6040516101339796959493929190611488565b6003546001600160a01b0316610170565b610190610207366004611441565b610552565b61023060405180604001604052806005815260200164302e302e3160d81b81525081565b60405161013391906114f7565b61012961024b366004611509565b6105ec565b610129601081565b610129602881565b61019061026e366004611509565b6105fc565b6102306040518060400160405280600c81526020016b25a0a4a0afa0aaa1aa24a7a760a11b81525081565b600454610170906001600160a01b031681565b6101296202bf2081565b610129614e2081565b6101906102d2366004611441565b6107b8565b606080825167ffffffffffffffff8111156102f4576102f46112eb565b60405190808252806020026020018201604052801561031d578160200160208202803683370190505b509150825167ffffffffffffffff81111561033a5761033a6112eb565b604051908082528060200260200182016040528015610363578160200160208202803683370190505b5090505f5b835181101561045d575f84828151811061038457610384611541565b602002602001015190506103ac816001600160a01b03165f9081526020819052604090205490565b8483815181106103be576103be611541565b602090810291909101015260048054604051631eb903cf60e01b81526001600160a01b0384811693820193909352911690631eb903cf90602401602060405180830381865afa158015610413573d5f803e3d5ffd5b505050506040513d601f19601f820116820180604052508101906104379190611555565b83838151811061044957610449611541565b602090810291909101015250600101610368565b50915091565b61046b6107fa565b6104745f610827565b565b61047e6107fa565b806001600160a01b0381166104a65760405163d92e233d60e01b815260040160405180910390fd5b600554604080516001600160a01b03928316815291841660208301527fc8a0473779a405800019e7658500d0930d92f78e776b553d286baeefb9c9a0f1910160405180910390a150600580546001600160a01b0319166001600160a01b0392909216919091179055565b5f6060805f805f6060610521610878565b6105296108aa565b604080515f80825260208201909252600f60f81b9b939a50919850469750309650945092509050565b61055a6107fa565b806001600160a01b0381166105825760405163d92e233d60e01b815260040160405180910390fd5b600454604080516001600160a01b03928316815291841660208301527f32718750012b831b1e21ea05c1ed833c9365fc94e7316126303f6d09f41beb5d910160405180910390a150600480546001600160a01b0319166001600160a01b0392909216919091179055565b5f6105f6826108d7565b92915050565b33411461061c57604051630608c7c960e51b815260040160405180910390fd5b6004546001600160a01b031661064557604051637941e9ad60e01b815260040160405180910390fd5b5f5a90505f61065a6060840160408501611441565b905060c083013561066a846109be565b610672575f80fd5b610681828560a0013583610b60565b610689575f80fd5b5f61069383610c91565b90505f6106a66080870160608801611441565b6001600160a01b0316836106bd60e089018961156c565b6040516106cb9291906115b6565b5f604051808303815f8787f1925050503d805f8114610705576040519150601f19603f3d011682016040523d82523d5f602084013e61070a565b606091505b50509050801561075b57604080516001600160a01b0386168152602081018490527f9e4369a013b5e45a103a959d8eb70f15c55dc496e8335f245690393dfb4b71d4910160405180910390a161079e565b604080516001600160a01b0386168152602081018490527fb9eaeae386d339f8115782f297a9e5f0e13fb587cd6b0d502f113cb8dd4d6cb0910160405180910390a15b6107a88486610d06565b6107b0575f80fd5b505050505050565b6107c06107fa565b6001600160a01b0381166107ee57604051631e4fbdf760e01b81525f60048201526024015b60405180910390fd5b6107f781610827565b50565b6003546001600160a01b031633146104745760405163118cdaa760e01b81523360048201526024016107e5565b600380546001600160a01b038381166001600160a01b0319831681179093556040519116919082907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0905f90a35050565b60606108a57f00000000000000000000000000000000000000000000000000000000000000006001610da3565b905090565b60606108a57f00000000000000000000000000000000000000000000000000000000000000006002610da3565b5f7f76991d1c87749d29787e5ad5e05218607b00b6b1bd07277e6061cf4456f0b2b0823560208401356109106060860160408701611441565b6109206080870160608801611441565b608087013560a088013560c089013561093c60e08b018b61156c565b60405161094a9291906115b6565b60408051918290038220602083019a909a5281019790975260608701959095526001600160a01b0393841660808701529290911660a085015260c084015260e0830152610100820152610120810191909152610140015b604051602081830303815290604052805190602001209050919050565b5f438260200135146109d157505f919050565b5f8260a00135116109e357505f919050565b5f610a2e6109f561010085018561156c565b8080601f0160208091040260200160405190810160405280939291908181526020018383808284375f92019190915250610e4c92505050565b90505f610a7e610a4261012086018661156c565b8080601f0160208091040260200160405190810160405280939291908181526020018383808284375f920191909152508693925050610e699050565b50506005549091506001600160a01b03808316911614610aa157505f9392505050565b5f610aab856108d7565b9050610ab681610eb2565b9250610b05610ac961010087018761156c565b8080601f0160208091040260200160405190810160405280939291908181526020018383808284375f920191909152508793925050610e699050565b50909250610b1b90506060860160408701611441565b6001600160a01b0316826001600160a01b031614610b3d57505f949350505050565b610b506101b36060870160408801611441565b8560800135149350505050919050565b5f80610b77610b726202bf20856115d9565b610ede565b90505f610b843a836115ec565b610b8e90866115d9565b60048054604051631eb903cf60e01b81526001600160a01b038a8116938201939093529293501690631eb903cf90602401602060405180830381865afa158015610bda573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610bfe9190611555565b811115610c0f575f92505050610c8a565b600480546040516308bf759d60e01b81526001600160a01b0389811693820193909352602481018890529116906308bf759d906044016020604051808303815f875af1158015610c61573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610c859190611603565b925050505b9392505050565b6001600160a01b0381165f9081526020819052604081208054600181019091557f7243aab3c75cebfd96dc41ece7762eb023fc8c81e9ba2ce1d487876419b918b583610cde8360016115d9565b604080516001600160a01b03909316835260208301919091520160405180910390a192915050565b5f80610d23614e205a610d199086611622565b610b7291906115d9565b6004805460405163b4fdfae560e01b81526001600160a01b038881169382019390935260248101849052929350169063b4fdfae5906044016020604051808303815f875af1158015610d77573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610d9b9190611603565b949350505050565b606060ff8314610dbd57610db683610f17565b90506105f6565b818054610dc990611635565b80601f0160208091040260200160405190810160405280929190818152602001828054610df590611635565b8015610e405780601f10610e1757610100808354040283529160200191610e40565b820191905f5260205f20905b815481529060010190602001808311610e2357829003601f168201915b505050505090506105f6565b5f610e578251610f54565b826040516020016109a1929190611684565b5f805f8351604103610ea0576020840151604085015160608601515f1a610e9288828585610fe4565b955095509550505050610eab565b505081515f91506002905b9250925092565b5f6105f6610ebe6110ac565b8360405161190160f01b8152600281019290925260228201526042902090565b5f80610eea60106111d5565b610ef490846115d9565b90505f610f0160286111d5565b9050808211610f105780610d9b565b5092915050565b60605f610f23836111ed565b6040805160208082528183019092529192505f91906020820181803683375050509182525060208101929092525090565b60605f610f6083611214565b60010190505f8167ffffffffffffffff811115610f7f57610f7f6112eb565b6040519080825280601f01601f191660200182016040528015610fa9576020820181803683370190505b5090508181016020015b5f19016f181899199a1a9b1b9c1cb0b131b232b360811b600a86061a8153600a8504945084610fb357509392505050565b5f80807f7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a084111561101d57505f915060039050826110a2565b604080515f808252602082018084528a905260ff891692820192909252606081018790526080810186905260019060a0016020604051602081039080840390855afa15801561106e573d5f803e3d5ffd5b5050604051601f1901519150506001600160a01b03811661109957505f9250600191508290506110a2565b92505f91508190505b9450945094915050565b5f306001600160a01b037f00000000000000000000000000000000000000000000000000000000000000001614801561110457507f000000000000000000000000000000000000000000000000000000000000000046145b1561112e57507f000000000000000000000000000000000000000000000000000000000000000090565b6108a5604080517f8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f60208201527f0000000000000000000000000000000000000000000000000000000000000000918101919091527f000000000000000000000000000000000000000000000000000000000000000060608201524660808201523060a08201525f9060c00160405160208183030381529060405280519060200120905090565b5f6152086111e383366115ec565b6105f691906115d9565b5f60ff8216601f8111156105f657604051632cd44ac360e21b815260040160405180910390fd5b5f8072184f03e93ff9f4daa797ed6e38ed64bf6a1f0160401b83106112525772184f03e93ff9f4daa797ed6e38ed64bf6a1f0160401b830492506040015b6d04ee2d6d415b85acef8100000000831061127e576d04ee2d6d415b85acef8100000000830492506020015b662386f26fc10000831061129c57662386f26fc10000830492506010015b6305f5e10083106112b4576305f5e100830492506008015b61271083106112c857612710830492506004015b606483106112da576064830492506002015b600a83106105f65760010192915050565b634e487b7160e01b5f52604160045260245ffd5b80356001600160a01b0381168114611315575f80fd5b919050565b5f602080838503121561132b575f80fd5b823567ffffffffffffffff80821115611342575f80fd5b818501915085601f830112611355575f80fd5b813581811115611367576113676112eb565b8060051b604051601f19603f8301168101818110858211171561138c5761138c6112eb565b6040529182528482019250838101850191888311156113a9575f80fd5b938501935b828510156113ce576113bf856112ff565b845293850193928501926113ae565b98975050505050505050565b5f815180845260208085019450602084015f5b83811015611409578151875295820195908201906001016113ed565b509495945050505050565b604081525f61142660408301856113da565b828103602084015261143881856113da565b95945050505050565b5f60208284031215611451575f80fd5b610c8a826112ff565b5f81518084528060208401602086015e5f602082860101526020601f19601f83011685010191505092915050565b60ff60f81b8816815260e060208201525f6114a660e083018961145a565b82810360408401526114b8818961145a565b606084018890526001600160a01b038716608085015260a0840186905283810360c085015290506114e981856113da565b9a9950505050505050505050565b602081525f610c8a602083018461145a565b5f60208284031215611519575f80fd5b813567ffffffffffffffff81111561152f575f80fd5b82016101408185031215610c8a575f80fd5b634e487b7160e01b5f52603260045260245ffd5b5f60208284031215611565575f80fd5b5051919050565b5f808335601e19843603018112611581575f80fd5b83018035915067ffffffffffffffff82111561159b575f80fd5b6020019150368190038213156115af575f80fd5b9250929050565b818382375f9101908152919050565b634e487b7160e01b5f52601160045260245ffd5b808201808211156105f6576105f66115c5565b80820281158282048414176105f6576105f66115c5565b5f60208284031215611613575f80fd5b81518015158114610c8a575f80fd5b818103818111156105f6576105f66115c5565b600181811c9082168061164957607f821691505b60208210810361166757634e487b7160e01b5f52602260045260245ffd5b50919050565b5f81518060208401855e5f93019283525090919050565b7f19457468657265756d205369676e6564204d6573736167653a0a00000000000081525f610d9b6116b8601a84018661166d565b8461166d56fea2646970667358221220ce68802868ab34fb3e09566b2636ccb2fceeff989ea4ce1e07d475c2daf469ba64736f6c63430008190033",
+	Bin: "0x6101606040526010600655602860075561520860085562030d406009556188b8600a5534801561002d575f80fd5b50604051611d08380380611d0883398101604081905261004c916102d3565b604080518082018252600c81526b25a0a4a0afa0aaa1aa24a7a760a11b60208083019190915282518084019093526005835264302e302e3160d81b9083015284916100988260016101f8565b610120526100a78160026101f8565b61014052815160208084019190912060e052815190820120610100524660a05261013360e05161010051604080517f8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f60208201529081019290925260608201524660808201523060a08201525f9060c00160405160208183030381529060405280519060200120905090565b60805250503060c0526001600160a01b03811661016a57604051631e4fbdf760e01b81525f60048201526024015b60405180910390fd5b6101738161022a565b50816001600160a01b03811661019c5760405163d92e233d60e01b815260040160405180910390fd5b816001600160a01b0381166101c45760405163d92e233d60e01b815260040160405180910390fd5b5050600480546001600160a01b039384166001600160a01b03199182161790915560058054929093169116179055506104c2565b5f6020835110156102135761020c8361027b565b9050610224565b8161021e84826103ab565b5060ff90505b92915050565b600380546001600160a01b038381166001600160a01b0319831681179093556040519116919082907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0905f90a35050565b5f80829050601f815111156102a5578260405163305a27a960e01b8152600401610161919061046a565b80516102b08261049f565b179392505050565b80516001600160a01b03811681146102ce575f80fd5b919050565b5f805f606084860312156102e5575f80fd5b6102ee846102b8565b92506102fc602085016102b8565b915061030a604085016102b8565b90509250925092565b634e487b7160e01b5f52604160045260245ffd5b600181811c9082168061033b57607f821691505b60208210810361035957634e487b7160e01b5f52602260045260245ffd5b50919050565b601f8211156103a657805f5260205f20601f840160051c810160208510156103845750805b601f840160051c820191505b818110156103a3575f8155600101610390565b50505b505050565b81516001600160401b038111156103c4576103c4610313565b6103d8816103d28454610327565b8461035f565b602080601f83116001811461040b575f84156103f45750858301515b5f19600386901b1c1916600185901b178555610462565b5f85815260208120601f198616915b828110156104395788860151825594840194600190910190840161041a565b508582101561045657878501515f19600388901b60f8161c191681555b505060018460011b0185555b505050505050565b602081525f82518060208401528060208501604085015e5f604082850101526040601f19601f83011684010191505092915050565b80516020808301519190811015610359575f1960209190910360031b1b16919050565b60805160a05160c05160e0516101005161012051610140516117f56105135f395f61095701525f61092501525f61124e01525f61122601525f61118101525f6111ab01525f6111d501526117f55ff3fe608060405234801561000f575f80fd5b5060043610610132575f3560e01c80638da5cb5b116100b4578063c62a110511610079578063c62a110514610299578063ca157554146102a2578063d2da236e146102b5578063d7cd3949146102e0578063ea147667146102f3578063f2fde38b146102fc575f80fd5b80638da5cb5b146102285780639d59928b146102395780639fc994261461024c578063a5b2ab401461027d578063a8aa945014610286575f80fd5b80635ec2c7bf116100fa5780635ec2c7bf1461019f578063715018a6146101ca578063774f45ec146101d25780637ecebe00146101e557806384b0196e1461020d575f80fd5b80630339ed3714610136578063145aa6c71461016057806322fce66f146101775780632a215610146101815780635e155d7a14610196575b5f80fd5b6101496101443660046113e4565b61030f565b6040516101579291906114de565b60405180910390f35b610169600a5481565b604051908152602001610157565b6101696201000081565b61019461018f36600461150b565b61049b565b005b61016960075481565b6005546101b2906001600160a01b031681565b6040516001600160a01b039091168152602001610157565b610194610509565b6101946101e0366004611542565b61051c565b6101696101f3366004611542565b6001600160a01b03165f9081526020819052604090205490565b6102156105b6565b6040516101579796959493929190611589565b6003546001600160a01b03166101b2565b610194610247366004611542565b6105f8565b61027060405180604001604052806005815260200164302e302e3160d81b81525081565b60405161015791906115f8565b61016960095481565b61016961029436600461160a565b610692565b61016960085481565b6101946102b036600461160a565b6106a2565b6102706040518060400160405280600c81526020016b25a0a4a0afa0aaa1aa24a7a760a11b81525081565b6004546101b2906001600160a01b031681565b61016960065481565b61019461030a366004611542565b61085e565b606080825167ffffffffffffffff81111561032c5761032c6113b5565b604051908082528060200260200182016040528015610355578160200160208202803683370190505b509150825167ffffffffffffffff811115610372576103726113b5565b60405190808252806020026020018201604052801561039b578160200160208202803683370190505b5090505f5b8351811015610495575f8482815181106103bc576103bc611642565b602002602001015190506103e4816001600160a01b03165f9081526020819052604090205490565b8483815181106103f6576103f6611642565b602090810291909101015260048054604051631eb903cf60e01b81526001600160a01b0384811693820193909352911690631eb903cf90602401602060405180830381865afa15801561044b573d5f803e3d5ffd5b505050506040513d601f19601f8201168201806040525081019061046f9190611656565b83838151811061048157610481611642565b6020908102919091010152506001016103a0565b50915091565b6104a36108a0565b604080518681526020810186905290810184905260608101839052608081018290527f88fa9ca37e3311ae53f6c07c267edc3aae4fc605df62318b5215d44665eb03089060a00160405180910390a1600694909455600792909255600855600955600a55565b6105116108a0565b61051a5f6108cd565b565b6105246108a0565b806001600160a01b03811661054c5760405163d92e233d60e01b815260040160405180910390fd5b600554604080516001600160a01b03928316815291841660208301527fc8a0473779a405800019e7658500d0930d92f78e776b553d286baeefb9c9a0f1910160405180910390a150600580546001600160a01b0319166001600160a01b0392909216919091179055565b5f6060805f805f60606105c761091e565b6105cf610950565b604080515f80825260208201909252600f60f81b9b939a50919850469750309650945092509050565b6106006108a0565b806001600160a01b0381166106285760405163d92e233d60e01b815260040160405180910390fd5b600454604080516001600160a01b03928316815291841660208301527f32718750012b831b1e21ea05c1ed833c9365fc94e7316126303f6d09f41beb5d910160405180910390a150600480546001600160a01b0319166001600160a01b0392909216919091179055565b5f61069c8261097d565b92915050565b3341146106c257604051630608c7c960e51b815260040160405180910390fd5b6004546001600160a01b03166106eb57604051637941e9ad60e01b815260040160405180910390fd5b5f5a90505f6107006060840160408501611542565b905060c083013561071084610a64565b610718575f80fd5b610727828560a0013583610c26565b61072f575f80fd5b5f61073983610d58565b90505f61074c6080870160608801611542565b6001600160a01b03168361076360e089018961166d565b6040516107719291906116b7565b5f604051808303815f8787f1925050503d805f81146107ab576040519150601f19603f3d011682016040523d82523d5f602084013e6107b0565b606091505b50509050801561080157604080516001600160a01b0386168152602081018490527f9e4369a013b5e45a103a959d8eb70f15c55dc496e8335f245690393dfb4b71d4910160405180910390a1610844565b604080516001600160a01b0386168152602081018490527fb9eaeae386d339f8115782f297a9e5f0e13fb587cd6b0d502f113cb8dd4d6cb0910160405180910390a15b61084e8486610dcd565b610856575f80fd5b505050505050565b6108666108a0565b6001600160a01b03811661089457604051631e4fbdf760e01b81525f60048201526024015b60405180910390fd5b61089d816108cd565b50565b6003546001600160a01b0316331461051a5760405163118cdaa760e01b815233600482015260240161088b565b600380546001600160a01b038381166001600160a01b0319831681179093556040519116919082907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0905f90a35050565b606061094b7f00000000000000000000000000000000000000000000000000000000000000006001610e6a565b905090565b606061094b7f00000000000000000000000000000000000000000000000000000000000000006002610e6a565b5f7f76991d1c87749d29787e5ad5e05218607b00b6b1bd07277e6061cf4456f0b2b0823560208401356109b66060860160408701611542565b6109c66080870160608801611542565b608087013560a088013560c08901356109e260e08b018b61166d565b6040516109f09291906116b7565b60408051918290038220602083019a909a5281019790975260608701959095526001600160a01b0393841660808701529290911660a085015260c084015260e0830152610100820152610120810191909152610140015b604051602081830303815290604052805190602001209050919050565b5f43826020013514610a7757505f919050565b5f8260a0013511610a8957505f919050565b62010000610a9a60e084018461166d565b90501115610aa957505f919050565b5f610af4610abb61010085018561166d565b8080601f0160208091040260200160405190810160405280939291908181526020018383808284375f92019190915250610f1392505050565b90505f610b44610b0861012086018661166d565b8080601f0160208091040260200160405190810160405280939291908181526020018383808284375f920191909152508693925050610f309050565b50506005549091506001600160a01b03808316911614610b6757505f9392505050565b5f610b718561097d565b9050610b7c81610f79565b9250610bcb610b8f61010087018761166d565b8080601f0160208091040260200160405190810160405280939291908181526020018383808284375f920191909152508793925050610f309050565b50909250610be190506060860160408701611542565b6001600160a01b0316826001600160a01b031614610c0357505f949350505050565b610c166101f36060870160408801611542565b8560800135149350505050919050565b5f80610c3e60095484610c3991906116da565b610fa5565b90505f610c4b3a836116ed565b610c5590866116da565b60048054604051631eb903cf60e01b81526001600160a01b038a8116938201939093529293501690631eb903cf90602401602060405180830381865afa158015610ca1573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610cc59190611656565b811115610cd6575f92505050610d51565b600480546040516308bf759d60e01b81526001600160a01b0389811693820193909352602481018890529116906308bf759d906044016020604051808303815f875af1158015610d28573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610d4c9190611704565b925050505b9392505050565b6001600160a01b0381165f9081526020819052604081208054600181019091557f7243aab3c75cebfd96dc41ece7762eb023fc8c81e9ba2ce1d487876419b918b583610da58360016116da565b604080516001600160a01b03909316835260208301919091520160405180910390a192915050565b5f80610dea600a545a610de09086611723565b610c3991906116da565b6004805460405163b4fdfae560e01b81526001600160a01b038881169382019390935260248101849052929350169063b4fdfae5906044016020604051808303815f875af1158015610e3e573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610e629190611704565b949350505050565b606060ff8314610e8457610e7d83610fe0565b905061069c565b818054610e9090611736565b80601f0160208091040260200160405190810160405280929190818152602001828054610ebc90611736565b8015610f075780601f10610ede57610100808354040283529160200191610f07565b820191905f5260205f20905b815481529060010190602001808311610eea57829003601f168201915b5050505050905061069c565b5f610f1e825161101d565b82604051602001610a47929190611785565b5f805f8351604103610f67576020840151604085015160608601515f1a610f59888285856110ad565b955095509550505050610f72565b505081515f91506002905b9250925092565b5f61069c610f85611175565b8360405161190160f01b8152600281019290925260228201526042902090565b5f80610fb260065461129e565b610fbc90846116da565b90505f610fca60075461129e565b9050808211610fd95780610e62565b5092915050565b60605f610fec836112b7565b6040805160208082528183019092529192505f91906020820181803683375050509182525060208101929092525090565b60605f611029836112de565b60010190505f8167ffffffffffffffff811115611048576110486113b5565b6040519080825280601f01601f191660200182016040528015611072576020820181803683370190505b5090508181016020015b5f19016f181899199a1a9b1b9c1cb0b131b232b360811b600a86061a8153600a850494508461107c57509392505050565b5f80807f7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a08411156110e657505f9150600390508261116b565b604080515f808252602082018084528a905260ff891692820192909252606081018790526080810186905260019060a0016020604051602081039080840390855afa158015611137573d5f803e3d5ffd5b5050604051601f1901519150506001600160a01b03811661116257505f92506001915082905061116b565b92505f91508190505b9450945094915050565b5f306001600160a01b037f0000000000000000000000000000000000000000000000000000000000000000161480156111cd57507f000000000000000000000000000000000000000000000000000000000000000046145b156111f757507f000000000000000000000000000000000000000000000000000000000000000090565b61094b604080517f8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f60208201527f0000000000000000000000000000000000000000000000000000000000000000918101919091527f000000000000000000000000000000000000000000000000000000000000000060608201524660808201523060a08201525f9060c00160405160208183030381529060405280519060200120905090565b6008545f906112ad83366116ed565b61069c91906116da565b5f60ff8216601f81111561069c57604051632cd44ac360e21b815260040160405180910390fd5b5f8072184f03e93ff9f4daa797ed6e38ed64bf6a1f0160401b831061131c5772184f03e93ff9f4daa797ed6e38ed64bf6a1f0160401b830492506040015b6d04ee2d6d415b85acef81000000008310611348576d04ee2d6d415b85acef8100000000830492506020015b662386f26fc10000831061136657662386f26fc10000830492506010015b6305f5e100831061137e576305f5e100830492506008015b612710831061139257612710830492506004015b606483106113a4576064830492506002015b600a831061069c5760010192915050565b634e487b7160e01b5f52604160045260245ffd5b80356001600160a01b03811681146113df575f80fd5b919050565b5f60208083850312156113f5575f80fd5b823567ffffffffffffffff8082111561140c575f80fd5b818501915085601f83011261141f575f80fd5b813581811115611431576114316113b5565b8060051b604051601f19603f83011681018181108582111715611456576114566113b5565b604052918252848201925083810185019188831115611473575f80fd5b938501935b8285101561149857611489856113c9565b84529385019392850192611478565b98975050505050505050565b5f815180845260208085019450602084015f5b838110156114d3578151875295820195908201906001016114b7565b509495945050505050565b604081525f6114f060408301856114a4565b828103602084015261150281856114a4565b95945050505050565b5f805f805f60a0868803121561151f575f80fd5b505083359560208501359550604085013594606081013594506080013592509050565b5f60208284031215611552575f80fd5b610d51826113c9565b5f81518084528060208401602086015e5f602082860101526020601f19601f83011685010191505092915050565b60ff60f81b8816815260e060208201525f6115a760e083018961155b565b82810360408401526115b9818961155b565b606084018890526001600160a01b038716608085015260a0840186905283810360c085015290506115ea81856114a4565b9a9950505050505050505050565b602081525f610d51602083018461155b565b5f6020828403121561161a575f80fd5b813567ffffffffffffffff811115611630575f80fd5b82016101408185031215610d51575f80fd5b634e487b7160e01b5f52603260045260245ffd5b5f60208284031215611666575f80fd5b5051919050565b5f808335601e19843603018112611682575f80fd5b83018035915067ffffffffffffffff82111561169c575f80fd5b6020019150368190038213156116b0575f80fd5b9250929050565b818382375f9101908152919050565b634e487b7160e01b5f52601160045260245ffd5b8082018082111561069c5761069c6116c6565b808202811582820484141761069c5761069c6116c6565b5f60208284031215611714575f80fd5b81518015158114610d51575f80fd5b8181038181111561069c5761069c6116c6565b600181811c9082168061174a57607f821691505b60208210810361176857634e487b7160e01b5f52602260045260245ffd5b50919050565b5f81518060208401855e5f93019283525090919050565b7f19457468657265756d205369676e6564204d6573736167653a0a00000000000081525f610e626117b9601a84018661176e565b8461176e56fea26469706673582212207625d0b77dbc584f4a8f400fa7c425d7f0cbe4068e91730dfe4756c13a70254a64736f6c63430008190033",
 }
 
 // AuctionEntryPointABI is the input ABI used to generate the binding from.
@@ -75,7 +77,7 @@ var AuctionEntryPointMetaData = &bind.MetaData{
 var AuctionEntryPointABI = AuctionEntryPointMetaData.ABI
 
 // AuctionEntryPointBinRuntime is the compiled bytecode used for adding genesis block without deploying code.
-const AuctionEntryPointBinRuntime = `608060405234801561000f575f80fd5b506004361061011c575f3560e01c80639fc99426116100a9578063d2da236e1161006e578063d2da236e14610273578063d7cd39491461029e578063e4a973dd146102b1578063eb322e74146102bb578063f2fde38b146102c4575f80fd5b80639fc994261461020c578063a8aa94501461023d578063aa65b34414610250578063b2f5f4ca14610258578063ca15755414610260575f80fd5b8063774f45ec116100ef578063774f45ec146101925780637ecebe00146101a557806384b0196e146101cd5780638da5cb5b146101e85780639d59928b146101f9575f80fd5b80630a409e2914610120578063287ca78e1461013c5780635ec2c7bf1461015d578063715018a614610188575b5f80fd5b61012961520881565b6040519081526020015b60405180910390f35b61014f61014a36600461131a565b6102d7565b604051610133929190611414565b600554610170906001600160a01b031681565b6040516001600160a01b039091168152602001610133565b610190610463565b005b6101906101a0366004611441565b610476565b6101296101b3366004611441565b6001600160a01b03165f9081526020819052604090205490565b6101d5610510565b6040516101339796959493929190611488565b6003546001600160a01b0316610170565b610190610207366004611441565b610552565b61023060405180604001604052806005815260200164302e302e3160d81b81525081565b60405161013391906114f7565b61012961024b366004611509565b6105ec565b610129601081565b610129602881565b61019061026e366004611509565b6105fc565b6102306040518060400160405280600c81526020016b25a0a4a0afa0aaa1aa24a7a760a11b81525081565b600454610170906001600160a01b031681565b6101296202bf2081565b610129614e2081565b6101906102d2366004611441565b6107b8565b606080825167ffffffffffffffff8111156102f4576102f46112eb565b60405190808252806020026020018201604052801561031d578160200160208202803683370190505b509150825167ffffffffffffffff81111561033a5761033a6112eb565b604051908082528060200260200182016040528015610363578160200160208202803683370190505b5090505f5b835181101561045d575f84828151811061038457610384611541565b602002602001015190506103ac816001600160a01b03165f9081526020819052604090205490565b8483815181106103be576103be611541565b602090810291909101015260048054604051631eb903cf60e01b81526001600160a01b0384811693820193909352911690631eb903cf90602401602060405180830381865afa158015610413573d5f803e3d5ffd5b505050506040513d601f19601f820116820180604052508101906104379190611555565b83838151811061044957610449611541565b602090810291909101015250600101610368565b50915091565b61046b6107fa565b6104745f610827565b565b61047e6107fa565b806001600160a01b0381166104a65760405163d92e233d60e01b815260040160405180910390fd5b600554604080516001600160a01b03928316815291841660208301527fc8a0473779a405800019e7658500d0930d92f78e776b553d286baeefb9c9a0f1910160405180910390a150600580546001600160a01b0319166001600160a01b0392909216919091179055565b5f6060805f805f6060610521610878565b6105296108aa565b604080515f80825260208201909252600f60f81b9b939a50919850469750309650945092509050565b61055a6107fa565b806001600160a01b0381166105825760405163d92e233d60e01b815260040160405180910390fd5b600454604080516001600160a01b03928316815291841660208301527f32718750012b831b1e21ea05c1ed833c9365fc94e7316126303f6d09f41beb5d910160405180910390a150600480546001600160a01b0319166001600160a01b0392909216919091179055565b5f6105f6826108d7565b92915050565b33411461061c57604051630608c7c960e51b815260040160405180910390fd5b6004546001600160a01b031661064557604051637941e9ad60e01b815260040160405180910390fd5b5f5a90505f61065a6060840160408501611441565b905060c083013561066a846109be565b610672575f80fd5b610681828560a0013583610b60565b610689575f80fd5b5f61069383610c91565b90505f6106a66080870160608801611441565b6001600160a01b0316836106bd60e089018961156c565b6040516106cb9291906115b6565b5f604051808303815f8787f1925050503d805f8114610705576040519150601f19603f3d011682016040523d82523d5f602084013e61070a565b606091505b50509050801561075b57604080516001600160a01b0386168152602081018490527f9e4369a013b5e45a103a959d8eb70f15c55dc496e8335f245690393dfb4b71d4910160405180910390a161079e565b604080516001600160a01b0386168152602081018490527fb9eaeae386d339f8115782f297a9e5f0e13fb587cd6b0d502f113cb8dd4d6cb0910160405180910390a15b6107a88486610d06565b6107b0575f80fd5b505050505050565b6107c06107fa565b6001600160a01b0381166107ee57604051631e4fbdf760e01b81525f60048201526024015b60405180910390fd5b6107f781610827565b50565b6003546001600160a01b031633146104745760405163118cdaa760e01b81523360048201526024016107e5565b600380546001600160a01b038381166001600160a01b0319831681179093556040519116919082907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0905f90a35050565b60606108a57f00000000000000000000000000000000000000000000000000000000000000006001610da3565b905090565b60606108a57f00000000000000000000000000000000000000000000000000000000000000006002610da3565b5f7f76991d1c87749d29787e5ad5e05218607b00b6b1bd07277e6061cf4456f0b2b0823560208401356109106060860160408701611441565b6109206080870160608801611441565b608087013560a088013560c089013561093c60e08b018b61156c565b60405161094a9291906115b6565b60408051918290038220602083019a909a5281019790975260608701959095526001600160a01b0393841660808701529290911660a085015260c084015260e0830152610100820152610120810191909152610140015b604051602081830303815290604052805190602001209050919050565b5f438260200135146109d157505f919050565b5f8260a00135116109e357505f919050565b5f610a2e6109f561010085018561156c565b8080601f0160208091040260200160405190810160405280939291908181526020018383808284375f92019190915250610e4c92505050565b90505f610a7e610a4261012086018661156c565b8080601f0160208091040260200160405190810160405280939291908181526020018383808284375f920191909152508693925050610e699050565b50506005549091506001600160a01b03808316911614610aa157505f9392505050565b5f610aab856108d7565b9050610ab681610eb2565b9250610b05610ac961010087018761156c565b8080601f0160208091040260200160405190810160405280939291908181526020018383808284375f920191909152508793925050610e699050565b50909250610b1b90506060860160408701611441565b6001600160a01b0316826001600160a01b031614610b3d57505f949350505050565b610b506101b36060870160408801611441565b8560800135149350505050919050565b5f80610b77610b726202bf20856115d9565b610ede565b90505f610b843a836115ec565b610b8e90866115d9565b60048054604051631eb903cf60e01b81526001600160a01b038a8116938201939093529293501690631eb903cf90602401602060405180830381865afa158015610bda573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610bfe9190611555565b811115610c0f575f92505050610c8a565b600480546040516308bf759d60e01b81526001600160a01b0389811693820193909352602481018890529116906308bf759d906044016020604051808303815f875af1158015610c61573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610c859190611603565b925050505b9392505050565b6001600160a01b0381165f9081526020819052604081208054600181019091557f7243aab3c75cebfd96dc41ece7762eb023fc8c81e9ba2ce1d487876419b918b583610cde8360016115d9565b604080516001600160a01b03909316835260208301919091520160405180910390a192915050565b5f80610d23614e205a610d199086611622565b610b7291906115d9565b6004805460405163b4fdfae560e01b81526001600160a01b038881169382019390935260248101849052929350169063b4fdfae5906044016020604051808303815f875af1158015610d77573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610d9b9190611603565b949350505050565b606060ff8314610dbd57610db683610f17565b90506105f6565b818054610dc990611635565b80601f0160208091040260200160405190810160405280929190818152602001828054610df590611635565b8015610e405780601f10610e1757610100808354040283529160200191610e40565b820191905f5260205f20905b815481529060010190602001808311610e2357829003601f168201915b505050505090506105f6565b5f610e578251610f54565b826040516020016109a1929190611684565b5f805f8351604103610ea0576020840151604085015160608601515f1a610e9288828585610fe4565b955095509550505050610eab565b505081515f91506002905b9250925092565b5f6105f6610ebe6110ac565b8360405161190160f01b8152600281019290925260228201526042902090565b5f80610eea60106111d5565b610ef490846115d9565b90505f610f0160286111d5565b9050808211610f105780610d9b565b5092915050565b60605f610f23836111ed565b6040805160208082528183019092529192505f91906020820181803683375050509182525060208101929092525090565b60605f610f6083611214565b60010190505f8167ffffffffffffffff811115610f7f57610f7f6112eb565b6040519080825280601f01601f191660200182016040528015610fa9576020820181803683370190505b5090508181016020015b5f19016f181899199a1a9b1b9c1cb0b131b232b360811b600a86061a8153600a8504945084610fb357509392505050565b5f80807f7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a084111561101d57505f915060039050826110a2565b604080515f808252602082018084528a905260ff891692820192909252606081018790526080810186905260019060a0016020604051602081039080840390855afa15801561106e573d5f803e3d5ffd5b5050604051601f1901519150506001600160a01b03811661109957505f9250600191508290506110a2565b92505f91508190505b9450945094915050565b5f306001600160a01b037f00000000000000000000000000000000000000000000000000000000000000001614801561110457507f000000000000000000000000000000000000000000000000000000000000000046145b1561112e57507f000000000000000000000000000000000000000000000000000000000000000090565b6108a5604080517f8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f60208201527f0000000000000000000000000000000000000000000000000000000000000000918101919091527f000000000000000000000000000000000000000000000000000000000000000060608201524660808201523060a08201525f9060c00160405160208183030381529060405280519060200120905090565b5f6152086111e383366115ec565b6105f691906115d9565b5f60ff8216601f8111156105f657604051632cd44ac360e21b815260040160405180910390fd5b5f8072184f03e93ff9f4daa797ed6e38ed64bf6a1f0160401b83106112525772184f03e93ff9f4daa797ed6e38ed64bf6a1f0160401b830492506040015b6d04ee2d6d415b85acef8100000000831061127e576d04ee2d6d415b85acef8100000000830492506020015b662386f26fc10000831061129c57662386f26fc10000830492506010015b6305f5e10083106112b4576305f5e100830492506008015b61271083106112c857612710830492506004015b606483106112da576064830492506002015b600a83106105f65760010192915050565b634e487b7160e01b5f52604160045260245ffd5b80356001600160a01b0381168114611315575f80fd5b919050565b5f602080838503121561132b575f80fd5b823567ffffffffffffffff80821115611342575f80fd5b818501915085601f830112611355575f80fd5b813581811115611367576113676112eb565b8060051b604051601f19603f8301168101818110858211171561138c5761138c6112eb565b6040529182528482019250838101850191888311156113a9575f80fd5b938501935b828510156113ce576113bf856112ff565b845293850193928501926113ae565b98975050505050505050565b5f815180845260208085019450602084015f5b83811015611409578151875295820195908201906001016113ed565b509495945050505050565b604081525f61142660408301856113da565b828103602084015261143881856113da565b95945050505050565b5f60208284031215611451575f80fd5b610c8a826112ff565b5f81518084528060208401602086015e5f602082860101526020601f19601f83011685010191505092915050565b60ff60f81b8816815260e060208201525f6114a660e083018961145a565b82810360408401526114b8818961145a565b606084018890526001600160a01b038716608085015260a0840186905283810360c085015290506114e981856113da565b9a9950505050505050505050565b602081525f610c8a602083018461145a565b5f60208284031215611519575f80fd5b813567ffffffffffffffff81111561152f575f80fd5b82016101408185031215610c8a575f80fd5b634e487b7160e01b5f52603260045260245ffd5b5f60208284031215611565575f80fd5b5051919050565b5f808335601e19843603018112611581575f80fd5b83018035915067ffffffffffffffff82111561159b575f80fd5b6020019150368190038213156115af575f80fd5b9250929050565b818382375f9101908152919050565b634e487b7160e01b5f52601160045260245ffd5b808201808211156105f6576105f66115c5565b80820281158282048414176105f6576105f66115c5565b5f60208284031215611613575f80fd5b81518015158114610c8a575f80fd5b818103818111156105f6576105f66115c5565b600181811c9082168061164957607f821691505b60208210810361166757634e487b7160e01b5f52602260045260245ffd5b50919050565b5f81518060208401855e5f93019283525090919050565b7f19457468657265756d205369676e6564204d6573736167653a0a00000000000081525f610d9b6116b8601a84018661166d565b8461166d56fea2646970667358221220ce68802868ab34fb3e09566b2636ccb2fceeff989ea4ce1e07d475c2daf469ba64736f6c63430008190033`
+const AuctionEntryPointBinRuntime = `608060405234801561000f575f80fd5b5060043610610132575f3560e01c80638da5cb5b116100b4578063c62a110511610079578063c62a110514610299578063ca157554146102a2578063d2da236e146102b5578063d7cd3949146102e0578063ea147667146102f3578063f2fde38b146102fc575f80fd5b80638da5cb5b146102285780639d59928b146102395780639fc994261461024c578063a5b2ab401461027d578063a8aa945014610286575f80fd5b80635ec2c7bf116100fa5780635ec2c7bf1461019f578063715018a6146101ca578063774f45ec146101d25780637ecebe00146101e557806384b0196e1461020d575f80fd5b80630339ed3714610136578063145aa6c71461016057806322fce66f146101775780632a215610146101815780635e155d7a14610196575b5f80fd5b6101496101443660046113e4565b61030f565b6040516101579291906114de565b60405180910390f35b610169600a5481565b604051908152602001610157565b6101696201000081565b61019461018f36600461150b565b61049b565b005b61016960075481565b6005546101b2906001600160a01b031681565b6040516001600160a01b039091168152602001610157565b610194610509565b6101946101e0366004611542565b61051c565b6101696101f3366004611542565b6001600160a01b03165f9081526020819052604090205490565b6102156105b6565b6040516101579796959493929190611589565b6003546001600160a01b03166101b2565b610194610247366004611542565b6105f8565b61027060405180604001604052806005815260200164302e302e3160d81b81525081565b60405161015791906115f8565b61016960095481565b61016961029436600461160a565b610692565b61016960085481565b6101946102b036600461160a565b6106a2565b6102706040518060400160405280600c81526020016b25a0a4a0afa0aaa1aa24a7a760a11b81525081565b6004546101b2906001600160a01b031681565b61016960065481565b61019461030a366004611542565b61085e565b606080825167ffffffffffffffff81111561032c5761032c6113b5565b604051908082528060200260200182016040528015610355578160200160208202803683370190505b509150825167ffffffffffffffff811115610372576103726113b5565b60405190808252806020026020018201604052801561039b578160200160208202803683370190505b5090505f5b8351811015610495575f8482815181106103bc576103bc611642565b602002602001015190506103e4816001600160a01b03165f9081526020819052604090205490565b8483815181106103f6576103f6611642565b602090810291909101015260048054604051631eb903cf60e01b81526001600160a01b0384811693820193909352911690631eb903cf90602401602060405180830381865afa15801561044b573d5f803e3d5ffd5b505050506040513d601f19601f8201168201806040525081019061046f9190611656565b83838151811061048157610481611642565b6020908102919091010152506001016103a0565b50915091565b6104a36108a0565b604080518681526020810186905290810184905260608101839052608081018290527f88fa9ca37e3311ae53f6c07c267edc3aae4fc605df62318b5215d44665eb03089060a00160405180910390a1600694909455600792909255600855600955600a55565b6105116108a0565b61051a5f6108cd565b565b6105246108a0565b806001600160a01b03811661054c5760405163d92e233d60e01b815260040160405180910390fd5b600554604080516001600160a01b03928316815291841660208301527fc8a0473779a405800019e7658500d0930d92f78e776b553d286baeefb9c9a0f1910160405180910390a150600580546001600160a01b0319166001600160a01b0392909216919091179055565b5f6060805f805f60606105c761091e565b6105cf610950565b604080515f80825260208201909252600f60f81b9b939a50919850469750309650945092509050565b6106006108a0565b806001600160a01b0381166106285760405163d92e233d60e01b815260040160405180910390fd5b600454604080516001600160a01b03928316815291841660208301527f32718750012b831b1e21ea05c1ed833c9365fc94e7316126303f6d09f41beb5d910160405180910390a150600480546001600160a01b0319166001600160a01b0392909216919091179055565b5f61069c8261097d565b92915050565b3341146106c257604051630608c7c960e51b815260040160405180910390fd5b6004546001600160a01b03166106eb57604051637941e9ad60e01b815260040160405180910390fd5b5f5a90505f6107006060840160408501611542565b905060c083013561071084610a64565b610718575f80fd5b610727828560a0013583610c26565b61072f575f80fd5b5f61073983610d58565b90505f61074c6080870160608801611542565b6001600160a01b03168361076360e089018961166d565b6040516107719291906116b7565b5f604051808303815f8787f1925050503d805f81146107ab576040519150601f19603f3d011682016040523d82523d5f602084013e6107b0565b606091505b50509050801561080157604080516001600160a01b0386168152602081018490527f9e4369a013b5e45a103a959d8eb70f15c55dc496e8335f245690393dfb4b71d4910160405180910390a1610844565b604080516001600160a01b0386168152602081018490527fb9eaeae386d339f8115782f297a9e5f0e13fb587cd6b0d502f113cb8dd4d6cb0910160405180910390a15b61084e8486610dcd565b610856575f80fd5b505050505050565b6108666108a0565b6001600160a01b03811661089457604051631e4fbdf760e01b81525f60048201526024015b60405180910390fd5b61089d816108cd565b50565b6003546001600160a01b0316331461051a5760405163118cdaa760e01b815233600482015260240161088b565b600380546001600160a01b038381166001600160a01b0319831681179093556040519116919082907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0905f90a35050565b606061094b7f00000000000000000000000000000000000000000000000000000000000000006001610e6a565b905090565b606061094b7f00000000000000000000000000000000000000000000000000000000000000006002610e6a565b5f7f76991d1c87749d29787e5ad5e05218607b00b6b1bd07277e6061cf4456f0b2b0823560208401356109b66060860160408701611542565b6109c66080870160608801611542565b608087013560a088013560c08901356109e260e08b018b61166d565b6040516109f09291906116b7565b60408051918290038220602083019a909a5281019790975260608701959095526001600160a01b0393841660808701529290911660a085015260c084015260e0830152610100820152610120810191909152610140015b604051602081830303815290604052805190602001209050919050565b5f43826020013514610a7757505f919050565b5f8260a0013511610a8957505f919050565b62010000610a9a60e084018461166d565b90501115610aa957505f919050565b5f610af4610abb61010085018561166d565b8080601f0160208091040260200160405190810160405280939291908181526020018383808284375f92019190915250610f1392505050565b90505f610b44610b0861012086018661166d565b8080601f0160208091040260200160405190810160405280939291908181526020018383808284375f920191909152508693925050610f309050565b50506005549091506001600160a01b03808316911614610b6757505f9392505050565b5f610b718561097d565b9050610b7c81610f79565b9250610bcb610b8f61010087018761166d565b8080601f0160208091040260200160405190810160405280939291908181526020018383808284375f920191909152508793925050610f309050565b50909250610be190506060860160408701611542565b6001600160a01b0316826001600160a01b031614610c0357505f949350505050565b610c166101f36060870160408801611542565b8560800135149350505050919050565b5f80610c3e60095484610c3991906116da565b610fa5565b90505f610c4b3a836116ed565b610c5590866116da565b60048054604051631eb903cf60e01b81526001600160a01b038a8116938201939093529293501690631eb903cf90602401602060405180830381865afa158015610ca1573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610cc59190611656565b811115610cd6575f92505050610d51565b600480546040516308bf759d60e01b81526001600160a01b0389811693820193909352602481018890529116906308bf759d906044016020604051808303815f875af1158015610d28573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610d4c9190611704565b925050505b9392505050565b6001600160a01b0381165f9081526020819052604081208054600181019091557f7243aab3c75cebfd96dc41ece7762eb023fc8c81e9ba2ce1d487876419b918b583610da58360016116da565b604080516001600160a01b03909316835260208301919091520160405180910390a192915050565b5f80610dea600a545a610de09086611723565b610c3991906116da565b6004805460405163b4fdfae560e01b81526001600160a01b038881169382019390935260248101849052929350169063b4fdfae5906044016020604051808303815f875af1158015610e3e573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610e629190611704565b949350505050565b606060ff8314610e8457610e7d83610fe0565b905061069c565b818054610e9090611736565b80601f0160208091040260200160405190810160405280929190818152602001828054610ebc90611736565b8015610f075780601f10610ede57610100808354040283529160200191610f07565b820191905f5260205f20905b815481529060010190602001808311610eea57829003601f168201915b5050505050905061069c565b5f610f1e825161101d565b82604051602001610a47929190611785565b5f805f8351604103610f67576020840151604085015160608601515f1a610f59888285856110ad565b955095509550505050610f72565b505081515f91506002905b9250925092565b5f61069c610f85611175565b8360405161190160f01b8152600281019290925260228201526042902090565b5f80610fb260065461129e565b610fbc90846116da565b90505f610fca60075461129e565b9050808211610fd95780610e62565b5092915050565b60605f610fec836112b7565b6040805160208082528183019092529192505f91906020820181803683375050509182525060208101929092525090565b60605f611029836112de565b60010190505f8167ffffffffffffffff811115611048576110486113b5565b6040519080825280601f01601f191660200182016040528015611072576020820181803683370190505b5090508181016020015b5f19016f181899199a1a9b1b9c1cb0b131b232b360811b600a86061a8153600a850494508461107c57509392505050565b5f80807f7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a08411156110e657505f9150600390508261116b565b604080515f808252602082018084528a905260ff891692820192909252606081018790526080810186905260019060a0016020604051602081039080840390855afa158015611137573d5f803e3d5ffd5b5050604051601f1901519150506001600160a01b03811661116257505f92506001915082905061116b565b92505f91508190505b9450945094915050565b5f306001600160a01b037f0000000000000000000000000000000000000000000000000000000000000000161480156111cd57507f000000000000000000000000000000000000000000000000000000000000000046145b156111f757507f000000000000000000000000000000000000000000000000000000000000000090565b61094b604080517f8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f60208201527f0000000000000000000000000000000000000000000000000000000000000000918101919091527f000000000000000000000000000000000000000000000000000000000000000060608201524660808201523060a08201525f9060c00160405160208183030381529060405280519060200120905090565b6008545f906112ad83366116ed565b61069c91906116da565b5f60ff8216601f81111561069c57604051632cd44ac360e21b815260040160405180910390fd5b5f8072184f03e93ff9f4daa797ed6e38ed64bf6a1f0160401b831061131c5772184f03e93ff9f4daa797ed6e38ed64bf6a1f0160401b830492506040015b6d04ee2d6d415b85acef81000000008310611348576d04ee2d6d415b85acef8100000000830492506020015b662386f26fc10000831061136657662386f26fc10000830492506010015b6305f5e100831061137e576305f5e100830492506008015b612710831061139257612710830492506004015b606483106113a4576064830492506002015b600a831061069c5760010192915050565b634e487b7160e01b5f52604160045260245ffd5b80356001600160a01b03811681146113df575f80fd5b919050565b5f60208083850312156113f5575f80fd5b823567ffffffffffffffff8082111561140c575f80fd5b818501915085601f83011261141f575f80fd5b813581811115611431576114316113b5565b8060051b604051601f19603f83011681018181108582111715611456576114566113b5565b604052918252848201925083810185019188831115611473575f80fd5b938501935b8285101561149857611489856113c9565b84529385019392850192611478565b98975050505050505050565b5f815180845260208085019450602084015f5b838110156114d3578151875295820195908201906001016114b7565b509495945050505050565b604081525f6114f060408301856114a4565b828103602084015261150281856114a4565b95945050505050565b5f805f805f60a0868803121561151f575f80fd5b505083359560208501359550604085013594606081013594506080013592509050565b5f60208284031215611552575f80fd5b610d51826113c9565b5f81518084528060208401602086015e5f602082860101526020601f19601f83011685010191505092915050565b60ff60f81b8816815260e060208201525f6115a760e083018961155b565b82810360408401526115b9818961155b565b606084018890526001600160a01b038716608085015260a0840186905283810360c085015290506115ea81856114a4565b9a9950505050505050505050565b602081525f610d51602083018461155b565b5f6020828403121561161a575f80fd5b813567ffffffffffffffff811115611630575f80fd5b82016101408185031215610d51575f80fd5b634e487b7160e01b5f52603260045260245ffd5b5f60208284031215611666575f80fd5b5051919050565b5f808335601e19843603018112611682575f80fd5b83018035915067ffffffffffffffff82111561169c575f80fd5b6020019150368190038213156116b0575f80fd5b9250929050565b818382375f9101908152919050565b634e487b7160e01b5f52601160045260245ffd5b8082018082111561069c5761069c6116c6565b808202811582820484141761069c5761069c6116c6565b5f60208284031215611714575f80fd5b81518015158114610d51575f80fd5b8181038181111561069c5761069c6116c6565b600181811c9082168061174a57607f821691505b60208210810361176857634e487b7160e01b5f52602260045260245ffd5b50919050565b5f81518060208401855e5f93019283525090919050565b7f19457468657265756d205369676e6564204d6573736167653a0a00000000000081525f610e626117b9601a84018661176e565b8461176e56fea26469706673582212207625d0b77dbc584f4a8f400fa7c425d7f0cbe4068e91730dfe4756c13a70254a64736f6c63430008190033`
 
 // Deprecated: Use AuctionEntryPointMetaData.Sigs instead.
 // AuctionEntryPointFuncSigs maps the 4-byte function signature to its string representation.
@@ -306,12 +308,12 @@ func (_AuctionEntryPoint *AuctionEntryPointCallerSession) AUCTIONVERSION() (stri
 	return _AuctionEntryPoint.Contract.AUCTIONVERSION(&_AuctionEntryPoint.CallOpts)
 }
 
-// GASBUFFERESTIMATE is a free data retrieval call binding the contract method 0xe4a973dd.
+// MAXDATASIZE is a free data retrieval call binding the contract method 0x22fce66f.
 //
-// Solidity: function GAS_BUFFER_ESTIMATE() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointCaller) GASBUFFERESTIMATE(opts *bind.CallOpts) (*big.Int, error) {
+// Solidity: function MAX_DATA_SIZE() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointCaller) MAXDATASIZE(opts *bind.CallOpts) (*big.Int, error) {
 	var out []interface{}
-	err := _AuctionEntryPoint.contract.Call(opts, &out, "GAS_BUFFER_ESTIMATE")
+	err := _AuctionEntryPoint.contract.Call(opts, &out, "MAX_DATA_SIZE")
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -323,142 +325,18 @@ func (_AuctionEntryPoint *AuctionEntryPointCaller) GASBUFFERESTIMATE(opts *bind.
 
 }
 
-// GASBUFFERESTIMATE is a free data retrieval call binding the contract method 0xe4a973dd.
+// MAXDATASIZE is a free data retrieval call binding the contract method 0x22fce66f.
 //
-// Solidity: function GAS_BUFFER_ESTIMATE() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointSession) GASBUFFERESTIMATE() (*big.Int, error) {
-	return _AuctionEntryPoint.Contract.GASBUFFERESTIMATE(&_AuctionEntryPoint.CallOpts)
+// Solidity: function MAX_DATA_SIZE() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointSession) MAXDATASIZE() (*big.Int, error) {
+	return _AuctionEntryPoint.Contract.MAXDATASIZE(&_AuctionEntryPoint.CallOpts)
 }
 
-// GASBUFFERESTIMATE is a free data retrieval call binding the contract method 0xe4a973dd.
+// MAXDATASIZE is a free data retrieval call binding the contract method 0x22fce66f.
 //
-// Solidity: function GAS_BUFFER_ESTIMATE() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GASBUFFERESTIMATE() (*big.Int, error) {
-	return _AuctionEntryPoint.Contract.GASBUFFERESTIMATE(&_AuctionEntryPoint.CallOpts)
-}
-
-// GASBUFFERUNMEASURED is a free data retrieval call binding the contract method 0xeb322e74.
-//
-// Solidity: function GAS_BUFFER_UNMEASURED() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointCaller) GASBUFFERUNMEASURED(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _AuctionEntryPoint.contract.Call(opts, &out, "GAS_BUFFER_UNMEASURED")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// GASBUFFERUNMEASURED is a free data retrieval call binding the contract method 0xeb322e74.
-//
-// Solidity: function GAS_BUFFER_UNMEASURED() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointSession) GASBUFFERUNMEASURED() (*big.Int, error) {
-	return _AuctionEntryPoint.Contract.GASBUFFERUNMEASURED(&_AuctionEntryPoint.CallOpts)
-}
-
-// GASBUFFERUNMEASURED is a free data retrieval call binding the contract method 0xeb322e74.
-//
-// Solidity: function GAS_BUFFER_UNMEASURED() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GASBUFFERUNMEASURED() (*big.Int, error) {
-	return _AuctionEntryPoint.Contract.GASBUFFERUNMEASURED(&_AuctionEntryPoint.CallOpts)
-}
-
-// GASCONTRACTEXECUTION is a free data retrieval call binding the contract method 0x0a409e29.
-//
-// Solidity: function GAS_CONTRACT_EXECUTION() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointCaller) GASCONTRACTEXECUTION(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _AuctionEntryPoint.contract.Call(opts, &out, "GAS_CONTRACT_EXECUTION")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// GASCONTRACTEXECUTION is a free data retrieval call binding the contract method 0x0a409e29.
-//
-// Solidity: function GAS_CONTRACT_EXECUTION() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointSession) GASCONTRACTEXECUTION() (*big.Int, error) {
-	return _AuctionEntryPoint.Contract.GASCONTRACTEXECUTION(&_AuctionEntryPoint.CallOpts)
-}
-
-// GASCONTRACTEXECUTION is a free data retrieval call binding the contract method 0x0a409e29.
-//
-// Solidity: function GAS_CONTRACT_EXECUTION() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GASCONTRACTEXECUTION() (*big.Int, error) {
-	return _AuctionEntryPoint.Contract.GASCONTRACTEXECUTION(&_AuctionEntryPoint.CallOpts)
-}
-
-// GASPERBYTEEIP7623 is a free data retrieval call binding the contract method 0xb2f5f4ca.
-//
-// Solidity: function GAS_PER_BYTE_EIP_7623() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointCaller) GASPERBYTEEIP7623(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _AuctionEntryPoint.contract.Call(opts, &out, "GAS_PER_BYTE_EIP_7623")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// GASPERBYTEEIP7623 is a free data retrieval call binding the contract method 0xb2f5f4ca.
-//
-// Solidity: function GAS_PER_BYTE_EIP_7623() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointSession) GASPERBYTEEIP7623() (*big.Int, error) {
-	return _AuctionEntryPoint.Contract.GASPERBYTEEIP7623(&_AuctionEntryPoint.CallOpts)
-}
-
-// GASPERBYTEEIP7623 is a free data retrieval call binding the contract method 0xb2f5f4ca.
-//
-// Solidity: function GAS_PER_BYTE_EIP_7623() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GASPERBYTEEIP7623() (*big.Int, error) {
-	return _AuctionEntryPoint.Contract.GASPERBYTEEIP7623(&_AuctionEntryPoint.CallOpts)
-}
-
-// GASPERBYTEINTRINSIC is a free data retrieval call binding the contract method 0xaa65b344.
-//
-// Solidity: function GAS_PER_BYTE_INTRINSIC() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointCaller) GASPERBYTEINTRINSIC(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _AuctionEntryPoint.contract.Call(opts, &out, "GAS_PER_BYTE_INTRINSIC")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// GASPERBYTEINTRINSIC is a free data retrieval call binding the contract method 0xaa65b344.
-//
-// Solidity: function GAS_PER_BYTE_INTRINSIC() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointSession) GASPERBYTEINTRINSIC() (*big.Int, error) {
-	return _AuctionEntryPoint.Contract.GASPERBYTEINTRINSIC(&_AuctionEntryPoint.CallOpts)
-}
-
-// GASPERBYTEINTRINSIC is a free data retrieval call binding the contract method 0xaa65b344.
-//
-// Solidity: function GAS_PER_BYTE_INTRINSIC() view returns(uint256)
-func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GASPERBYTEINTRINSIC() (*big.Int, error) {
-	return _AuctionEntryPoint.Contract.GASPERBYTEINTRINSIC(&_AuctionEntryPoint.CallOpts)
+// Solidity: function MAX_DATA_SIZE() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointCallerSession) MAXDATASIZE() (*big.Int, error) {
+	return _AuctionEntryPoint.Contract.MAXDATASIZE(&_AuctionEntryPoint.CallOpts)
 }
 
 // Auctioneer is a free data retrieval call binding the contract method 0x5ec2c7bf.
@@ -593,6 +471,161 @@ func (_AuctionEntryPoint *AuctionEntryPointCallerSession) Eip712Domain() (struct
 	return _AuctionEntryPoint.Contract.Eip712Domain(&_AuctionEntryPoint.CallOpts)
 }
 
+// GasBufferEstimate is a free data retrieval call binding the contract method 0xa5b2ab40.
+//
+// Solidity: function gasBufferEstimate() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointCaller) GasBufferEstimate(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _AuctionEntryPoint.contract.Call(opts, &out, "gasBufferEstimate")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GasBufferEstimate is a free data retrieval call binding the contract method 0xa5b2ab40.
+//
+// Solidity: function gasBufferEstimate() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointSession) GasBufferEstimate() (*big.Int, error) {
+	return _AuctionEntryPoint.Contract.GasBufferEstimate(&_AuctionEntryPoint.CallOpts)
+}
+
+// GasBufferEstimate is a free data retrieval call binding the contract method 0xa5b2ab40.
+//
+// Solidity: function gasBufferEstimate() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GasBufferEstimate() (*big.Int, error) {
+	return _AuctionEntryPoint.Contract.GasBufferEstimate(&_AuctionEntryPoint.CallOpts)
+}
+
+// GasBufferUnmeasured is a free data retrieval call binding the contract method 0x145aa6c7.
+//
+// Solidity: function gasBufferUnmeasured() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointCaller) GasBufferUnmeasured(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _AuctionEntryPoint.contract.Call(opts, &out, "gasBufferUnmeasured")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GasBufferUnmeasured is a free data retrieval call binding the contract method 0x145aa6c7.
+//
+// Solidity: function gasBufferUnmeasured() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointSession) GasBufferUnmeasured() (*big.Int, error) {
+	return _AuctionEntryPoint.Contract.GasBufferUnmeasured(&_AuctionEntryPoint.CallOpts)
+}
+
+// GasBufferUnmeasured is a free data retrieval call binding the contract method 0x145aa6c7.
+//
+// Solidity: function gasBufferUnmeasured() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GasBufferUnmeasured() (*big.Int, error) {
+	return _AuctionEntryPoint.Contract.GasBufferUnmeasured(&_AuctionEntryPoint.CallOpts)
+}
+
+// GasContractExecution is a free data retrieval call binding the contract method 0xc62a1105.
+//
+// Solidity: function gasContractExecution() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointCaller) GasContractExecution(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _AuctionEntryPoint.contract.Call(opts, &out, "gasContractExecution")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GasContractExecution is a free data retrieval call binding the contract method 0xc62a1105.
+//
+// Solidity: function gasContractExecution() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointSession) GasContractExecution() (*big.Int, error) {
+	return _AuctionEntryPoint.Contract.GasContractExecution(&_AuctionEntryPoint.CallOpts)
+}
+
+// GasContractExecution is a free data retrieval call binding the contract method 0xc62a1105.
+//
+// Solidity: function gasContractExecution() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GasContractExecution() (*big.Int, error) {
+	return _AuctionEntryPoint.Contract.GasContractExecution(&_AuctionEntryPoint.CallOpts)
+}
+
+// GasPerByteEip7623 is a free data retrieval call binding the contract method 0x5e155d7a.
+//
+// Solidity: function gasPerByteEip7623() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointCaller) GasPerByteEip7623(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _AuctionEntryPoint.contract.Call(opts, &out, "gasPerByteEip7623")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GasPerByteEip7623 is a free data retrieval call binding the contract method 0x5e155d7a.
+//
+// Solidity: function gasPerByteEip7623() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointSession) GasPerByteEip7623() (*big.Int, error) {
+	return _AuctionEntryPoint.Contract.GasPerByteEip7623(&_AuctionEntryPoint.CallOpts)
+}
+
+// GasPerByteEip7623 is a free data retrieval call binding the contract method 0x5e155d7a.
+//
+// Solidity: function gasPerByteEip7623() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GasPerByteEip7623() (*big.Int, error) {
+	return _AuctionEntryPoint.Contract.GasPerByteEip7623(&_AuctionEntryPoint.CallOpts)
+}
+
+// GasPerByteIntrinsic is a free data retrieval call binding the contract method 0xea147667.
+//
+// Solidity: function gasPerByteIntrinsic() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointCaller) GasPerByteIntrinsic(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _AuctionEntryPoint.contract.Call(opts, &out, "gasPerByteIntrinsic")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GasPerByteIntrinsic is a free data retrieval call binding the contract method 0xea147667.
+//
+// Solidity: function gasPerByteIntrinsic() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointSession) GasPerByteIntrinsic() (*big.Int, error) {
+	return _AuctionEntryPoint.Contract.GasPerByteIntrinsic(&_AuctionEntryPoint.CallOpts)
+}
+
+// GasPerByteIntrinsic is a free data retrieval call binding the contract method 0xea147667.
+//
+// Solidity: function gasPerByteIntrinsic() view returns(uint256)
+func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GasPerByteIntrinsic() (*big.Int, error) {
+	return _AuctionEntryPoint.Contract.GasPerByteIntrinsic(&_AuctionEntryPoint.CallOpts)
+}
+
 // GetAuctionTxHash is a free data retrieval call binding the contract method 0xa8aa9450.
 //
 // Solidity: function getAuctionTxHash((bytes32,uint256,address,address,uint256,uint256,uint256,bytes,bytes,bytes) auctionTx) pure returns(bytes32)
@@ -624,49 +657,49 @@ func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GetAuctionTxHash(aucti
 	return _AuctionEntryPoint.Contract.GetAuctionTxHash(&_AuctionEntryPoint.CallOpts, auctionTx)
 }
 
-// GetNonceAndBids is a free data retrieval call binding the contract method 0x287ca78e.
+// GetNoncesAndDeposits is a free data retrieval call binding the contract method 0x0339ed37.
 //
-// Solidity: function getNonceAndBids(address[] searchers) view returns(uint256[] nonces_, uint256[] bids_)
-func (_AuctionEntryPoint *AuctionEntryPointCaller) GetNonceAndBids(opts *bind.CallOpts, searchers []common.Address) (struct {
-	Nonces []*big.Int
-	Bids   []*big.Int
+// Solidity: function getNoncesAndDeposits(address[] searchers) view returns(uint256[] nonces_, uint256[] deposits_)
+func (_AuctionEntryPoint *AuctionEntryPointCaller) GetNoncesAndDeposits(opts *bind.CallOpts, searchers []common.Address) (struct {
+	Nonces   []*big.Int
+	Deposits []*big.Int
 }, error) {
 	var out []interface{}
-	err := _AuctionEntryPoint.contract.Call(opts, &out, "getNonceAndBids", searchers)
+	err := _AuctionEntryPoint.contract.Call(opts, &out, "getNoncesAndDeposits", searchers)
 
 	outstruct := new(struct {
-		Nonces []*big.Int
-		Bids   []*big.Int
+		Nonces   []*big.Int
+		Deposits []*big.Int
 	})
 	if err != nil {
 		return *outstruct, err
 	}
 
 	outstruct.Nonces = *abi.ConvertType(out[0], new([]*big.Int)).(*[]*big.Int)
-	outstruct.Bids = *abi.ConvertType(out[1], new([]*big.Int)).(*[]*big.Int)
+	outstruct.Deposits = *abi.ConvertType(out[1], new([]*big.Int)).(*[]*big.Int)
 
 	return *outstruct, err
 
 }
 
-// GetNonceAndBids is a free data retrieval call binding the contract method 0x287ca78e.
+// GetNoncesAndDeposits is a free data retrieval call binding the contract method 0x0339ed37.
 //
-// Solidity: function getNonceAndBids(address[] searchers) view returns(uint256[] nonces_, uint256[] bids_)
-func (_AuctionEntryPoint *AuctionEntryPointSession) GetNonceAndBids(searchers []common.Address) (struct {
-	Nonces []*big.Int
-	Bids   []*big.Int
+// Solidity: function getNoncesAndDeposits(address[] searchers) view returns(uint256[] nonces_, uint256[] deposits_)
+func (_AuctionEntryPoint *AuctionEntryPointSession) GetNoncesAndDeposits(searchers []common.Address) (struct {
+	Nonces   []*big.Int
+	Deposits []*big.Int
 }, error) {
-	return _AuctionEntryPoint.Contract.GetNonceAndBids(&_AuctionEntryPoint.CallOpts, searchers)
+	return _AuctionEntryPoint.Contract.GetNoncesAndDeposits(&_AuctionEntryPoint.CallOpts, searchers)
 }
 
-// GetNonceAndBids is a free data retrieval call binding the contract method 0x287ca78e.
+// GetNoncesAndDeposits is a free data retrieval call binding the contract method 0x0339ed37.
 //
-// Solidity: function getNonceAndBids(address[] searchers) view returns(uint256[] nonces_, uint256[] bids_)
-func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GetNonceAndBids(searchers []common.Address) (struct {
-	Nonces []*big.Int
-	Bids   []*big.Int
+// Solidity: function getNoncesAndDeposits(address[] searchers) view returns(uint256[] nonces_, uint256[] deposits_)
+func (_AuctionEntryPoint *AuctionEntryPointCallerSession) GetNoncesAndDeposits(searchers []common.Address) (struct {
+	Nonces   []*big.Int
+	Deposits []*big.Int
 }, error) {
-	return _AuctionEntryPoint.Contract.GetNonceAndBids(&_AuctionEntryPoint.CallOpts, searchers)
+	return _AuctionEntryPoint.Contract.GetNoncesAndDeposits(&_AuctionEntryPoint.CallOpts, searchers)
 }
 
 // Nonces is a free data retrieval call binding the contract method 0x7ecebe00.
@@ -792,6 +825,27 @@ func (_AuctionEntryPoint *AuctionEntryPointSession) ChangeDepositVault(_depositV
 // Solidity: function changeDepositVault(address _depositVault) returns()
 func (_AuctionEntryPoint *AuctionEntryPointTransactorSession) ChangeDepositVault(_depositVault common.Address) (*types.Transaction, error) {
 	return _AuctionEntryPoint.Contract.ChangeDepositVault(&_AuctionEntryPoint.TransactOpts, _depositVault)
+}
+
+// ChangeGasParameters is a paid mutator transaction binding the contract method 0x2a215610.
+//
+// Solidity: function changeGasParameters(uint256 _gasPerByteIntrinsic, uint256 _gasPerByteEip7623, uint256 _gasContractExecution, uint256 _gasBufferEstimate, uint256 _gasBufferUnmeasured) returns()
+func (_AuctionEntryPoint *AuctionEntryPointTransactor) ChangeGasParameters(opts *bind.TransactOpts, _gasPerByteIntrinsic *big.Int, _gasPerByteEip7623 *big.Int, _gasContractExecution *big.Int, _gasBufferEstimate *big.Int, _gasBufferUnmeasured *big.Int) (*types.Transaction, error) {
+	return _AuctionEntryPoint.contract.Transact(opts, "changeGasParameters", _gasPerByteIntrinsic, _gasPerByteEip7623, _gasContractExecution, _gasBufferEstimate, _gasBufferUnmeasured)
+}
+
+// ChangeGasParameters is a paid mutator transaction binding the contract method 0x2a215610.
+//
+// Solidity: function changeGasParameters(uint256 _gasPerByteIntrinsic, uint256 _gasPerByteEip7623, uint256 _gasContractExecution, uint256 _gasBufferEstimate, uint256 _gasBufferUnmeasured) returns()
+func (_AuctionEntryPoint *AuctionEntryPointSession) ChangeGasParameters(_gasPerByteIntrinsic *big.Int, _gasPerByteEip7623 *big.Int, _gasContractExecution *big.Int, _gasBufferEstimate *big.Int, _gasBufferUnmeasured *big.Int) (*types.Transaction, error) {
+	return _AuctionEntryPoint.Contract.ChangeGasParameters(&_AuctionEntryPoint.TransactOpts, _gasPerByteIntrinsic, _gasPerByteEip7623, _gasContractExecution, _gasBufferEstimate, _gasBufferUnmeasured)
+}
+
+// ChangeGasParameters is a paid mutator transaction binding the contract method 0x2a215610.
+//
+// Solidity: function changeGasParameters(uint256 _gasPerByteIntrinsic, uint256 _gasPerByteEip7623, uint256 _gasContractExecution, uint256 _gasBufferEstimate, uint256 _gasBufferUnmeasured) returns()
+func (_AuctionEntryPoint *AuctionEntryPointTransactorSession) ChangeGasParameters(_gasPerByteIntrinsic *big.Int, _gasPerByteEip7623 *big.Int, _gasContractExecution *big.Int, _gasBufferEstimate *big.Int, _gasBufferUnmeasured *big.Int) (*types.Transaction, error) {
+	return _AuctionEntryPoint.Contract.ChangeGasParameters(&_AuctionEntryPoint.TransactOpts, _gasPerByteIntrinsic, _gasPerByteEip7623, _gasContractExecution, _gasBufferEstimate, _gasBufferUnmeasured)
 }
 
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
@@ -1376,6 +1430,144 @@ func (_AuctionEntryPoint *AuctionEntryPointFilterer) ParseChangeDepositVault(log
 	return event, nil
 }
 
+// AuctionEntryPointChangeGasParametersIterator is returned from FilterChangeGasParameters and is used to iterate over the raw logs and unpacked data for ChangeGasParameters events raised by the AuctionEntryPoint contract.
+type AuctionEntryPointChangeGasParametersIterator struct {
+	Event *AuctionEntryPointChangeGasParameters // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log    // Log channel receiving the found contract events
+	sub  kaia.Subscription // Subscription for errors, completion and termination
+	done bool              // Whether the subscription completed delivering logs
+	fail error             // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *AuctionEntryPointChangeGasParametersIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(AuctionEntryPointChangeGasParameters)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(AuctionEntryPointChangeGasParameters)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *AuctionEntryPointChangeGasParametersIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *AuctionEntryPointChangeGasParametersIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// AuctionEntryPointChangeGasParameters represents a ChangeGasParameters event raised by the AuctionEntryPoint contract.
+type AuctionEntryPointChangeGasParameters struct {
+	GasPerByteIntrinsic  *big.Int
+	GasPerByteEip7623    *big.Int
+	GasContractExecution *big.Int
+	GasBufferEstimate    *big.Int
+	GasBufferUnmeasured  *big.Int
+	Raw                  types.Log // Blockchain specific contextual infos
+}
+
+// FilterChangeGasParameters is a free log retrieval operation binding the contract event 0x88fa9ca37e3311ae53f6c07c267edc3aae4fc605df62318b5215d44665eb0308.
+//
+// Solidity: event ChangeGasParameters(uint256 gasPerByteIntrinsic, uint256 gasPerByteEip7623, uint256 gasContractExecution, uint256 gasBufferEstimate, uint256 gasBufferUnmeasured)
+func (_AuctionEntryPoint *AuctionEntryPointFilterer) FilterChangeGasParameters(opts *bind.FilterOpts) (*AuctionEntryPointChangeGasParametersIterator, error) {
+
+	logs, sub, err := _AuctionEntryPoint.contract.FilterLogs(opts, "ChangeGasParameters")
+	if err != nil {
+		return nil, err
+	}
+	return &AuctionEntryPointChangeGasParametersIterator{contract: _AuctionEntryPoint.contract, event: "ChangeGasParameters", logs: logs, sub: sub}, nil
+}
+
+// WatchChangeGasParameters is a free log subscription operation binding the contract event 0x88fa9ca37e3311ae53f6c07c267edc3aae4fc605df62318b5215d44665eb0308.
+//
+// Solidity: event ChangeGasParameters(uint256 gasPerByteIntrinsic, uint256 gasPerByteEip7623, uint256 gasContractExecution, uint256 gasBufferEstimate, uint256 gasBufferUnmeasured)
+func (_AuctionEntryPoint *AuctionEntryPointFilterer) WatchChangeGasParameters(opts *bind.WatchOpts, sink chan<- *AuctionEntryPointChangeGasParameters) (event.Subscription, error) {
+
+	logs, sub, err := _AuctionEntryPoint.contract.WatchLogs(opts, "ChangeGasParameters")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(AuctionEntryPointChangeGasParameters)
+				if err := _AuctionEntryPoint.contract.UnpackLog(event, "ChangeGasParameters", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseChangeGasParameters is a log parse operation binding the contract event 0x88fa9ca37e3311ae53f6c07c267edc3aae4fc605df62318b5215d44665eb0308.
+//
+// Solidity: event ChangeGasParameters(uint256 gasPerByteIntrinsic, uint256 gasPerByteEip7623, uint256 gasContractExecution, uint256 gasBufferEstimate, uint256 gasBufferUnmeasured)
+func (_AuctionEntryPoint *AuctionEntryPointFilterer) ParseChangeGasParameters(log types.Log) (*AuctionEntryPointChangeGasParameters, error) {
+	event := new(AuctionEntryPointChangeGasParameters)
+	if err := _AuctionEntryPoint.contract.UnpackLog(event, "ChangeGasParameters", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
 // AuctionEntryPointEIP712DomainChangedIterator is returned from FilterEIP712DomainChanged and is used to iterate over the raw logs and unpacked data for EIP712DomainChanged events raised by the AuctionEntryPoint contract.
 type AuctionEntryPointEIP712DomainChangedIterator struct {
 	Event *AuctionEntryPointEIP712DomainChanged // Event containing the contract specifics and raw log
@@ -1799,8 +1991,8 @@ func (_AuctionEntryPoint *AuctionEntryPointFilterer) ParseUseNonce(log types.Log
 
 // AuctionErrorMetaData contains all meta data concerning the AuctionError contract.
 var AuctionErrorMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"EmptyDepositVault\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInput\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"MinDepositNotOver\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyAuctionDepositVault\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyEntryPoint\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyProposer\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyStakingAdmin\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WithdrawReservationExists\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WithdrawalFailed\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WithdrawalNotAllowedYet\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroDepositAmount\",\"type\":\"error\"}]",
-	Bin: "0x6080604052348015600e575f80fd5b50603e80601a5f395ff3fe60806040525f80fdfea26469706673582212207528d0d43ae476e30651a0be079c16a1af03532761e8a907f228cacf87ea7d1264736f6c63430008190033",
+	ABI: "[{\"inputs\":[],\"name\":\"EmptyDepositVault\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInput\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidRange\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"MinDepositNotOver\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyAuctionDepositVault\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyEntryPoint\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyProposer\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyStakingAdmin\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WithdrawReservationExists\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WithdrawalFailed\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WithdrawalNotAllowedYet\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroDepositAmount\",\"type\":\"error\"}]",
+	Bin: "0x6080604052348015600e575f80fd5b50603e80601a5f395ff3fe60806040525f80fdfea264697066735822122027ef626ad32beffa7c9030f20900b95077a015f63ad2912297fd33026b57835864736f6c63430008190033",
 }
 
 // AuctionErrorABI is the input ABI used to generate the binding from.
@@ -1808,7 +2000,7 @@ var AuctionErrorMetaData = &bind.MetaData{
 var AuctionErrorABI = AuctionErrorMetaData.ABI
 
 // AuctionErrorBinRuntime is the compiled bytecode used for adding genesis block without deploying code.
-const AuctionErrorBinRuntime = `60806040525f80fdfea26469706673582212207528d0d43ae476e30651a0be079c16a1af03532761e8a907f228cacf87ea7d1264736f6c63430008190033`
+const AuctionErrorBinRuntime = `60806040525f80fdfea264697066735822122027ef626ad32beffa7c9030f20900b95077a015f63ad2912297fd33026b57835864736f6c63430008190033`
 
 // AuctionErrorBin is the compiled bytecode used for deploying new contracts.
 // Deprecated: Use AuctionErrorMetaData.Bin instead.
@@ -4696,15 +4888,21 @@ func (_IAuctionDepositVault *IAuctionDepositVaultFilterer) ParseVaultWithdraw(lo
 
 // IAuctionEntryPointMetaData contains all meta data concerning the IAuctionEntryPoint contract.
 var IAuctionEntryPointMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"name\":\"Call\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"name\":\"CallFailed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"oldAuctioneer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newAuctioneer\",\"type\":\"address\"}],\"name\":\"ChangeAuctioneer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"oldDepositVault\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newDepositVault\",\"type\":\"address\"}],\"name\":\"ChangeDepositVault\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"searcher\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"name\":\"UseNonce\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"auctioneer\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"targetTxHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"bid\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"callGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"searcherSig\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"auctioneerSig\",\"type\":\"bytes\"}],\"internalType\":\"structIAuctionEntryPoint.AuctionTx\",\"name\":\"auctionTx\",\"type\":\"tuple\"}],\"name\":\"call\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_auctioneer\",\"type\":\"address\"}],\"name\":\"changeAuctioneer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_depositVault\",\"type\":\"address\"}],\"name\":\"changeDepositVault\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"depositVault\",\"outputs\":[{\"internalType\":\"contractIAuctionDepositVault\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"targetTxHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"bid\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"callGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"searcherSig\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"auctioneerSig\",\"type\":\"bytes\"}],\"internalType\":\"structIAuctionEntryPoint.AuctionTx\",\"name\":\"auctionTx\",\"type\":\"tuple\"}],\"name\":\"getAuctionTxHash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"searchers\",\"type\":\"address[]\"}],\"name\":\"getNonceAndBids\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"nonces_\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256[]\",\"name\":\"bids_\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"name\":\"Call\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"name\":\"CallFailed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"oldAuctioneer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newAuctioneer\",\"type\":\"address\"}],\"name\":\"ChangeAuctioneer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"oldDepositVault\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newDepositVault\",\"type\":\"address\"}],\"name\":\"ChangeDepositVault\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasPerByteIntrinsic\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasPerByteEip7623\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasContractExecution\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasBufferEstimate\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasBufferUnmeasured\",\"type\":\"uint256\"}],\"name\":\"ChangeGasParameters\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"searcher\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"name\":\"UseNonce\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"auctioneer\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"targetTxHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"bid\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"callGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"searcherSig\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"auctioneerSig\",\"type\":\"bytes\"}],\"internalType\":\"structIAuctionEntryPoint.AuctionTx\",\"name\":\"auctionTx\",\"type\":\"tuple\"}],\"name\":\"call\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_auctioneer\",\"type\":\"address\"}],\"name\":\"changeAuctioneer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_depositVault\",\"type\":\"address\"}],\"name\":\"changeDepositVault\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gasPerByteIntrinsic\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_gasPerByteEip7623\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_gasContractExecution\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_gasBufferEstimate\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_gasBufferUnmeasured\",\"type\":\"uint256\"}],\"name\":\"changeGasParameters\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"depositVault\",\"outputs\":[{\"internalType\":\"contractIAuctionDepositVault\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gasBufferEstimate\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gasBufferUnmeasured\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gasContractExecution\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gasPerByteEip7623\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gasPerByteIntrinsic\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"targetTxHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"bid\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"callGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"searcherSig\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"auctioneerSig\",\"type\":\"bytes\"}],\"internalType\":\"structIAuctionEntryPoint.AuctionTx\",\"name\":\"auctionTx\",\"type\":\"tuple\"}],\"name\":\"getAuctionTxHash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"searchers\",\"type\":\"address[]\"}],\"name\":\"getNoncesAndDeposits\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"nonces_\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256[]\",\"name\":\"deposits_\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 	Sigs: map[string]string{
 		"5ec2c7bf": "auctioneer()",
 		"ca157554": "call((bytes32,uint256,address,address,uint256,uint256,uint256,bytes,bytes,bytes))",
 		"774f45ec": "changeAuctioneer(address)",
 		"9d59928b": "changeDepositVault(address)",
+		"2a215610": "changeGasParameters(uint256,uint256,uint256,uint256,uint256)",
 		"d7cd3949": "depositVault()",
+		"a5b2ab40": "gasBufferEstimate()",
+		"145aa6c7": "gasBufferUnmeasured()",
+		"c62a1105": "gasContractExecution()",
+		"5e155d7a": "gasPerByteEip7623()",
+		"ea147667": "gasPerByteIntrinsic()",
 		"a8aa9450": "getAuctionTxHash((bytes32,uint256,address,address,uint256,uint256,uint256,bytes,bytes,bytes))",
-		"287ca78e": "getNonceAndBids(address[])",
+		"0339ed37": "getNoncesAndDeposits(address[])",
 	},
 }
 
@@ -4923,6 +5121,161 @@ func (_IAuctionEntryPoint *IAuctionEntryPointCallerSession) DepositVault() (comm
 	return _IAuctionEntryPoint.Contract.DepositVault(&_IAuctionEntryPoint.CallOpts)
 }
 
+// GasBufferEstimate is a free data retrieval call binding the contract method 0xa5b2ab40.
+//
+// Solidity: function gasBufferEstimate() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointCaller) GasBufferEstimate(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _IAuctionEntryPoint.contract.Call(opts, &out, "gasBufferEstimate")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GasBufferEstimate is a free data retrieval call binding the contract method 0xa5b2ab40.
+//
+// Solidity: function gasBufferEstimate() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointSession) GasBufferEstimate() (*big.Int, error) {
+	return _IAuctionEntryPoint.Contract.GasBufferEstimate(&_IAuctionEntryPoint.CallOpts)
+}
+
+// GasBufferEstimate is a free data retrieval call binding the contract method 0xa5b2ab40.
+//
+// Solidity: function gasBufferEstimate() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointCallerSession) GasBufferEstimate() (*big.Int, error) {
+	return _IAuctionEntryPoint.Contract.GasBufferEstimate(&_IAuctionEntryPoint.CallOpts)
+}
+
+// GasBufferUnmeasured is a free data retrieval call binding the contract method 0x145aa6c7.
+//
+// Solidity: function gasBufferUnmeasured() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointCaller) GasBufferUnmeasured(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _IAuctionEntryPoint.contract.Call(opts, &out, "gasBufferUnmeasured")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GasBufferUnmeasured is a free data retrieval call binding the contract method 0x145aa6c7.
+//
+// Solidity: function gasBufferUnmeasured() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointSession) GasBufferUnmeasured() (*big.Int, error) {
+	return _IAuctionEntryPoint.Contract.GasBufferUnmeasured(&_IAuctionEntryPoint.CallOpts)
+}
+
+// GasBufferUnmeasured is a free data retrieval call binding the contract method 0x145aa6c7.
+//
+// Solidity: function gasBufferUnmeasured() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointCallerSession) GasBufferUnmeasured() (*big.Int, error) {
+	return _IAuctionEntryPoint.Contract.GasBufferUnmeasured(&_IAuctionEntryPoint.CallOpts)
+}
+
+// GasContractExecution is a free data retrieval call binding the contract method 0xc62a1105.
+//
+// Solidity: function gasContractExecution() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointCaller) GasContractExecution(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _IAuctionEntryPoint.contract.Call(opts, &out, "gasContractExecution")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GasContractExecution is a free data retrieval call binding the contract method 0xc62a1105.
+//
+// Solidity: function gasContractExecution() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointSession) GasContractExecution() (*big.Int, error) {
+	return _IAuctionEntryPoint.Contract.GasContractExecution(&_IAuctionEntryPoint.CallOpts)
+}
+
+// GasContractExecution is a free data retrieval call binding the contract method 0xc62a1105.
+//
+// Solidity: function gasContractExecution() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointCallerSession) GasContractExecution() (*big.Int, error) {
+	return _IAuctionEntryPoint.Contract.GasContractExecution(&_IAuctionEntryPoint.CallOpts)
+}
+
+// GasPerByteEip7623 is a free data retrieval call binding the contract method 0x5e155d7a.
+//
+// Solidity: function gasPerByteEip7623() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointCaller) GasPerByteEip7623(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _IAuctionEntryPoint.contract.Call(opts, &out, "gasPerByteEip7623")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GasPerByteEip7623 is a free data retrieval call binding the contract method 0x5e155d7a.
+//
+// Solidity: function gasPerByteEip7623() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointSession) GasPerByteEip7623() (*big.Int, error) {
+	return _IAuctionEntryPoint.Contract.GasPerByteEip7623(&_IAuctionEntryPoint.CallOpts)
+}
+
+// GasPerByteEip7623 is a free data retrieval call binding the contract method 0x5e155d7a.
+//
+// Solidity: function gasPerByteEip7623() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointCallerSession) GasPerByteEip7623() (*big.Int, error) {
+	return _IAuctionEntryPoint.Contract.GasPerByteEip7623(&_IAuctionEntryPoint.CallOpts)
+}
+
+// GasPerByteIntrinsic is a free data retrieval call binding the contract method 0xea147667.
+//
+// Solidity: function gasPerByteIntrinsic() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointCaller) GasPerByteIntrinsic(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _IAuctionEntryPoint.contract.Call(opts, &out, "gasPerByteIntrinsic")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GasPerByteIntrinsic is a free data retrieval call binding the contract method 0xea147667.
+//
+// Solidity: function gasPerByteIntrinsic() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointSession) GasPerByteIntrinsic() (*big.Int, error) {
+	return _IAuctionEntryPoint.Contract.GasPerByteIntrinsic(&_IAuctionEntryPoint.CallOpts)
+}
+
+// GasPerByteIntrinsic is a free data retrieval call binding the contract method 0xea147667.
+//
+// Solidity: function gasPerByteIntrinsic() view returns(uint256)
+func (_IAuctionEntryPoint *IAuctionEntryPointCallerSession) GasPerByteIntrinsic() (*big.Int, error) {
+	return _IAuctionEntryPoint.Contract.GasPerByteIntrinsic(&_IAuctionEntryPoint.CallOpts)
+}
+
 // GetAuctionTxHash is a free data retrieval call binding the contract method 0xa8aa9450.
 //
 // Solidity: function getAuctionTxHash((bytes32,uint256,address,address,uint256,uint256,uint256,bytes,bytes,bytes) auctionTx) view returns(bytes32)
@@ -4954,49 +5307,49 @@ func (_IAuctionEntryPoint *IAuctionEntryPointCallerSession) GetAuctionTxHash(auc
 	return _IAuctionEntryPoint.Contract.GetAuctionTxHash(&_IAuctionEntryPoint.CallOpts, auctionTx)
 }
 
-// GetNonceAndBids is a free data retrieval call binding the contract method 0x287ca78e.
+// GetNoncesAndDeposits is a free data retrieval call binding the contract method 0x0339ed37.
 //
-// Solidity: function getNonceAndBids(address[] searchers) view returns(uint256[] nonces_, uint256[] bids_)
-func (_IAuctionEntryPoint *IAuctionEntryPointCaller) GetNonceAndBids(opts *bind.CallOpts, searchers []common.Address) (struct {
-	Nonces []*big.Int
-	Bids   []*big.Int
+// Solidity: function getNoncesAndDeposits(address[] searchers) view returns(uint256[] nonces_, uint256[] deposits_)
+func (_IAuctionEntryPoint *IAuctionEntryPointCaller) GetNoncesAndDeposits(opts *bind.CallOpts, searchers []common.Address) (struct {
+	Nonces   []*big.Int
+	Deposits []*big.Int
 }, error) {
 	var out []interface{}
-	err := _IAuctionEntryPoint.contract.Call(opts, &out, "getNonceAndBids", searchers)
+	err := _IAuctionEntryPoint.contract.Call(opts, &out, "getNoncesAndDeposits", searchers)
 
 	outstruct := new(struct {
-		Nonces []*big.Int
-		Bids   []*big.Int
+		Nonces   []*big.Int
+		Deposits []*big.Int
 	})
 	if err != nil {
 		return *outstruct, err
 	}
 
 	outstruct.Nonces = *abi.ConvertType(out[0], new([]*big.Int)).(*[]*big.Int)
-	outstruct.Bids = *abi.ConvertType(out[1], new([]*big.Int)).(*[]*big.Int)
+	outstruct.Deposits = *abi.ConvertType(out[1], new([]*big.Int)).(*[]*big.Int)
 
 	return *outstruct, err
 
 }
 
-// GetNonceAndBids is a free data retrieval call binding the contract method 0x287ca78e.
+// GetNoncesAndDeposits is a free data retrieval call binding the contract method 0x0339ed37.
 //
-// Solidity: function getNonceAndBids(address[] searchers) view returns(uint256[] nonces_, uint256[] bids_)
-func (_IAuctionEntryPoint *IAuctionEntryPointSession) GetNonceAndBids(searchers []common.Address) (struct {
-	Nonces []*big.Int
-	Bids   []*big.Int
+// Solidity: function getNoncesAndDeposits(address[] searchers) view returns(uint256[] nonces_, uint256[] deposits_)
+func (_IAuctionEntryPoint *IAuctionEntryPointSession) GetNoncesAndDeposits(searchers []common.Address) (struct {
+	Nonces   []*big.Int
+	Deposits []*big.Int
 }, error) {
-	return _IAuctionEntryPoint.Contract.GetNonceAndBids(&_IAuctionEntryPoint.CallOpts, searchers)
+	return _IAuctionEntryPoint.Contract.GetNoncesAndDeposits(&_IAuctionEntryPoint.CallOpts, searchers)
 }
 
-// GetNonceAndBids is a free data retrieval call binding the contract method 0x287ca78e.
+// GetNoncesAndDeposits is a free data retrieval call binding the contract method 0x0339ed37.
 //
-// Solidity: function getNonceAndBids(address[] searchers) view returns(uint256[] nonces_, uint256[] bids_)
-func (_IAuctionEntryPoint *IAuctionEntryPointCallerSession) GetNonceAndBids(searchers []common.Address) (struct {
-	Nonces []*big.Int
-	Bids   []*big.Int
+// Solidity: function getNoncesAndDeposits(address[] searchers) view returns(uint256[] nonces_, uint256[] deposits_)
+func (_IAuctionEntryPoint *IAuctionEntryPointCallerSession) GetNoncesAndDeposits(searchers []common.Address) (struct {
+	Nonces   []*big.Int
+	Deposits []*big.Int
 }, error) {
-	return _IAuctionEntryPoint.Contract.GetNonceAndBids(&_IAuctionEntryPoint.CallOpts, searchers)
+	return _IAuctionEntryPoint.Contract.GetNoncesAndDeposits(&_IAuctionEntryPoint.CallOpts, searchers)
 }
 
 // Call is a paid mutator transaction binding the contract method 0xca157554.
@@ -5060,6 +5413,27 @@ func (_IAuctionEntryPoint *IAuctionEntryPointSession) ChangeDepositVault(_deposi
 // Solidity: function changeDepositVault(address _depositVault) returns()
 func (_IAuctionEntryPoint *IAuctionEntryPointTransactorSession) ChangeDepositVault(_depositVault common.Address) (*types.Transaction, error) {
 	return _IAuctionEntryPoint.Contract.ChangeDepositVault(&_IAuctionEntryPoint.TransactOpts, _depositVault)
+}
+
+// ChangeGasParameters is a paid mutator transaction binding the contract method 0x2a215610.
+//
+// Solidity: function changeGasParameters(uint256 _gasPerByteIntrinsic, uint256 _gasPerByteEip7623, uint256 _gasContractExecution, uint256 _gasBufferEstimate, uint256 _gasBufferUnmeasured) returns()
+func (_IAuctionEntryPoint *IAuctionEntryPointTransactor) ChangeGasParameters(opts *bind.TransactOpts, _gasPerByteIntrinsic *big.Int, _gasPerByteEip7623 *big.Int, _gasContractExecution *big.Int, _gasBufferEstimate *big.Int, _gasBufferUnmeasured *big.Int) (*types.Transaction, error) {
+	return _IAuctionEntryPoint.contract.Transact(opts, "changeGasParameters", _gasPerByteIntrinsic, _gasPerByteEip7623, _gasContractExecution, _gasBufferEstimate, _gasBufferUnmeasured)
+}
+
+// ChangeGasParameters is a paid mutator transaction binding the contract method 0x2a215610.
+//
+// Solidity: function changeGasParameters(uint256 _gasPerByteIntrinsic, uint256 _gasPerByteEip7623, uint256 _gasContractExecution, uint256 _gasBufferEstimate, uint256 _gasBufferUnmeasured) returns()
+func (_IAuctionEntryPoint *IAuctionEntryPointSession) ChangeGasParameters(_gasPerByteIntrinsic *big.Int, _gasPerByteEip7623 *big.Int, _gasContractExecution *big.Int, _gasBufferEstimate *big.Int, _gasBufferUnmeasured *big.Int) (*types.Transaction, error) {
+	return _IAuctionEntryPoint.Contract.ChangeGasParameters(&_IAuctionEntryPoint.TransactOpts, _gasPerByteIntrinsic, _gasPerByteEip7623, _gasContractExecution, _gasBufferEstimate, _gasBufferUnmeasured)
+}
+
+// ChangeGasParameters is a paid mutator transaction binding the contract method 0x2a215610.
+//
+// Solidity: function changeGasParameters(uint256 _gasPerByteIntrinsic, uint256 _gasPerByteEip7623, uint256 _gasContractExecution, uint256 _gasBufferEstimate, uint256 _gasBufferUnmeasured) returns()
+func (_IAuctionEntryPoint *IAuctionEntryPointTransactorSession) ChangeGasParameters(_gasPerByteIntrinsic *big.Int, _gasPerByteEip7623 *big.Int, _gasContractExecution *big.Int, _gasBufferEstimate *big.Int, _gasBufferUnmeasured *big.Int) (*types.Transaction, error) {
+	return _IAuctionEntryPoint.Contract.ChangeGasParameters(&_IAuctionEntryPoint.TransactOpts, _gasPerByteIntrinsic, _gasPerByteEip7623, _gasContractExecution, _gasBufferEstimate, _gasBufferUnmeasured)
 }
 
 // IAuctionEntryPointCallIterator is returned from FilterCall and is used to iterate over the raw logs and unpacked data for Call events raised by the IAuctionEntryPoint contract.
@@ -5596,6 +5970,144 @@ func (_IAuctionEntryPoint *IAuctionEntryPointFilterer) WatchChangeDepositVault(o
 func (_IAuctionEntryPoint *IAuctionEntryPointFilterer) ParseChangeDepositVault(log types.Log) (*IAuctionEntryPointChangeDepositVault, error) {
 	event := new(IAuctionEntryPointChangeDepositVault)
 	if err := _IAuctionEntryPoint.contract.UnpackLog(event, "ChangeDepositVault", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// IAuctionEntryPointChangeGasParametersIterator is returned from FilterChangeGasParameters and is used to iterate over the raw logs and unpacked data for ChangeGasParameters events raised by the IAuctionEntryPoint contract.
+type IAuctionEntryPointChangeGasParametersIterator struct {
+	Event *IAuctionEntryPointChangeGasParameters // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log    // Log channel receiving the found contract events
+	sub  kaia.Subscription // Subscription for errors, completion and termination
+	done bool              // Whether the subscription completed delivering logs
+	fail error             // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *IAuctionEntryPointChangeGasParametersIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(IAuctionEntryPointChangeGasParameters)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(IAuctionEntryPointChangeGasParameters)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *IAuctionEntryPointChangeGasParametersIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *IAuctionEntryPointChangeGasParametersIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// IAuctionEntryPointChangeGasParameters represents a ChangeGasParameters event raised by the IAuctionEntryPoint contract.
+type IAuctionEntryPointChangeGasParameters struct {
+	GasPerByteIntrinsic  *big.Int
+	GasPerByteEip7623    *big.Int
+	GasContractExecution *big.Int
+	GasBufferEstimate    *big.Int
+	GasBufferUnmeasured  *big.Int
+	Raw                  types.Log // Blockchain specific contextual infos
+}
+
+// FilterChangeGasParameters is a free log retrieval operation binding the contract event 0x88fa9ca37e3311ae53f6c07c267edc3aae4fc605df62318b5215d44665eb0308.
+//
+// Solidity: event ChangeGasParameters(uint256 gasPerByteIntrinsic, uint256 gasPerByteEip7623, uint256 gasContractExecution, uint256 gasBufferEstimate, uint256 gasBufferUnmeasured)
+func (_IAuctionEntryPoint *IAuctionEntryPointFilterer) FilterChangeGasParameters(opts *bind.FilterOpts) (*IAuctionEntryPointChangeGasParametersIterator, error) {
+
+	logs, sub, err := _IAuctionEntryPoint.contract.FilterLogs(opts, "ChangeGasParameters")
+	if err != nil {
+		return nil, err
+	}
+	return &IAuctionEntryPointChangeGasParametersIterator{contract: _IAuctionEntryPoint.contract, event: "ChangeGasParameters", logs: logs, sub: sub}, nil
+}
+
+// WatchChangeGasParameters is a free log subscription operation binding the contract event 0x88fa9ca37e3311ae53f6c07c267edc3aae4fc605df62318b5215d44665eb0308.
+//
+// Solidity: event ChangeGasParameters(uint256 gasPerByteIntrinsic, uint256 gasPerByteEip7623, uint256 gasContractExecution, uint256 gasBufferEstimate, uint256 gasBufferUnmeasured)
+func (_IAuctionEntryPoint *IAuctionEntryPointFilterer) WatchChangeGasParameters(opts *bind.WatchOpts, sink chan<- *IAuctionEntryPointChangeGasParameters) (event.Subscription, error) {
+
+	logs, sub, err := _IAuctionEntryPoint.contract.WatchLogs(opts, "ChangeGasParameters")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(IAuctionEntryPointChangeGasParameters)
+				if err := _IAuctionEntryPoint.contract.UnpackLog(event, "ChangeGasParameters", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseChangeGasParameters is a log parse operation binding the contract event 0x88fa9ca37e3311ae53f6c07c267edc3aae4fc605df62318b5215d44665eb0308.
+//
+// Solidity: event ChangeGasParameters(uint256 gasPerByteIntrinsic, uint256 gasPerByteEip7623, uint256 gasContractExecution, uint256 gasBufferEstimate, uint256 gasBufferUnmeasured)
+func (_IAuctionEntryPoint *IAuctionEntryPointFilterer) ParseChangeGasParameters(log types.Log) (*IAuctionEntryPointChangeGasParameters, error) {
+	event := new(IAuctionEntryPointChangeGasParameters)
+	if err := _IAuctionEntryPoint.contract.UnpackLog(event, "ChangeGasParameters", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

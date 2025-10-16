@@ -2014,7 +2014,7 @@ func (self *Account) AuctionRevertedBid(c *client.Client, auctionEntryPoint, tar
 			BlockNumber:  new(big.Int).Add(blockNumber, common.Big1).Uint64(),
 			Sender:       self.address,
 			To:           targetContract.address,
-			Nonce:        math.MaxUint64, // This causes a revert.
+			Nonce:        math.MaxInt64, // This causes a revert.
 			Bid:          big.NewInt(2),
 			CallGasLimit: gas,
 			Data:         contractCallData,

@@ -2,7 +2,6 @@ package account
 
 import (
 	"fmt"
-	"log"
 	"math/big"
 	"math/rand"
 	"sync"
@@ -133,68 +132,44 @@ func (a *AccGroup) GetValidAccGrp() []*Account {
 	return accGrp
 }
 
-func (a *AccGroup) DeployTestContracts(tcList []string, targetTxTypeList []string, localReservoir *Account, gCli *client.Client, chargeValue *big.Int, maxConcurrency int) {
-	inTheTcList := func(testNames []string) bool {
-		for _, tcName := range tcList {
-			for _, target := range testNames {
-				if tcName == target {
-					return true
-				}
+func ContainsAnyInList(list []string, targets []string) bool {
+	for _, target := range targets {
+		for _, item := range list {
+			if item == target {
+				return true
 			}
 		}
-		return false
 	}
+	return false
+}
 
-	inTheTargetTxTypeList := func(targetTxTypes []string) bool {
-		for _, targetTxType := range targetTxTypeList {
-			for _, target := range targetTxTypes {
-				if targetTxType == target {
-					return true
-				}
-			}
-		}
-		return false
-	}
-
+func (a *AccGroup) DeployTestContracts(gCli *client.Client, chargeValue *big.Int, maxConcurrency int, tcList []string, targetTxTypeList []string, localReservoir *Account, globalReservoir *Account, isLeader bool) {
 	for idx, info := range TestContractInfos {
 		testContractType := TestContract(idx)
-		if testContractType != ContractGeneral && !inTheTcList(info.testNames) && !inTheTargetTxTypeList(info.auctionTargetTxTypeList) {
+		if testContractType != ContractGeneral && !ContainsAnyInList(tcList, info.testNames) && !ContainsAnyInList(targetTxTypeList, info.auctionTargetTxTypeList) {
 			continue
 		}
 
-		if info.ShouldDeploy(gCli, info.deployer) {
-			if info.deployer == nil {
-				info.deployer = localReservoir
-			}
+		isAlreadyDeployed := info.IsDeployed(gCli, info.deployer)
+		if isLeader && !isAlreadyDeployed {
 			localReservoir.TransferSignedTxWithGuaranteeRetry(gCli, info.deployer, chargeValue)
 			a.contracts[idx] = info.deployer.SmartContractDeployWithGuaranteeRetry(gCli, info.GetBytecodeWithConstructorParam(info.Bytecode, a.contracts, info.deployer), info.contractName, true)
+		} else {
+			a.contracts[idx] = NewKaiaAccountWithAddr(0, info.GetAddress(gCli, info.deployer))
 		}
 
-		a.contracts[idx] = NewKaiaAccountWithAddr(0, info.GetAddress(gCli, info.deployer))
-
-		// additional work - erc20 token charging or erc721 minting
-		if TestContract(idx) == ContractErc20 {
-			log.Printf("Start erc20 token charging to the test account group")
-			TestContractInfos[ContractErc20].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], nil, TestContractInfos[ContractErc20].GenData(localReservoir.address, big.NewInt(1e11)))
-			ConcurrentTransactionSend(a.GetValidAccGrp(), maxConcurrency, func(acc *Account) {
-				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractErc20], nil, TestContractInfos[ContractErc20].GenData(acc.address, big.NewInt(1e4)))
-			})
-		} else if TestContract(idx) == ContractErc721 {
-			log.Printf("Start erc721 nft minting to the test account group(similar to erc20 token charging)")
-			localReservoir.MintERC721ToTestAccounts(gCli, a.GetValidAccGrp(), a.GetTestContractByName(ContractErc721).GetAddress(), 5)
-		} else if TestContract(idx) == ContractGaslessToken && (inTheTcList([]string{"gaslessTransactionTC", "gaslessOnlyApproveTC"}) || inTheTargetTxTypeList([]string{"GAA", "GAS"})) {
-			log.Printf("Start gasless test token charging to the test account group")
-			lenValidAccGrp := big.NewInt(int64(len(a.GetValidAccGrp())))
-			lenGaslessApproveAccGrp := big.NewInt(int64(len(a.GetAccListByName(AccListForGaslessApproveTx))))
-			totalChargeValue := new(big.Int).Mul(chargeValue, new(big.Int).Add(lenValidAccGrp, lenGaslessApproveAccGrp))
-			// ContractGaslessToken's GenData generate data of approve. So can use ERC20's genData for transfer.
-			TestContractInfos[ContractGaslessToken].deployer.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], nil, TestContractInfos[ContractErc20].GenData(localReservoir.address, totalChargeValue))
-
-			// accounts(validAccGrp + gaslessApproveAccGrp) should be charged.
-			accounts := a.GetValidAccGrp()
-			accounts = append(accounts, a.GetAccListByName(AccListForGaslessApproveTx)...)
-			ConcurrentTransactionSend(accounts, maxConcurrency, func(acc *Account) {
-				localReservoir.SmartContractExecutionWithGuaranteeRetry(gCli, a.contracts[ContractGaslessToken], nil, TestContractInfos[ContractErc20].GenData(acc.address, chargeValue))
+		// additional work - erc20 token charging, erc721 minting, GSR setup, Auction setup, etc.
+		if info.DoAdditionalWork != nil {
+			info.DoAdditionalWork(&AdditionalWorkContext{
+				GCli:             gCli,
+				LocalReservoir:   localReservoir,
+				GlobalReservoir:  globalReservoir,
+				ChargeValue:      chargeValue,
+				IsLeader:         isLeader,
+				MaxConcurrency:   maxConcurrency,
+				AccGrp:           a,
+				TcList:           tcList,
+				TargetTxTypeList: targetTxTypeList,
 			})
 		}
 	}
@@ -227,6 +202,9 @@ func (a *AccountSet) Add(acc *Account) {
 func (a *AccountSet) GetAccountRandomly() *Account {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if a.Len() == 0 {
+		return nil
+	}
 	return a.accounts[rand.Int()%a.Len()]
 }
 
@@ -239,6 +217,9 @@ func (a *AccountSet) GetAccountIndex(index int) *Account {
 func (a *AccountSet) GetAccountRoundRobin() *Account {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if a.Len() == 0 {
+		return nil
+	}
 	acc := a.accounts[a.roundRobinIndex]
 	a.roundRobinIndex++
 	if a.roundRobinIndex >= a.Len() {

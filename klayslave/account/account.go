@@ -2342,17 +2342,17 @@ func toRlp(tx *types.Transaction) []byte {
 	return rlp
 }
 
-func ConcurrentTransactionSend(accs []*Account, maxConcurrency int, transactionSend func(*Account)) {
+func ConcurrentTransactionSend(accs []*Account, maxConcurrency int, transactionSend func(int, *Account)) {
 	if maxConcurrency <= 0 {
 		maxConcurrency = runtime.NumCPU() * 10 // default value
 	}
 	ch := make(chan int, maxConcurrency)
 	wg := sync.WaitGroup{}
-	for _, acc := range accs {
+	for idx, acc := range accs {
 		ch <- 1
 		wg.Add(1)
 		go func() {
-			transactionSend(acc)
+			transactionSend(idx, acc)
 			<-ch
 			wg.Done()
 		}()

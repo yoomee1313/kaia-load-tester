@@ -60,6 +60,62 @@ type Client interface {
 	TransactionReceiptRpcOutput(ctx context.Context, txHash common.Hash) (r map[string]interface{}, err error)
 }
 
+// TxSendFunc is a function type that sends a transaction
+type TxSendFunc func() (*types.Transaction, error)
+
+// RetryConfig configures retry behavior
+type RetryConfig struct {
+	SendRetryInterval time.Duration
+	WaitMinedTimeout  time.Duration
+	// ShouldSkip returns true if the error should skip retry and return immediately
+	ShouldSkip func(error) bool
+}
+
+// DefaultRetryConfig returns default retry configuration
+func DefaultRetryConfig() RetryConfig {
+	return RetryConfig{
+		SendRetryInterval: 1 * time.Second,
+		WaitMinedTimeout:  60 * time.Second,
+		ShouldSkip:        nil,
+	}
+}
+
+// RunWithRetry executes a transaction with retry logic for both send and WaitMined failures
+func (a *Account) RunWithRetry(c *client.Client, config RetryConfig, sendTx TxSendFunc) *types.Transaction {
+	for {
+		var lastTx *types.Transaction
+		var err error
+
+		// Inner loop: retry sending transaction
+		for {
+			lastTx, err = sendTx()
+			if err == nil {
+				break
+			}
+			// Check if this error should skip retry
+			if config.ShouldSkip != nil && config.ShouldSkip(err) {
+				return lastTx
+			}
+			log.Printf("Failed to send tx: err=%s", err.Error())
+			time.Sleep(config.SendRetryInterval)
+		}
+
+		// WaitMined with timeout
+		ctx, cancelFn := context.WithTimeout(context.Background(), config.WaitMinedTimeout)
+		receipt, err := bind.WaitMined(ctx, c, lastTx)
+		cancelFn()
+
+		if err == nil && receipt != nil && receipt.Status == 1 {
+			return lastTx // success
+		}
+
+		// WaitMined failed or tx reverted - reset nonce and retry
+		log.Printf("WaitMined failed or tx reverted, retrying: err=%v, txHash=%s", err, lastTx.Hash().String())
+		a.nonce = 0 // Reset nonce to fetch fresh nonce on retry
+		time.Sleep(1 * time.Second)
+	}
+}
+
 func init() {
 	gasPrice = big.NewInt(0)
 	chainID = big.NewInt(2018)
@@ -349,32 +405,12 @@ func (self *Account) TransferSignedTx(c *client.Client, to *Account, value *big.
 }
 
 func (self *Account) TransferSignedTxWithGuaranteeRetry(c *client.Client, to *Account, value *big.Int) *types.Transaction {
-	var (
-		err    error
-		lastTx *types.Transaction
-	)
-
-	for {
-		lastTx, _, err = self.TransferSignedTxReturnTx(true, c, to, value)
-		// TODO-kaia-load-tester: return error if the error isn't able to handle
-		if err == nil {
-			break // Succeed, let's break the loop
-		}
-		log.Printf("Failed to execute: err=%s", err.Error())
-		time.Sleep(1 * time.Second) // Mostly, the err is `txpool is full`, retry after a while.
-		//numChargedAcc, lastFailedNum = estimateRemainingTime(accGrp, numChargedAcc, lastFailedNum)
-	}
-
-	ctx, cancelFn := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancelFn()
-
-	receipt, err := bind.WaitMined(ctx, c, lastTx)
-	cancelFn()
-	if err != nil || (receipt != nil && receipt.Status == 0) {
-		// shouldn't happen. must check if contract is correct.
-		log.Fatalf("tx mined but failed, err=%s, txHash=%s", err, lastTx.Hash().String())
-	}
-	return lastTx
+	config := DefaultRetryConfig()
+	config.WaitMinedTimeout = 30 * time.Second
+	return self.RunWithRetry(c, config, func() (*types.Transaction, error) {
+		tx, _, err := self.TransferSignedTxReturnTx(true, c, to, value)
+		return tx, err
+	})
 }
 
 func (self *Account) TransferSignedTxWithoutLock(c *client.Client, to *Account, value *big.Int) (common.Hash, *big.Int, error) {
@@ -2188,106 +2224,52 @@ func (self *Account) TransferUnsignedTx(c *client.Client, to *Account, value *bi
 func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, byteCode []byte, contractName string, shouldFixNonceZero bool) *Account {
 	log.Println(contractName, "deployer", self.address.String())
 
-	var (
-		err    error
-		addr   common.Address
-		lastTx *types.Transaction
-	)
-
 	nonce := self.GetNonce(gCli)
 	if shouldFixNonceZero {
 		nonce = 0
 	}
 
-	for {
-		addr, lastTx, _, err = self.TransferNewSmartContractDeployTx(gCli, nil, common.Big0, byteCode, shouldFixNonceZero)
-		if err == nil || strings.HasPrefix(err.Error(), "known transaction") || (shouldFixNonceZero && err.Error() == blockchain.ErrNonceTooLow.Error()) {
-			addr = crypto.CreateAddress(self.GetAddress(), nonce)
-			break
-		}
-		log.Printf("Failed to deploy a %s: err %s", contractName, err.Error())
-		time.Sleep(5 * time.Second) // Mostly, the err is `txpool is full`, retry after a while.
+	config := RetryConfig{
+		SendRetryInterval: 5 * time.Second,
+		WaitMinedTimeout:  60 * time.Second,
+		ShouldSkip: func(err error) bool {
+			// Treat "known transaction" and ErrNonceTooLow (when shouldFixNonceZero) as success
+			return strings.HasPrefix(err.Error(), "known transaction") ||
+				(shouldFixNonceZero && err.Error() == blockchain.ErrNonceTooLow.Error())
+		},
 	}
 
-	log.Printf("Start waiting the receipt of the tx(%v).\n", lastTx.Hash().String())
-	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancelFn()
+	self.RunWithRetry(gCli, config, func() (*types.Transaction, error) {
+		_, tx, _, err := self.TransferNewSmartContractDeployTx(gCli, nil, common.Big0, byteCode, shouldFixNonceZero)
+		return tx, err
+	})
 
-	receipt, err := bind.WaitMined(ctx, gCli, lastTx)
-	if err != nil || (receipt != nil && receipt.Status == 0) {
-		// shouldn't happen. must check if contract is correct.
-		log.Fatalf("tx mined but failed, err=%s, receipt=%s", err, receipt)
-		return nil
-	}
-
+	addr := crypto.CreateAddress(self.GetAddress(), nonce)
 	log.Printf("%s has been deployed to : %s\n", contractName, addr.String())
 	return NewKaiaAccountWithAddr(1, addr)
 }
 
-// TODO-kaia-load-tester: unify Retry functions into one function
 func (a *Account) SmartContractExecutionWithGuaranteeRetry(gCli *client.Client, to *Account, value *big.Int, data []byte) {
-	for {
-		var (
-			err    error
-			lastTx *types.Transaction
-		)
-
-		for {
-			lastTx, _, err = a.TransferNewSmartContractExecutionTx(gCli, to, value, data)
-			if err == nil {
-				break
-			}
-			log.Printf("Failed to execute: err=%s", err.Error())
-			time.Sleep(1 * time.Second) // Mostly, the err is `txpool is full`, retry after a while.
-		}
-
-		ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
-
-		receipt, err := bind.WaitMined(ctx, gCli, lastTx)
-		cancelFn()
-
-		if err == nil && receipt != nil && receipt.Status == 1 {
-			return // success
-		}
-
-		// WaitMined failed or tx reverted - reset nonce and retry
-		log.Printf("WaitMined failed or tx reverted, retrying: err=%v, txHash=%s", err, lastTx.Hash().String())
-		a.nonce = 0 // Reset nonce to fetch fresh nonce on retry
-		time.Sleep(1 * time.Second)
-	}
+	a.RunWithRetry(gCli, DefaultRetryConfig(), func() (*types.Transaction, error) {
+		tx, _, err := a.TransferNewSmartContractExecutionTx(gCli, to, value, data)
+		return tx, err
+	})
 }
 
 func (a *Account) TryRunTxSendFunctionWithGuaranteeRetry(gCli *client.Client, allowedErrors []error, txSendFunc func(gCli *client.Client, sender *Account) (*types.Transaction, error)) {
-	var (
-		err    error
-		lastTx *types.Transaction
-	)
-
-	for {
-		lastTx, err = txSendFunc(gCli, a)
-		if err == nil {
-			break
-		}
-
+	config := DefaultRetryConfig()
+	config.ShouldSkip = func(err error) bool {
 		for _, allowError := range allowedErrors {
 			if err.Error() == allowError.Error() {
 				log.Printf("Skipping the transaction: err=%s", err.Error())
-				return
+				return true
 			}
 		}
-
-		log.Printf("Failed to send tx: err=%s", err.Error())
-		time.Sleep(1 * time.Second)
+		return false
 	}
-	ctx, cancelFn := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancelFn()
-
-	receipt, err := bind.WaitMined(ctx, gCli, lastTx)
-	cancelFn()
-	if err != nil || (receipt != nil && receipt.Status == 0) {
-		// shouldn't happen. must check if contract is correct.
-		log.Fatalf("tx mined but failed, err=%s, txHash=%s", err, lastTx.Hash().String())
-	}
+	a.RunWithRetry(gCli, config, func() (*types.Transaction, error) {
+		return txSendFunc(gCli, a)
+	})
 }
 
 func (a *Account) CheckBalance(expectedBalance *big.Int, cli *client.Client) error {

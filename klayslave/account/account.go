@@ -2226,27 +2226,34 @@ func (self *Account) SmartContractDeployWithGuaranteeRetry(gCli *client.Client, 
 
 // TODO-kaia-load-tester: unify Retry functions into one function
 func (a *Account) SmartContractExecutionWithGuaranteeRetry(gCli *client.Client, to *Account, value *big.Int, data []byte) {
-	var (
-		err    error
-		lastTx *types.Transaction
-	)
-
 	for {
-		lastTx, _, err = a.TransferNewSmartContractExecutionTx(gCli, to, value, data)
-		if err == nil {
-			break
-		}
-		log.Printf("Failed to execute: err=%s", err.Error())
-		time.Sleep(1 * time.Second) // Mostly, the err is `txpool is full`, retry after a while.
-	}
-	ctx, cancelFn := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancelFn()
+		var (
+			err    error
+			lastTx *types.Transaction
+		)
 
-	receipt, err := bind.WaitMined(ctx, gCli, lastTx)
-	cancelFn()
-	if err != nil || (receipt != nil && receipt.Status == 0) {
-		// shouldn't happen. must check if contract is correct.
-		log.Fatalf("tx mined but failed, err=%s, txHash=%s", err, lastTx.Hash().String())
+		for {
+			lastTx, _, err = a.TransferNewSmartContractExecutionTx(gCli, to, value, data)
+			if err == nil {
+				break
+			}
+			log.Printf("Failed to execute: err=%s", err.Error())
+			time.Sleep(1 * time.Second) // Mostly, the err is `txpool is full`, retry after a while.
+		}
+
+		ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
+
+		receipt, err := bind.WaitMined(ctx, gCli, lastTx)
+		cancelFn()
+
+		if err == nil && receipt != nil && receipt.Status == 1 {
+			return // success
+		}
+
+		// WaitMined failed or tx reverted - reset nonce and retry
+		log.Printf("WaitMined failed or tx reverted, retrying: err=%v, txHash=%s", err, lastTx.Hash().String())
+		a.nonce = 0 // Reset nonce to fetch fresh nonce on retry
+		time.Sleep(1 * time.Second)
 	}
 }
 

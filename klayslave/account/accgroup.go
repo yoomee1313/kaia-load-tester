@@ -2,9 +2,11 @@ package account
 
 import (
 	"fmt"
+	"log"
 	"math/big"
 	"math/rand"
 	"sync"
+	"time"
 
 	"github.com/kaiachain/kaia/client"
 )
@@ -144,35 +146,83 @@ func ContainsAnyInList(list []string, targets []string) bool {
 }
 
 func (a *AccGroup) DeployTestContracts(gCli *client.Client, chargeValue *big.Int, maxConcurrency int, tcList []string, targetTxTypeList []string, localReservoir *Account, globalReservoir *Account, isLeader bool) {
+	ctx := &AdditionalWorkContext{
+		GCli:             gCli,
+		LocalReservoir:   localReservoir,
+		GlobalReservoir:  globalReservoir,
+		ChargeValue:      chargeValue,
+		IsLeader:         isLeader,
+		MaxConcurrency:   maxConcurrency,
+		AccGrp:           a,
+		TcList:           tcList,
+		TargetTxTypeList: targetTxTypeList,
+	}
+
+	// Phase 1: Deploy contracts and run setup work (leader only)
 	for idx, info := range TestContractInfos {
 		testContractType := TestContract(idx)
 		if testContractType != ContractGeneral && !ContainsAnyInList(tcList, info.testNames) && !ContainsAnyInList(targetTxTypeList, info.auctionTargetTxTypeList) {
 			continue
 		}
 
-		isAlreadyDeployed := info.IsDeployed(gCli, info.deployer)
-		if isLeader && !isAlreadyDeployed {
-			localReservoir.TransferSignedTxWithGuaranteeRetry(gCli, info.deployer, chargeValue)
-			a.contracts[idx] = info.deployer.SmartContractDeployWithGuaranteeRetry(gCli, info.GetBytecodeWithConstructorParam(info.Bytecode, a.contracts, info.deployer), info.contractName, true)
-		} else {
+		if isLeader {
+			isAlreadyDeployed := info.IsDeployed(gCli, info.deployer)
+			if !isAlreadyDeployed {
+				localReservoir.TransferSignedTxWithGuaranteeRetry(gCli, info.deployer, chargeValue)
+				a.contracts[idx] = info.deployer.SmartContractDeployWithGuaranteeRetry(gCli, info.GetBytecodeWithConstructorParam(info.Bytecode, a.contracts, info.deployer), info.contractName, true)
+			} else {
+				a.contracts[idx] = NewKaiaAccountWithAddr(0, info.GetAddress(gCli, info.deployer))
+			}
+
+			// Setup work - only leader executes (e.g., GSR registration, Auction registration)
+			if info.DoSetupWork != nil {
+				info.DoSetupWork(ctx)
+			}
+		}
+	}
+
+	// Phase 2: Wait for deploy/setup completion, get contract address, and run charging work
+	for idx, info := range TestContractInfos {
+		testContractType := TestContract(idx)
+		if testContractType != ContractGeneral && !ContainsAnyInList(tcList, info.testNames) && !ContainsAnyInList(targetTxTypeList, info.auctionTargetTxTypeList) {
+			continue
+		}
+
+		if !isLeader {
+			// Wait for deploy completion (use WaitForSetup if available, otherwise use IsDeployed)
+			if info.WaitForSetup != nil {
+				WaitForSetupCompletion(gCli, info.WaitForSetup, info.contractName)
+			} else {
+				WaitForSetupCompletion(gCli, func(gCli *client.Client) bool {
+					return info.IsDeployed(gCli, info.deployer)
+				}, info.contractName)
+			}
+
+			// Get contract address after deploy completion
 			a.contracts[idx] = NewKaiaAccountWithAddr(0, info.GetAddress(gCli, info.deployer))
 		}
 
-		// additional work - erc20 token charging, erc721 minting, GSR setup, Auction setup, etc.
-		if info.DoAdditionalWork != nil {
-			info.DoAdditionalWork(&AdditionalWorkContext{
-				GCli:             gCli,
-				LocalReservoir:   localReservoir,
-				GlobalReservoir:  globalReservoir,
-				ChargeValue:      chargeValue,
-				IsLeader:         isLeader,
-				MaxConcurrency:   maxConcurrency,
-				AccGrp:           a,
-				TcList:           tcList,
-				TargetTxTypeList: targetTxTypeList,
-			})
+		// Charging work - all slaves execute (e.g., token charging, NFT minting, deposit)
+		if info.DoChargingWork != nil {
+			info.DoChargingWork(ctx)
 		}
 	}
+}
+
+// WaitForSetupCompletion polls on-chain state until setup is complete
+func WaitForSetupCompletion(gCli *client.Client, waitFn func(*client.Client) bool, contractName string) {
+	const maxRetries = 60
+	const retryInterval = 5 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		if waitFn(gCli) {
+			log.Printf("Setup for %s is complete, proceeding with charging work", contractName)
+			return
+		}
+		log.Printf("Waiting for %s setup to complete... (attempt %d/%d)", contractName, i+1, maxRetries)
+		time.Sleep(retryInterval)
+	}
+	log.Printf("WARNING: Setup for %s did not complete within timeout, proceeding anyway", contractName)
 }
 
 type AccountSet struct {

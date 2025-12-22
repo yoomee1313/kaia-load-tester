@@ -105,7 +105,12 @@ type TestContractInfo struct {
 	GetBytecodeWithConstructorParam func(bin []byte, contracts []*Account, deployer *Account) []byte
 	IsDeployed                      func(gCli *client.Client, deployer *Account) bool
 	GetAddress                      func(gCli *client.Client, deployer *Account) common.Address
-	DoAdditionalWork                func(ctx *AdditionalWorkContext)
+	// DoSetupWork is executed by leader only (e.g., GSR registration, Auction registration)
+	DoSetupWork func(ctx *AdditionalWorkContext)
+	// DoChargingWork is executed by all slaves after setup is complete (e.g., token charging, NFT minting)
+	DoChargingWork func(ctx *AdditionalWorkContext)
+	// WaitForSetup returns true when setup is complete (used by followers to wait for leader)
+	WaitForSetup func(gCli *client.Client) bool
 }
 
 // AdditionalWorkContext contains all context needed for additional work after contract deployment
@@ -173,7 +178,7 @@ func createERC20ContractInfo() TestContractInfo {
 		GetBytecodeWithConstructorParam: returnBinAsIs,
 		IsDeployed:                      isDeployerNonceNotZero,
 		GetAddress:                      getNonce0ContractAddress,
-		DoAdditionalWork: func(ctx *AdditionalWorkContext) {
+		DoChargingWork: func(ctx *AdditionalWorkContext) {
 			log.Printf("Start erc20 token charging to the test account group")
 			contract := ctx.AccGrp.GetTestContractByName(ContractErc20)
 			ERC20Deployer.SmartContractExecutionWithGuaranteeRetry(ctx.GCli, contract, nil, PackContractCall(erc20ABI, "mint", ctx.LocalReservoir.address, big.NewInt(1e11)))
@@ -196,7 +201,7 @@ func createERC721ContractInfo() TestContractInfo {
 		GetBytecodeWithConstructorParam: returnBinAsIs,
 		IsDeployed:                      isDeployerNonceNotZero,
 		GetAddress:                      getNonce0ContractAddress,
-		DoAdditionalWork: func(ctx *AdditionalWorkContext) {
+		DoChargingWork: func(ctx *AdditionalWorkContext) {
 			log.Printf("Start erc721 nft minting to the test account group(similar to erc20 token charging)")
 			contract := ctx.AccGrp.GetTestContractByName(ContractErc721)
 			// Use timestamp-based offset to avoid token ID collision on re-runs
@@ -266,7 +271,10 @@ func createGaslessTokenContractInfo() TestContractInfo {
 		},
 		IsDeployed: IsGSRExistInRegistry,
 		GetAddress: getGaslessTokenAddress,
-		DoAdditionalWork: func(ctx *AdditionalWorkContext) {
+		WaitForSetup: func(gCli *client.Client) bool {
+			return IsGSRExistInRegistry(gCli, nil)
+		},
+		DoChargingWork: func(ctx *AdditionalWorkContext) {
 			if !ContainsAnyInList(ctx.TcList, []string{"gaslessTransactionTC", "gaslessOnlyApproveTC"}) && !ContainsAnyInList(ctx.TargetTxTypeList, []string{"GAA", "GAS"}) {
 				return
 			}
@@ -359,8 +367,11 @@ func createGaslessSwapRouterContractInfo() TestContractInfo {
 		},
 		IsDeployed: IsGSRExistInRegistry,
 		GetAddress: getGSRAddress,
-		DoAdditionalWork: func(ctx *AdditionalWorkContext) {
-			if !ctx.IsLeader && IsGSRExistInRegistry(ctx.GCli, nil) {
+		WaitForSetup: func(gCli *client.Client) bool {
+			return IsGSRExistInRegistry(gCli, nil)
+		},
+		DoSetupWork: func(ctx *AdditionalWorkContext) {
+			if IsGSRExistInRegistry(ctx.GCli, nil) {
 				return
 			}
 			log.Printf("GSR does not exist in registry, setting up liquidity and registering GSR...")
@@ -501,13 +512,17 @@ func createAuctionEntryPointContractInfo() TestContractInfo {
 		},
 		IsDeployed: IsAuctionEntryPointExistInRegistry,
 		GetAddress: getAuctionEntryPointAddress,
-		DoAdditionalWork: func(ctx *AdditionalWorkContext) {
-			if !ctx.IsLeader && IsAuctionEntryPointExistInRegistry(ctx.GCli, nil) {
+		WaitForSetup: func(gCli *client.Client) bool {
+			return IsAuctionEntryPointExistInRegistry(gCli, nil)
+		},
+		DoSetupWork: func(ctx *AdditionalWorkContext) {
+			if IsAuctionEntryPointExistInRegistry(ctx.GCli, nil) {
 				return
 			}
 			log.Printf("Auction Entry Point does not exist in registry, registering...")
 			RegisterAuctionEntryPoint(ctx.GCli, ctx.AccGrp, ctx.GlobalReservoir)
-
+		},
+		DoChargingWork: func(ctx *AdditionalWorkContext) {
 			// Deposit to the Auction Contract for each account
 			log.Printf("Start depositing to the Auction Contract for each account")
 			abii, err := auctionDepositVaultContracts.AuctionDepositVaultMetaData.GetAbi()

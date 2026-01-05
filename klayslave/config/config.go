@@ -35,7 +35,8 @@ type Config struct {
 	chargeKLAYAmount  int
 	chargeParallelNum int
 
-	gEndpoint string
+	gEndpoint     string
+	isLeaderSlave bool
 
 	// Directly from connected node
 	gasPrice *big.Int
@@ -82,6 +83,7 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 	cfg.chargeKLAYAmount = ctx.Int("charge")
 	cfg.chargeParallelNum = ctx.Int("chargeParallel")
 	cfg.richWalletPrivateKey = ctx.String("key")
+	cfg.isLeaderSlave = ctx.Bool("leader")
 
 	// Do not allow null richWalletPrivateKey
 	if cfg.richWalletPrivateKey == "" {
@@ -115,7 +117,7 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 	}
 
 	// Parse auctionTargetTxTypeList when auctionBidTC or auctionRevertedBidTC is set
-	if cfg.InTheTcList("auctionBidTC") || cfg.InTheTcList("auctionRevertedBidTC") {
+	if account.ContainsAnyInList(cfg.tcNameList, []string{"auctionBidTC", "auctionRevertedBidTC"}) {
 		auctionTargetTxTypeList := ctx.String("auctionTargetTxTypeList")
 		if len(auctionTargetTxTypeList) == 0 {
 			log.Fatal("auctionTargetTxTypeList is not set. Please set auctionTargetTxTypeList.")
@@ -138,7 +140,7 @@ func (cfg *Config) setConfigsFromFlag(ctx *cli.Context) {
 	}
 
 	maxRPC := ctx.Int("max-rps")
-	if (cfg.InTheTcList("auctionBidTC") || cfg.InTheTcList("auctionRevertedBidTC")) && cfg.nUserForSigned < maxRPC {
+	if account.ContainsAnyInList(cfg.tcNameList, []string{"auctionBidTC", "auctionRevertedBidTC"}) && cfg.nUserForSigned < maxRPC {
 		log.Fatal("When auctionBidTC or auctionRevertedBidTC is set, nUserForSigned must be larger than max-rps")
 	}
 
@@ -228,24 +230,7 @@ func (cfg *Config) GetAuctionTargetTxTypeList() []string { return cfg.auctionTar
 func (cfg *Config) GetRichWalletPrivateKey() string      { return cfg.richWalletPrivateKey }
 func (cfg *Config) GetGCli() *klay.Client                { return cfg.gCli }
 func (cfg *Config) GetChargeParallelNum() int            { return cfg.chargeParallelNum }
-func (cfg *Config) InTheTcList(tcName string) bool {
-	for _, tc := range cfg.tcNameList {
-		if tcName == tc {
-			return true
-		}
-	}
-	return false
-}
-func (cfg *Config) InTheTargetTxTypeList(targetTxTypes ...string) bool {
-	for _, auctionTargetTxType := range cfg.auctionTargetTxTypeList {
-		for _, targetTxType := range targetTxTypes {
-			if auctionTargetTxType == targetTxType {
-				return true
-			}
-		}
-	}
-	return false
-}
+func (cfg *Config) IsLeaderSlave() bool                  { return cfg.isLeaderSlave }
 func (cfg *Config) GetChargeValue() *big.Int {
 	return new(big.Int).Mul(big.NewInt(int64(cfg.chargeKLAYAmount)), big.NewInt(params.KAIA))
 }
@@ -269,6 +254,7 @@ var Flags = []cli.Flag{
 	cli.StringFlag{Name: "auctionTargetTxTypeList", Value: "", Usage: "auction target tx types which user want to run, multiple target tx types are separated by comma."},
 	cli.StringFlag{Name: "testTokenAddr", Value: "", Usage: "Address of TestToken Contract"},
 	cli.StringFlag{Name: "gsrAddr", Value: "", Usage: "Address of Gasless Swap Router"},
+	cli.BoolFlag{Name: "leader", Usage: "If true, this slave will deploy contracts"},
 }
 
 var BoomerFlags = []cli.Flag{

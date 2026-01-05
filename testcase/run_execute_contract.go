@@ -88,11 +88,12 @@ func RunErc721TransferTC(config *TCConfig) func() {
 		cli := config.CliPool.Alloc().(*client.Client)
 		defer config.CliPool.Free(cli)
 
-		toAcc := config.AccGrp.GetAccountRandomly()
-
 		// Find an account with available tokens
-		var fromAcc *account.Account
-		var tokenId *big.Int
+		var (
+			fromAcc *account.Account
+			tokenId *big.Int
+			toAcc   = config.AccGrp.GetAccountRandomly()
+		)
 
 		// Try multiple accounts to find one with tokens
 		candidateIdx := rand.Intn(config.AccGrp.Len())
@@ -115,7 +116,10 @@ func RunErc721TransferTC(config *TCConfig) func() {
 		}
 
 		start := boomer.Now()
-		_, _, err := fromAcc.TransferERC721(false, cli, config.SmartContractAccounts[account.ContractErc721].GetAddress(), toAcc, tokenId)
+
+		data := account.PackContractCall(account.TestContractInfos[account.ContractErc721].Abi, "transferFrom", fromAcc.GetAddress(), toAcc.GetAddress(), tokenId)
+		_, _, err := fromAcc.TransferNewSmartContractExecutionTx(cli, config.SmartContractAccounts[account.ContractErc721], nil, data)
+
 		elapsed := boomer.Now() - start
 
 		if err == nil {

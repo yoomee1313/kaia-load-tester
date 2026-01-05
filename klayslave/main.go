@@ -62,12 +62,13 @@ func main() {
 
 func RunAction(ctx *cli.Context) {
 	cfg := config.NewConfig(ctx)
-	accGrp := account.NewAccGroup(cfg.GetChainID(), cfg.GetGasPrice(), cfg.GetBaseFee(), cfg.InTheTcList("transferUnsignedTx"))
+	tcList := cfg.GetTcStrList()
+	accGrp := account.NewAccGroup(cfg.GetChainID(), cfg.GetGasPrice(), cfg.GetBaseFee(), account.ContainsAnyInList(tcList, []string{"transferUnsignedTx"}))
 	var nUserForGaslessRevertTx, nUserForGaslessApproveTx int = 0, 0
-	if cfg.InTheTcList("gaslessRevertTransactionTC") {
+	if account.ContainsAnyInList(tcList, []string{"gaslessRevertTransactionTC"}) {
 		nUserForGaslessRevertTx = cfg.GetNUserForSigned() // same as nUserForSignedTx
 	}
-	if cfg.InTheTcList("gaslessOnlyApproveTC") {
+	if account.ContainsAnyInList(tcList, []string{"gaslessOnlyApproveTC"}) {
 		nUserForGaslessApproveTx = cfg.GetNUserForSigned() // same as nUserForSignedTx
 	}
 	accGrp.CreateAccountsPerAccGrp(cfg.GetNUserForSigned(), cfg.GetNUserForUnsigned(), cfg.GetNUserForNewAccounts(), nUserForGaslessRevertTx, nUserForGaslessApproveTx, cfg.GetTcStrList(), cfg.GetGEndpoint())
@@ -96,7 +97,7 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	approveGroupChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForGaslessApproveTx)))))
 	forAuctionDepositChargeValue := new(big.Int).Mul(cfg.GetChargeValue(), big.NewInt(int64(len(accGrp.GetAccListByName(account.AccListForSignedTx)))))
 	initialLiquidity := common.Big0
-	if !account.IsGSRExistInRegistry(cfg.GetGCli()) {
+	if !account.IsGSRExistInRegistry(cfg.GetGCli(), nil) {
 		// If GSR does not exist, charge initial liquidity to the local reservoir
 		initialLiquidity = account.GetInitialLiquidity()
 	}
@@ -115,7 +116,7 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	accs := accGrp.GetValidAccGrp()
 	accs = append(accs, accGrp.GetAccListByName(account.AccListForGaslessRevertTx)...)  // for avoid validation
 	accs = append(accs, accGrp.GetAccListByName(account.AccListForGaslessApproveTx)...) // for avoid validation
-	account.ConcurrentTransactionSend(accs, cfg.GetChargeParallelNum(), func(acc *account.Account) {
+	account.ConcurrentTransactionSend(accs, cfg.GetChargeParallelNum(), func(_ int, acc *account.Account) {
 		localReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), acc, cfg.GetChargeValue())
 	})
 	log.Printf("Finished charging KLAY to %d test account(s)\n", len(accs))
@@ -125,50 +126,10 @@ func createTestAccGroupsAndPrepareContracts(cfg *config.Config, accGrp *account.
 	accGrp.SetAccGrpByActivePercent(cfg.GetActiveUserPercent())
 
 	// 4. Deploy the test contracts which will be used in various TCs. If needed, charge tokens to test accounts.
-	accGrp.DeployTestContracts(cfg.GetTcStrList(), cfg.GetAuctionTargetTxTypeList(), localReservoirAccount, cfg.GetGCli(), cfg.GetChargeValue(), cfg.GetChargeParallelNum())
-
-	// 5. Setup liquidity and register GSR if tc is gaslessTransactionTC, gaslessRevertTransactionTC, or gaslessOnlyApproveTC
-	needGaslessSetup := cfg.InTheTcList("gaslessTransactionTC") || cfg.InTheTcList("gaslessRevertTransactionTC") || cfg.InTheTcList("gaslessOnlyApproveTC") || cfg.InTheTargetTxTypeList("GAA", "GAS", "rGAA", "rGAS")
-	if !account.IsGSRExistInRegistry(cfg.GetGCli()) && needGaslessSetup {
-		log.Printf("GSR does not exist in registry, setting up liquidity and registering GSR...")
-
-		// Charge KAIA and gasless tokens to GSRSetupManager
-		localReservoirAccount.TransferSignedTxWithGuaranteeRetry(cfg.GetGCli(), account.GSRSetupManager, new(big.Int).Add(cfg.GetChargeValue(), account.GetInitialLiquidity()))
-		account.GaslessTokenDeployer.SmartContractExecutionWithGuaranteeRetry(
-			cfg.GetGCli(),
-			accGrp.GetTestContractByName(account.ContractGaslessToken),
-			nil,
-			account.TestContractInfos[account.ContractErc20].GenData(account.GSRSetupManager.GetAddress(), account.GetInitialLiquidity()),
-		)
-
-		// Setup liquidity
-		account.SetupLiquidity(cfg.GetGCli(), accGrp)
-
-		// Register GSR
-		account.RegisterGSR(cfg.GetGCli(), accGrp, globalReservoirAccount)
-	}
-
-	// 6. Register Auction Entry Point if tc is auctionBidTC or auctionRevertedBidTC
-	auctionInTc := cfg.InTheTcList("auctionBidTC") || cfg.InTheTcList("auctionRevertedBidTC")
-	if !account.IsAuctionEntryPointExistInRegistry(cfg.GetGCli()) && auctionInTc {
-		log.Printf("Auction Entry Point does not exist in registry, registering Auction Entry Point...")
-
-		// Register Auction Entry Point
-		account.RegisterAuctionEntryPoint(cfg.GetGCli(), accGrp, globalReservoirAccount)
-	}
-
-	// 7. Deposit to the Auction Contract for each account if tc is auctionBidTC or auctionRevertedBidTC
-	if auctionInTc {
-		log.Printf("Start depositing to the Auction Contract for each account")
-		account.ConcurrentTransactionSend(accGrp.GetValidAccGrp(), cfg.GetChargeParallelNum(), func(acc *account.Account) {
-			localReservoirAccount.SmartContractExecutionWithGuaranteeRetry(
-				cfg.GetGCli(),
-				accGrp.GetTestContractByName(account.ContractAuctionDepositVault),
-				cfg.GetChargeValue(),
-				account.TestContractInfos[account.ContractAuctionDepositVault].GenData(acc.GetAddress(), nil),
-			)
-		})
-	}
+	// GSR setup, Auction Entry Point registration, and Deposit are also done in DoAdditionalWork.
+	// All slaves call DeployTestContracts, but only leader does additional work (token charging, minting, etc.)
+	// Contracts are deployed only if deployer nonce is 0 (not yet deployed)
+	accGrp.DeployTestContracts(cfg.GetGCli(), cfg.GetChargeValue(), cfg.GetChargeParallelNum(), cfg.GetTcStrList(), cfg.GetAuctionTargetTxTypeList(), localReservoirAccount, globalReservoirAccount, cfg.IsLeaderSlave())
 
 	return localReservoirAccount
 }
